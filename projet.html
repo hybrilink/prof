@@ -192,8 +192,34 @@
         
         .student-detail-card .detail-row strong {
             color: var(--primary-blue);
-            min-width: 120px;
+            min-width: 130px;
         }
+        
+        .etape-select-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+        
+        .etape-select-container .current-stage {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .etape-select-container .current-stage .stage-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        
+        .stage-badge.stage-0 { background: #e9ecef; color: #6c757d; }
+        .stage-badge.stage-1 { background: #f8d7da; color: #721c24; }
+        .stage-badge.stage-2 { background: #fff3cd; color: #856404; }
+        .stage-badge.stage-3 { background: #fff3cd; color: #856404; }
+        .stage-badge.stage-4 { background: #d4edda; color: #155724; }
         
         .alert-custom {
             border-radius: 12px;
@@ -236,50 +262,20 @@
             margin: 0 auto 15px;
         }
         
-        /* Info étudiant trouvé */
-        .student-found-card {
-            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-            border-radius: 15px;
-            padding: 20px 25px;
-            margin-bottom: 20px;
-            border: 2px solid var(--primary-blue);
-            cursor: pointer;
-            transition: all 0.2s;
+        .progress {
+            height: 25px;
+            border-radius: 12px;
+            background: #e9ecef;
+            overflow: hidden;
         }
         
-        .student-found-card:hover {
-            box-shadow: 0 8px 25px rgba(0,51,102,0.15);
-            transform: translateY(-2px);
-        }
-        
-        .student-found-card .student-name {
-            font-size: 1.1rem;
+        .progress-bar {
             font-weight: 700;
-            color: var(--primary-blue);
-        }
-        
-        .student-found-card .student-details {
             font-size: 0.85rem;
-            color: #555;
-            margin-top: 5px;
-        }
-        
-        .etape-select-group {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 15px;
-            border: 2px solid #e0e0e0;
-        }
-        
-        .etape-select-group .current-etape-info {
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 10px;
-        }
-        
-        .etape-select-group .current-etape-info strong {
-            color: var(--primary-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: width 0.5s ease;
         }
         
         @media (max-width: 768px) {
@@ -403,7 +399,7 @@
             const textColor = config.textColor || 'white';
             
             const toastHtml = `
-                <div class="toast-custom" style="position:fixed;top:20px;right:20px;z-index:10000;background:${config.bg};color:${textColor};padding:15px 20px;border-radius:12px;box-shadow:0 5px 20px rgba(0,0,0,0.2);max-width:350px;font-weight:500;animation:slideInRight 0.3s ease-out;">
+                <div class="toast-custom" style="position:fixed;top:20px;right:20px;z-index:10000;background:${config.bg};color:${textColor};padding:15px 20px;border-radius:12px;box-shadow:0 5px 20px rgba(0,0,0,0.2);max-width:350px;font-weight:500;">
                     <i class="bi bi-${config.icon} me-2"></i>${message}
                 </div>
             `;
@@ -415,21 +411,48 @@
         }
         
         // ==================== DONNÉES ====================
-        let allProjects = []; // Tous les projets (pour recherche)
-        let selectedProject = null;
+        let myProjects = [];
+        let allPromotions = [];
         
-        async function loadAllProjects() {
+        async function loadMyProjects() {
             try {
-                const snapshot = await db.collection('projets').get();
-                allProjects = [];
+                const snapshot = await db.collection('projets')
+                    .where('directeurId', '==', currentProfessor.id)
+                    .get();
+                myProjects = [];
                 snapshot.forEach(doc => {
-                    allProjects.push({ id: doc.id, ...doc.data() });
+                    myProjects.push({ id: doc.id, ...doc.data() });
                 });
-                return allProjects;
+                return myProjects;
             } catch (error) {
                 console.error('Erreur chargement projets:', error);
                 return [];
             }
+        }
+        
+        // Charger les promotions pour résoudre les noms
+        async function loadPromotions() {
+            try {
+                const snapshot = await db.collection('promotions').get();
+                allPromotions = [];
+                snapshot.forEach(doc => {
+                    allPromotions.push({ id: doc.id, ...doc.data() });
+                });
+                return allPromotions;
+            } catch (error) {
+                console.error('Erreur chargement promotions:', error);
+                return [];
+            }
+        }
+        
+        // Obtenir le nom lisible d'une promotion à partir de son ID
+        function getPromotionName(promotionId) {
+            if (!promotionId) return 'Non définie';
+            // Chercher dans la liste des promotions chargées
+            const promo = allPromotions.find(p => p.id === promotionId);
+            if (promo) return promo.nom;
+            // Si non trouvé, retourner l'ID tel quel (fallback)
+            return promotionId;
         }
         
         // ==================== RENDU ====================
@@ -438,159 +461,95 @@
             const loadingIndicator = document.getElementById('loadingIndicator');
             if (loadingIndicator) loadingIndicator.style.display = 'none';
             
-            await loadAllProjects();
+            await loadPromotions();
+            await loadMyProjects();
             
             let html = '';
             
-            // Section 1 : Recherche par matricule
+            // Section : Recherche par matricule
             html += `
                 <div class="section-card">
                     <h3><i class="bi bi-search me-2"></i>Rechercher un Étudiant</h3>
-                    <p class="subtitle">Entrez le matricule ou le nom d'un étudiant pour afficher ses informations et suivre son projet.</p>
+                    <p class="subtitle">Entrez le matricule d'un étudiant pour afficher ses informations et suivre son projet. (${myProjects.length} étudiant(s) sous votre direction)</p>
                     
                     <div class="search-box mb-3">
                         <input type="text" class="form-control" id="searchMatricule" 
-                               placeholder="Entrez le matricule ou le nom de l'étudiant...">
+                               placeholder="Entrez le matricule de l'étudiant...">
                         <i class="bi bi-search"></i>
                     </div>
                     <div id="searchResult"></div>
                 </div>
             `;
             
-            // Section 2 : Détails et suivi (affiché si un projet est sélectionné)
+            // Section : Détails et suivi (apparaît après recherche)
             html += `<div id="projectDetailSection"></div>`;
             
             container.innerHTML = html;
             
             // Setup recherche
-            setupSearch();
-            
-            // Si un projet était sélectionné, le réafficher
-            if (selectedProject) {
-                displayProjectDetail(selectedProject);
-            }
+            setupMatriculeSearch();
         }
         
-        function setupSearch() {
+        function setupMatriculeSearch() {
             const input = document.getElementById('searchMatricule');
             if (!input) return;
             
             input.addEventListener('input', function() {
-                const searchTerm = this.value.trim().toLowerCase();
+                const matricule = this.value.trim().toLowerCase();
                 const resultDiv = document.getElementById('searchResult');
                 
-                if (searchTerm.length < 2) {
+                if (matricule.length < 2) {
                     resultDiv.innerHTML = '';
+                    document.getElementById('projectDetailSection').innerHTML = '';
                     return;
                 }
                 
-                // Chercher dans tous les projets par matricule ou nom
-                const foundProjects = allProjects.filter(p => 
-                    (p.etudiantMatricule && p.etudiantMatricule.toLowerCase().includes(searchTerm)) ||
-                    (p.etudiantNom && p.etudiantNom.toLowerCase().includes(searchTerm))
+                const project = myProjects.find(p => 
+                    p.etudiantMatricule && p.etudiantMatricule.toLowerCase().includes(matricule)
                 );
                 
-                if (foundProjects.length > 0) {
-                    resultDiv.innerHTML = foundProjects.map(project => {
-                        const pourcentage = (project.etape || 0) * 25;
-                        let barColor = '#dc3545';
-                        if (pourcentage >= 100) barColor = '#28a745';
-                        else if (pourcentage >= 75) barColor = '#ffc107';
-                        else if (pourcentage >= 50) barColor = '#fd7e14';
-                        
-                        const deptName = getDepartementName(project.departementId);
-                        const isMyStudent = project.directeurId === currentProfessor.id;
-                        
-                        return `
-                            <div class="student-found-card" onclick="selectProject('${project.id}')" 
-                                 style="${isMyStudent ? '' : 'opacity:0.7; border-color:#ff9800;'}">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <div class="student-name">
-                                            <i class="bi ${isMyStudent ? 'bi-person-check-fill text-success' : 'bi-person-fill'} me-2"></i>
-                                            ${escapeHtml(project.etudiantNom || 'N/A')}
-                                            ${!isMyStudent ? '<span class="badge bg-warning text-dark ms-2" style="font-size:0.7rem;">Non assigné à vous</span>' : ''}
-                                        </div>
-                                        <div class="student-details">
-                                            Matricule: <strong>${escapeHtml(project.etudiantMatricule || 'N/A')}</strong> | 
-                                            Promotion: ${escapeHtml(project.promotion || 'N/A')} | 
-                                            Département: ${escapeHtml(deptName)}
-                                        </div>
-                                    </div>
-                                    <div class="text-end">
-                                        <div class="mb-1">
-                                            <span style="font-weight:700;color:${barColor};">${pourcentage}%</span>
-                                        </div>
-                                        <div class="progress" style="width:80px;height:6px;background:#e0e0e0;border-radius:3px;">
-                                            <div style="width:${pourcentage}%;height:100%;background:${barColor};border-radius:3px;"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mt-2">
-                                    <small class="text-primary"><i class="bi bi-hand-index"></i> Cliquez pour voir les détails et gérer le suivi</small>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                } else {
+                if (project) {
+                    const pourcentage = (project.etape || 0) * 25;
                     resultDiv.innerHTML = `
-                        <div class="alert alert-warning alert-custom">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                            Aucun étudiant trouvé avec "${escapeHtml(searchTerm)}". Vérifiez le matricule ou le nom.
+                        <div class="student-detail-card" style="cursor:pointer;" onclick="displayProjectDetail('${project.id}')">
+                            <strong><i class="bi bi-person-check"></i> ${escapeHtml(project.etudiantNom || 'N/A')}</strong>
+                            <br><small>Matricule: ${escapeHtml(project.etudiantMatricule)} | Promotion: ${escapeHtml(getPromotionName(project.promotion))} | Progression: ${pourcentage}%</small>
+                            <br><small class="text-primary">Cliquez pour afficher les détails complets</small>
                         </div>
                     `;
+                    
+                    // Afficher directement les détails
+                    displayProjectDetail(project.id);
+                } else {
+                    resultDiv.innerHTML = '<p class="text-muted mt-2"><i class="bi bi-exclamation-circle"></i> Aucun de vos étudiants ne correspond à ce matricule.</p>';
+                    document.getElementById('projectDetailSection').innerHTML = '';
                 }
             });
         }
         
-        function selectProject(projectId) {
-            const project = allProjects.find(p => p.id === projectId);
+        function displayProjectDetail(projectId) {
+            const project = myProjects.find(p => p.id === projectId);
             if (!project) return;
             
-            selectedProject = project;
-            displayProjectDetail(project);
-            
-            document.getElementById('projectDetailSection').scrollIntoView({ behavior: 'smooth' });
-        }
-        
-        function getEtapeLabel(etape) {
-            const labels = ['Aucune étape', 'Étape 1 - 25% (Démarrage)', 'Étape 2 - 50% (Intermédiaire)', 'Étape 3 - 75% (Avancé)', 'Étape 4 - 100% (Feu Vert)'];
-            return labels[etape] || `Étape ${etape}`;
-        }
-        
-        function displayProjectDetail(project) {
             const detailSection = document.getElementById('projectDetailSection');
             if (!detailSection) return;
             
             const deptName = getDepartementName(project.departementId);
+            const promotionName = getPromotionName(project.promotion);
             const currentEtape = project.etape || 0;
             const pourcentage = currentEtape * 25;
             
-            let barColor = '#dc3545';
-            if (pourcentage >= 100) barColor = '#28a745';
-            else if (pourcentage >= 75) barColor = '#ffc107';
-            else if (pourcentage >= 50) barColor = '#fd7e14';
-            
-            const isMyStudent = project.directeurId === currentProfessor.id;
-            
-            // Options pour le select des étapes (on peut choisir n'importe quelle étape)
-            let etapeOptions = '<option value="0">Aucune étape (0%)</option>';
-            for (let i = 1; i <= 4; i++) {
-                const selected = (currentEtape === i) ? 'selected' : '';
-                etapeOptions += `<option value="${i}" ${selected}>${getEtapeLabel(i)}</option>`;
-            }
+            // Déterminer la classe du badge d'étape
+            let stageClass = 'stage-0';
+            if (currentEtape === 1) stageClass = 'stage-1';
+            else if (currentEtape === 2) stageClass = 'stage-2';
+            else if (currentEtape === 3) stageClass = 'stage-3';
+            else if (currentEtape >= 4) stageClass = 'stage-4';
             
             detailSection.innerHTML = `
                 <div class="section-card">
                     <h3><i class="bi bi-file-earmark-text-fill me-2"></i>Détails du Projet</h3>
                     <p class="subtitle">Suivi du projet de <strong>${escapeHtml(project.etudiantNom || 'N/A')}</strong></p>
-                    
-                    ${!isMyStudent ? `
-                        <div class="alert alert-warning alert-custom">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                            <strong>Attention :</strong> Cet étudiant ne vous est pas assigné comme directeur. Vous pouvez consulter mais les modifications seront enregistrées.
-                        </div>
-                    ` : ''}
                     
                     <div class="student-detail-card">
                         <div class="detail-row">
@@ -606,7 +565,7 @@
                         <div class="detail-row">
                             <i class="bi bi-mortarboard-fill"></i>
                             <strong>Promotion :</strong>
-                            <span>${escapeHtml(project.promotion || 'Non renseignée')}</span>
+                            <span>${escapeHtml(promotionName)}</span>
                         </div>
                         <div class="detail-row">
                             <i class="bi bi-building"></i>
@@ -659,41 +618,46 @@
                     <hr>
                     <h5 class="mb-3"><i class="bi bi-check-circle-fill me-2"></i>Validation des étapes (Feu Vert)</h5>
                     
-                    <div class="etape-select-group">
-                        <div class="current-etape-info">
-                            <i class="bi bi-info-circle me-1"></i> 
-                            Étape actuelle : <strong>${getEtapeLabel(currentEtape)}</strong>
+                    <div class="etape-select-container">
+                        <div class="current-stage mb-3">
+                            <span>Étape actuelle : </span>
+                            <span class="stage-badge ${stageClass}">
+                                ${currentEtape === 0 ? 'Aucune étape validée' : 
+                                  currentEtape === 4 ? '✅ Feu Vert (100%)' : 
+                                  `Étape ${currentEtape} - ${currentEtape * 25}%`}
+                            </span>
                         </div>
                         
-                        <div class="row align-items-end">
-                            <div class="col-md-8 mb-3">
-                                <label for="etapeSelect" class="form-label">
-                                    <i class="bi bi-list-check me-1"></i> Sélectionner l'étape à valider
-                                </label>
-                                <select class="form-select" id="etapeSelect">
-                                    ${etapeOptions}
-                                </select>
-                                <div class="form-text">
-                                    <i class="bi bi-info-circle"></i> 
-                                    Vous pouvez sélectionner n'importe quelle étape, même sauter des étapes. 
-                                    L'étudiant verra la progression correspondante.
-                                </div>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <button class="btn-success-action" onclick="validateEtape('${project.id}')">
-                                    <i class="bi bi-check-lg me-2"></i> Valider cette étape
-                                </button>
-                            </div>
+                        <div class="mb-3">
+                            <label for="etapeSelect" class="form-label">
+                                <i class="bi bi-list-check me-1"></i> Sélectionner l'étape à valider
+                            </label>
+                            <select class="form-select" id="etapeSelect" style="font-size:1rem;">
+                                <option value="0" ${currentEtape === 0 ? 'selected' : ''}>0 - Aucune étape (0%)</option>
+                                <option value="1" ${currentEtape === 1 ? 'selected' : ''}>Étape 1 - Démarrage (25%)</option>
+                                <option value="2" ${currentEtape === 2 ? 'selected' : ''}>Étape 2 - Intermédiaire (50%)</option>
+                                <option value="3" ${currentEtape === 3 ? 'selected' : ''}>Étape 3 - Avancé (75%)</option>
+                                <option value="4" ${currentEtape === 4 ? 'selected' : ''}>Étape 4 - Feu Vert (100%)</option>
+                            </select>
+                        </div>
+                        
+                        <button class="btn-success-action" onclick="validateEtapeFromSelect('${project.id}')">
+                            <i class="bi bi-check-lg me-2"></i> Valider cette étape
+                        </button>
+                        
+                        <div class="alert alert-info alert-custom mt-3">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            Vous pouvez sélectionner directement n'importe quelle étape. L'étudiant verra sa progression mise à jour immédiatement.
                         </div>
                     </div>
                     
                     <!-- Progression actuelle -->
                     <div class="mt-3">
                         <label class="form-label">Progression actuelle : ${pourcentage}%</label>
-                        <div class="progress" style="height: 25px; border-radius: 12px;">
+                        <div class="progress">
                             <div class="progress-bar ${pourcentage >= 100 ? 'bg-success' : pourcentage >= 75 ? 'bg-warning' : pourcentage >= 50 ? '' : 'bg-danger'}" 
                                  role="progressbar" 
-                                 style="width: ${pourcentage}%; font-weight:700; background:${barColor};"
+                                 style="width: ${pourcentage}%; font-weight:700;"
                                  aria-valuenow="${pourcentage}" aria-valuemin="0" aria-valuemax="100">
                                 ${pourcentage}%
                             </div>
@@ -703,43 +667,41 @@
                     ${pourcentage >= 100 ? `
                         <div class="alert alert-success alert-custom mt-3">
                             <i class="bi bi-trophy-fill me-2"></i>
-                            <strong>Félicitations !</strong> Le Feu Vert a été accordé pour ce projet. L'étudiant peut maintenant télécharger son document.
+                            <strong>Félicitations !</strong> Le Feu Vert a été accordé. L'étudiant peut télécharger son document.
                         </div>
-                    ` : `
-                        <div class="alert alert-info alert-custom mt-3">
-                            <i class="bi bi-info-circle-fill me-2"></i>
-                            Quand l'étudiant atteindra 100%, il pourra télécharger son document Feu Vert.
-                        </div>
-                    `}
+                    ` : ''}
                 </div>
             `;
+            
+            // Scroll vers les détails
+            detailSection.scrollIntoView({ behavior: 'smooth' });
         }
         
-        async function validateEtape(projectId) {
-            const etapeSelect = document.getElementById('etapeSelect');
-            if (!etapeSelect) return;
+        // Validation depuis le select (permet de sauter des étapes)
+        async function validateEtapeFromSelect(projectId) {
+            const select = document.getElementById('etapeSelect');
+            if (!select) return;
             
-            const nouvelleEtape = parseInt(etapeSelect.value);
-            const project = allProjects.find(p => p.id === projectId);
+            const nouvelleEtape = parseInt(select.value);
+            const project = myProjects.find(p => p.id === projectId);
             if (!project) return;
             
-            const currentEtape = project.etape || 0;
+            const ancienneEtape = project.etape || 0;
             
-            if (nouvelleEtape === currentEtape) {
-                showToast('Cette étape est déjà la progression actuelle', 'info');
+            if (nouvelleEtape === ancienneEtape) {
+                showToast('L\'étudiant est déjà à cette étape', 'info');
                 return;
             }
             
             const etapeLabels = ['Aucune étape (0%)', 'Étape 1 - 25%', 'Étape 2 - 50%', 'Étape 3 - 75%', 'Étape 4 - 100% (Feu Vert)'];
-            const direction = nouvelleEtape > currentEtape ? 'avancer' : 'reculer';
             
-            if (!confirm(`Confirmer le changement de progression pour l'étudiant ${project.etudiantNom || project.etudiantMatricule} ?\n\nDe : ${etapeLabels[currentEtape]}\nÀ : ${etapeLabels[nouvelleEtape]}\n\nAction : ${direction === 'avancer' ? 'Avancer' : 'Reculer'} la progression`)) {
-                // Remettre l'ancienne valeur dans le select
-                etapeSelect.value = currentEtape;
-                return;
-            }
+            const message = nouvelleEtape > ancienneEtape 
+                ? `Valider l'${etapeLabels[nouvelleEtape]} pour ${project.etudiantNom || project.etudiantMatricule} ?\n\nProgression : ${ancienneEtape * 25}% → ${nouvelleEtape * 25}%`
+                : `⚠️ RÉTROGRADER à l'${etapeLabels[nouvelleEtape]} pour ${project.etudiantNom || project.etudiantMatricule} ?\n\nProgression : ${ancienneEtape * 25}% → ${nouvelleEtape * 25}%`;
             
-            showLoading(true, `Mise à jour de la progression...`);
+            if (!confirm(message)) return;
+            
+            showLoading(true, `Mise à jour de l'étape...`);
             
             try {
                 await db.collection('projets').doc(projectId).update({
@@ -748,13 +710,12 @@
                 
                 // Mettre à jour localement
                 project.etape = nouvelleEtape;
-                selectedProject = project;
                 
                 showLoading(false);
-                showToast(`✅ Progression mise à jour : ${etapeLabels[nouvelleEtape]}`, 'success');
+                showToast(`✅ ${etapeLabels[nouvelleEtape]} validée avec succès !`, 'success');
                 
                 // Rafraîchir l'affichage
-                displayProjectDetail(project);
+                displayProjectDetail(projectId);
                 
             } catch (error) {
                 showLoading(false);
@@ -780,17 +741,16 @@
                     sujetReformule: sujetReformule
                 });
                 
-                const project = allProjects.find(p => p.id === projectId);
+                const project = myProjects.find(p => p.id === projectId);
                 if (project) {
                     project.departementId = departement;
                     project.sujetReformule = sujetReformule;
-                    selectedProject = project;
                 }
                 
                 showLoading(false);
                 showToast('✅ Sujet mis à jour avec succès !', 'success');
                 
-                displayProjectDetail(project);
+                displayProjectDetail(projectId);
                 
             } catch (error) {
                 showLoading(false);
@@ -804,8 +764,6 @@
             if (!checkSession()) return;
             console.log('🚀 Page Suivi Projets - Professeur');
             console.log('👤 Professeur:', currentProfessor.nomComplet);
-            console.log('📝 Recherche libre - Tous les étudiants accessibles');
-            console.log('🔀 Les étapes peuvent être sautées librement');
             
             const style = document.createElement('style');
             style.textContent = `
