@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Connexion Professeur - Faculté Agronomique</title>
+     <meta name="theme-color" content="#003366">
+    <meta name="description" content="Connexion à l'espace étudiant de la Faculté Agronomique - UNILU">
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+    <link rel="icon" type="image/png" href="icon-96x96.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FAC Agro">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-96x96.png">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root { --primary-blue: #003366; --dark-blue: #002244; --accent-yellow: #ffb347; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
+            font-family: 'Segoe UI', sans-serif;
+            padding: 20px;
+        }
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            animation: slideUp 0.5s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .login-header { text-align: center; margin-bottom: 30px; }
+        .login-icon {
+            width: 80px; height: 80px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+            color: var(--accent-yellow);
+            font-size: 40px;
+        }
+        .login-title { color: var(--primary-blue); font-weight: bold; margin-bottom: 5px; }
+        .login-subtitle { color: #888; font-size: 14px; }
+        .form-control {
+            border-radius: 10px; padding: 12px;
+            border: 2px solid #e0e0e0; transition: all 0.3s;
+        }
+        .form-control:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 0.2rem rgba(0,51,102,0.25);
+        }
+        .btn-login {
+            background: var(--primary-blue);
+            color: white; border: none;
+            padding: 14px; border-radius: 10px;
+            width: 100%; font-weight: bold; font-size: 16px;
+            transition: all 0.3s; margin-top: 10px;
+        }
+        .btn-login:hover {
+            background: var(--accent-yellow);
+            color: var(--primary-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        .btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .toast-notification {
+            position: fixed; top: 20px; right: 20px;
+            z-index: 9999; min-width: 300px;
+        }
+        .notification-toast { animation: slideInRight 0.3s ease-out; }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .password-toggle { cursor: pointer; }
+        .back-link {
+            color: var(--primary-blue); text-decoration: none; font-weight: 500;
+            display: inline-flex; align-items: center; gap: 5px; margin-top: 15px;
+        }
+        .back-link:hover { text-decoration: underline; }
+        .input-group-text {
+            background: #f8f9fa; border: 2px solid #e0e0e0; cursor: pointer;
+        }
+        .info-text {
+            text-align: center; margin-top: 25px; padding-top: 20px;
+            border-top: 1px solid #e0e0e0; font-size: 13px; color: #888;
+        }
+        .info-text i { color: var(--primary-blue); }
+    </style>
+</head>
+<body>
+    <div id="toastContainer" class="toast-notification"></div>
+    
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-icon"><img src="ti.png"></div>
+            <h3 class="login-title">Espace Professeur</h3>
+            <p class="login-subtitle">Faculté des Sciences Agronomiques</p>
+        </div>
+        
+        <form id="loginForm">
+            <div class="mb-3">
+                <label class="form-label"><i class="bi bi-envelope-fill"></i> Email professionnel</label>
+                <input type="email" class="form-control" id="email" required 
+                    placeholder="professeur@fsa-unilu.com" autocomplete="email">
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label"><i class="bi bi-lock-fill"></i> Mot de passe</label>
+                <div class="input-group">
+                    <input type="password" class="form-control" id="password" required 
+                        placeholder="••••••••" autocomplete="current-password">
+                    <span class="input-group-text password-toggle" id="togglePassword">
+                        <i class="bi bi-eye-fill"></i>
+                    </span>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-login" id="loginBtn">
+                <i class="bi bi-box-arrow-in-right"></i> Se connecter
+            </button>
+        </form>
+        
+        <div class="text-center mt-3">
+          
+        </div>
+        
+        <div class="info-text">
+            <i class="bi bi-shield-check"></i> HYBRILINK-TECH<br>
+            <small>Votre partenaire tech de A à Z</small>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBb82N2-5ns7qKjQBAj5UvDW87s2PZ27F0",
+            authDomain: "fsa-unilu.firebaseapp.com",
+            projectId: "fsa-unilu",
+            storageBucket: "fsa-unilu.firebasestorage.app",
+            messagingSenderId: "36551990738",
+            appId: "1:36551990738:web:e91fdcb53f8aab5d1b7c0b"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const bgColor = type === 'success' ? '#28a745' : '#dc3545';
+            const icon = type === 'success' ? 'check-circle-fill' : 'x-circle-fill';
+            const toastHtml = `<div class="toast notification-toast" style="background:${bgColor};color:white;border-radius:10px;margin-bottom:10px;"><div class="toast-body"><i class="bi bi-${icon} me-2"></i>${message}</div></div>`;
+            container.insertAdjacentHTML('afterbegin', toastHtml);
+            setTimeout(() => container.firstElementChild?.remove(), 4000);
+        }
+        
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+            if(passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.replace('bi-eye-fill', 'bi-eye-slash-fill');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.replace('bi-eye-slash-fill', 'bi-eye-fill');
+            }
+        });
+        
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Connexion...';
+            
+            try {
+                const usersRef = db.collection('utilisateurs');
+                const q = await usersRef.where('email','==',email).where('role','==','professeur').get();
+                
+                if(q.empty) {
+                    showToast('Email ou mot de passe incorrect','danger');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Se connecter';
+                    return;
+                }
+                
+                let userFound = null;
+                q.forEach(doc => {
+                    const userData = doc.data();
+                    if(userData.motDePasse === password) userFound = { id: doc.id, ...userData };
+                });
+                
+                if(userFound) {
+                    const sessionData = { user: userFound, timestamp: Date.now(), role: 'professeur' };
+                    localStorage.setItem('professeur_session', JSON.stringify(sessionData));
+                    showToast(`Bienvenue ${userFound.nomComplet} !`,'success');
+                    setTimeout(() => { window.location.href = 'professeur.html'; }, 500);
+                } else {
+                    showToast('Email ou mot de passe incorrect','danger');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Se connecter';
+                }
+            } catch(err) {
+                console.error('Erreur connexion:', err);
+                showToast('Erreur de connexion','danger');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Se connecter';
+            }
+        });
+
+        // Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
+            });
+        }
+    </script>
+</body>
+</html>

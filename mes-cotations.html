@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Mes Cotations - Professeur</title>
+    <meta name="theme-color" content="#003366">
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-96x96.png">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { 
+            --primary-blue: #003366; 
+            --dark-blue: #002244; 
+            --accent-yellow: #ffb347; 
+            --light-gray: #f0f2f5;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+        }
+        
+        body { background: var(--light-gray); font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        .navbar-custom { background: var(--primary-blue); box-shadow: 0 4px 15px rgba(0,0,0,0.2); padding: 12px 0; }
+        .navbar-brand { font-weight: bold; font-size: 1.1rem; }
+        
+        .back-btn {
+            background: var(--accent-yellow); color: var(--primary-blue);
+            border: none; padding: 8px 20px; border-radius: 25px;
+            font-weight: bold; transition: all 0.3s;
+            display: inline-flex; align-items: center; gap: 8px;
+            text-decoration: none; cursor: pointer;
+        }
+        .back-btn:hover { background: #ff9800; transform: translateY(-2px); color: var(--primary-blue); }
+        
+        .navbar-right { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        
+        .profile-photo {
+            width: 45px; height: 45px; border-radius: 50%;
+            background: var(--accent-yellow); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-weight: bold; color: var(--primary-blue); font-size: 18px;
+        }
+        
+        .prof-name-nav {
+            color: white; font-weight: 500; font-size: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .prof-name-nav i { color: var(--accent-yellow); }
+        
+        .content-card {
+            background: white; border-radius: 20px; padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1); margin-bottom: 30px;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card-header-custom {
+            background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
+            color: white; border-radius: 20px 20px 0 0;
+            padding: 20px 25px; margin: -30px -30px 25px -30px;
+        }
+        .card-header-custom h4 { margin: 0; font-weight: bold; }
+        .card-header-custom h4 i { color: var(--accent-yellow); }
+        
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; flex-wrap: wrap; gap: 15px;
+            padding-bottom: 15px; border-bottom: 2px solid #f0f0f0;
+        }
+        .section-header h5 { color: var(--primary-blue); margin: 0; font-weight: bold; }
+        
+        .form-label { font-weight: 600; color: var(--primary-blue); margin-bottom: 8px; font-size: 14px; }
+        
+        .form-control, .form-select {
+            border-radius: 10px; padding: 12px 15px;
+            border: 2px solid #e0e0e0; transition: all 0.3s; font-size: 15px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 0.2rem rgba(0,51,102,0.25);
+        }
+        
+        .btn-action {
+            background: var(--primary-blue); color: white;
+            border: none; padding: 12px 25px; border-radius: 12px;
+            font-weight: bold; transition: all 0.3s; cursor: pointer;
+        }
+        .btn-action:hover { background: var(--dark-blue); transform: translateY(-2px); }
+        .btn-action:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        .btn-export {
+            background: #28a745; color: white;
+            border: none; padding: 10px 20px; border-radius: 10px;
+            font-weight: bold; transition: all 0.3s; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-export:hover { background: #218838; transform: translateY(-2px); }
+        .btn-export:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .btn-import {
+            background: #17a2b8; color: white;
+            border: none; padding: 10px 20px; border-radius: 10px;
+            font-weight: bold; transition: all 0.3s; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-import:hover { background: #138496; transform: translateY(-2px); }
+        .btn-import:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .btn-publish {
+            background: var(--accent-yellow); color: var(--primary-blue);
+            border: none; padding: 14px 30px; border-radius: 12px;
+            font-weight: bold; font-size: 16px; transition: all 0.3s; width: 100%;
+        }
+        .btn-publish:hover { background: #ff9800; transform: translateY(-2px); }
+        .btn-publish:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        .info-alert {
+            background: #e8f4fd; border-left: 4px solid var(--primary-blue);
+            border-radius: 10px; padding: 15px; margin-bottom: 20px; font-size: 14px;
+        }
+        
+        .import-zone {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .import-zone h6 { color: var(--primary-blue); margin-bottom: 15px; }
+        
+        .cotes-table {
+            width: 100%; border-collapse: collapse;
+            background: white; border-radius: 15px;
+            overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            font-size: 13px;
+        }
+        .cotes-table thead th {
+            background: var(--primary-blue); color: white;
+            padding: 10px 8px; text-align: center; font-weight: 600; font-size: 12px;
+            white-space: nowrap; position: sticky; top: 0;
+        }
+        .cotes-table tbody td {
+            padding: 8px; border-bottom: 1px solid #e0e0e0;
+            vertical-align: middle; text-align: center;
+        }
+        .cotes-table tbody tr:hover { background: #f8f9fa; }
+        
+        .moyenne-cell { font-weight: bold; font-size: 14px; }
+        .moyenne-cell.reussi { color: #28a745; }
+        .moyenne-cell.echoue { color: #dc3545; }
+        
+        .toast-notification { position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast { animation: slideInRight 0.3s ease-out; }
+        
+        .loading-spinner {
+            display: inline-block; width: 20px; height: 20px;
+            border: 3px solid rgba(255,255,255,0.3); border-top-color: white;
+            border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .footer-info { text-align: center; margin-top: auto; padding: 20px 0; border-top: 1px solid #e0e0e0; font-size: 12px; color: #888; }
+        .footer-info img { border-radius: 20px; vertical-align: middle; }
+        
+        .stats-mini { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px; }
+        .stat-mini-item {
+            background: #f8f9fa; border-radius: 10px;
+            padding: 10px 15px; text-align: center; font-size: 13px;
+        }
+        .stat-mini-item strong { color: var(--primary-blue); font-size: 18px; display: block; }
+        
+        .table-responsive { border-radius: 15px; overflow-x: auto; max-height: 500px; overflow-y: auto; }
+        
+        .btn-outline-action {
+            background: white; color: var(--primary-blue);
+            border: 2px solid var(--primary-blue);
+            padding: 8px 15px; border-radius: 10px;
+            font-weight: bold; transition: all 0.3s; cursor: pointer;
+            font-size: 13px;
+        }
+        .btn-outline-action:hover { background: var(--primary-blue); color: white; }
+        
+        @media (max-width: 768px) {
+            .content-card { padding: 20px; }
+            .card-header-custom { margin: -20px -20px 20px -20px; padding: 15px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-custom">
+        <div class="container">
+            <a class="navbar-brand text-white" href="#"><i class="bi bi-person-workspace"></i> Espace Professeur</a>
+            <div class="navbar-right">
+                <span class="prof-name-nav d-none d-md-inline-flex" id="profNameNav">
+                    <i class="bi bi-person-badge"></i> <span id="navProfName">Professeur</span>
+                </span>
+                <div class="profile-photo" id="profileAvatar" title="Mon profil">P</div>
+                <a href="professeur.html" class="back-btn"><i class="bi bi-house-door-fill"></i> Accueil</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container mt-4" style="flex: 1;">
+        <div id="toastContainer" class="toast-notification"></div>
+        
+        <!-- Sélection -->
+        <div class="content-card">
+            <div class="card-header-custom">
+                <h4><i class="bi bi-pencil-square"></i> Gestion des Cotations</h4>
+            </div>
+            
+            <div class="info-alert">
+                <i class="bi bi-info-circle-fill"></i>
+                <strong>Fonctionnement :</strong> Sélectionnez une promotion et un cours, puis exportez le tableau Excel modèle. Complétez les cotes (Présence/2, TD/2, TP/2, Interro/4) dans le fichier Excel, puis importez-le. Vérifiez l'aperçu et publiez. Pour modifier des cotes déjà publiées, réexportez, modifiez et réimportez.
+            </div>
+            
+            <!-- Étape 1 : Sélection -->
+            <div class="row">
+                <div class="col-md-5 mb-3">
+                    <label class="form-label"><i class="bi bi-trophy-fill"></i> Promotion</label>
+                    <select class="form-select" id="promotionSelect">
+                        <option value="">-- Sélectionner une promotion --</option>
+                    </select>
+                </div>
+                <div class="col-md-5 mb-3">
+                    <label class="form-label"><i class="bi bi-book-fill"></i> Cours</label>
+                    <select class="form-select" id="coursSelect">
+                        <option value="">-- Sélectionner d'abord une promotion --</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-3 d-flex align-items-end">
+                    <button class="btn-export w-100" id="exportBtn" disabled>
+                        <i class="bi bi-download"></i> Exporter
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Étape 2 : Import -->
+            <div class="import-zone">
+                <h6><i class="bi bi-upload"></i> Importer le fichier Excel complété</h6>
+                <div class="row">
+                    <div class="col-md-8 mb-2">
+                        <input type="file" class="form-control" id="excelFileInput" accept=".xlsx, .xls">
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <button class="btn-import w-100" id="previewImportBtn" disabled>
+                            <i class="bi bi-eye"></i> Afficher l'aperçu
+                        </button>
+                    </div>
+                </div>
+                <small class="text-muted">
+                    <i class="bi bi-info-circle"></i> Exportez d'abord le modèle, complétez les cotes, puis importez le fichier modifié.
+                </small>
+            </div>
+        </div>
+        
+        <!-- Aperçu et publication -->
+        <div class="content-card" id="previewCard" style="display:none;">
+            <div class="section-header">
+                <h5><i class="bi bi-table"></i> Aperçu des cotes</h5>
+                <div>
+                    <button class="btn-outline-action me-2" id="cancelPreviewBtn">
+                        <i class="bi bi-x-circle"></i> Annuler
+                    </button>
+                    <button class="btn-publish" id="publishBtn">
+                        <i class="bi bi-cloud-upload-fill"></i> Publier les cotes
+                    </button>
+                </div>
+            </div>
+            
+            <div class="stats-mini" id="statsMini"></div>
+            <div class="table-responsive" id="previewTable"></div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="footer-info">
+            <i class="bi bi-shield-check"></i> HYBRILINK-TECH - Votre partenaire digital de A à Z<br>
+            <img src="t.png" width="40px" alt="HYBRILINK" onerror="this.style.display='none'">
+        </div>
+    </div>
+
+    <script>
+        // ========== INITIALISATION INSTANTANÉE FIREBASE ==========
+        const firebaseConfig = {
+            apiKey: "AIzaSyBb82N2-5ns7qKjQBAj5UvDW87s2PZ27F0",
+            authDomain: "fsa-unilu.firebaseapp.com",
+            projectId: "fsa-unilu",
+            storageBucket: "fsa-unilu.firebasestorage.app",
+            messagingSenderId: "36551990738",
+            appId: "1:36551990738:web:e91fdcb53f8aab5d1b7c0b"
+        };
+        
+        // Initialisation immédiate sans délai
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+        
+        // Activation de la persistance pour données instantanées
+        db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+            if (err.code === 'failed-precondition') {
+                console.log('Persistance multi-onglets activée');
+            }
+        });
+        
+        // ========== VARIABLES GLOBALES ==========
+        let currentUser = null;
+        let currentUserId = null;
+        let allPromotions = [];
+        let allCours = [];
+        let allEtudiants = [];
+        let allCotations = [];
+        let excelData = [];
+        let currentCoursId = '';
+        let currentPromoId = '';
+        
+        // ========== UTILITAIRES ==========
+        function showToast(msg, type = 'success') {
+            const c = document.getElementById('toastContainer');
+            const bg = type==='success'?'#28a745':type==='warning'?'#ffc107':'#dc3545';
+            const ic = type==='success'?'check-circle-fill':type==='warning'?'exclamation-triangle-fill':'x-circle-fill';
+            const tc = type==='warning'?'#333':'white';
+            c.insertAdjacentHTML('afterbegin', 
+                `<div class="toast" style="background:${bg};color:${tc};border-radius:10px;margin-bottom:10px;">
+                    <div class="toast-body"><i class="bi bi-${ic} me-2"></i>${msg}</div></div>`);
+            setTimeout(() => { if(c.firstElementChild) c.firstElementChild.remove(); }, 4000);
+        }
+        
+        function escapeHtml(t) { 
+            if(!t) return ''; 
+            const d = document.createElement('div'); 
+            d.textContent = t; 
+            return d.innerHTML; 
+        }
+        
+        function parseFloatSafe(val) { 
+            const n = parseFloat(val); 
+            return isNaN(n) ? 0 : n; 
+        }
+        
+        function calculerMoyenne(p, td, tp, interro) {
+            return Math.min(10, parseFloatSafe(p) + parseFloatSafe(td) + parseFloatSafe(tp) + parseFloatSafe(interro));
+        }
+        
+        // ========== INITIALISATION INSTANTANÉE ==========
+        async function initApp() {
+            try {
+                // Récupération instantanée de la session
+                const sessionData = localStorage.getItem('professeur_session');
+                
+                if (!sessionData) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                const session = JSON.parse(sessionData);
+                
+                // Vérification validité session
+                if (!session.user || session.user.role !== 'professeur') {
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // Vérification timestamp (24h max)
+                const sessionAge = Date.now() - session.timestamp;
+                if (sessionAge > 86400000) {
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                currentUserId = session.user.id;
+                
+                // RECHERCHE INSTANTANÉE DU PROFESSEUR DANS FIREBASE
+                const profDoc = await db.collection('utilisateurs').doc(currentUserId).get();
+                
+                if (profDoc.exists) {
+                    // Données temps réel depuis Firebase
+                    currentUser = { id: profDoc.id, ...profDoc.data() };
+                    
+                    // Mise à jour du localStorage avec données fraîches
+                    session.user = currentUser;
+                    session.timestamp = Date.now();
+                    localStorage.setItem('professeur_session', JSON.stringify(session));
+                } else {
+                    // Fallback sur les données du localStorage
+                    currentUser = session.user;
+                }
+                
+                // Affichage instantané du nom du professeur
+                afficherInfosProfesseur();
+                
+                // Chargement parallèle pour performance maximale
+                await Promise.all([
+                    chargerPromotions(),
+                    chargerEtudiants(),
+                    chargerCotationsExistantes()
+                ]);
+                
+                await chargerCours();
+                
+                console.log('✅ Initialisation terminée -', currentUser.nomComplet);
+                
+            } catch (error) {
+                console.error('Erreur initialisation:', error);
+                
+                // Fallback localStorage en cas d'erreur
+                const sessionData = localStorage.getItem('professeur_session');
+                if (sessionData) {
+                    const session = JSON.parse(sessionData);
+                    currentUser = session.user;
+                    afficherInfosProfesseur();
+                    await chargerPromotions();
+                    await chargerEtudiants();
+                    await chargerCours();
+                    await chargerCotationsExistantes();
+                } else {
+                    window.location.href = 'login.html';
+                }
+            }
+        }
+        
+        function afficherInfosProfesseur() {
+            if (!currentUser) return;
+            
+            const nomComplet = currentUser.nomComplet || 'Professeur';
+            
+            // Affichage dans la navbar
+            document.getElementById('navProfName').textContent = nomComplet;
+            
+            // Initiales pour l'avatar
+            const initials = nomComplet.split(' ')
+                .map(n => n[0])
+                .join('')
+                .substring(0, 2)
+                .toUpperCase();
+            
+            document.getElementById('profileAvatar').textContent = initials;
+            document.getElementById('profileAvatar').title = nomComplet;
+            
+            // Mise à jour du titre de la page
+            document.title = `Mes Cotations - ${nomComplet}`;
+        }
+        
+        // ========== CHARGEMENT DES DONNÉES ==========
+        async function chargerCours() {
+            try {
+                const snap = await db.collection('cours')
+                    .where('professeurId', '==', currentUserId)
+                    .get();
+                
+                allCours = [];
+                snap.forEach(d => allCours.push({ id: d.id, ...d.data() }));
+                
+                console.log(`✅ ${allCours.length} cours chargés`);
+            } catch(e) { 
+                console.error('Erreur chargement cours:', e); 
+            }
+        }
+        
+        async function chargerPromotions() {
+            try {
+                const snap = await db.collection('promotions').get();
+                allPromotions = [];
+                snap.forEach(d => allPromotions.push({ id: d.id, ...d.data() }));
+                allPromotions.sort((a,b) => (a.nom||'').localeCompare(b.nom||''));
+                
+                console.log(`✅ ${allPromotions.length} promotions chargées`);
+            } catch(e) {
+                console.error('Erreur chargement promotions:', e);
+            }
+        }
+        
+        async function chargerEtudiants() {
+            try {
+                const snap = await db.collection('etudiants').get();
+                allEtudiants = [];
+                snap.forEach(d => allEtudiants.push({ id: d.id, ...d.data() }));
+                
+                console.log(`✅ ${allEtudiants.length} étudiants chargés`);
+            } catch(e) {
+                console.error('Erreur chargement étudiants:', e);
+            }
+        }
+        
+        async function chargerCotationsExistantes() {
+            try {
+                const snap = await db.collection('cotations')
+                    .where('professeurId', '==', currentUserId)
+                    .get();
+                
+                allCotations = [];
+                snap.forEach(d => allCotations.push({ id: d.id, ...d.data() }));
+                
+                console.log(`✅ ${allCotations.length} cotations existantes chargées`);
+            } catch(e) {
+                console.error('Erreur chargement cotations:', e);
+            }
+        }
+        
+        // ========== ACTUALISATION DES SÉLECTEURS ==========
+        function actualiserSelecteursPromotions() {
+            const promosDuProf = [...new Set(allCours.map(c => c.promotionId))];
+            const sel = document.getElementById('promotionSelect');
+            sel.innerHTML = '<option value="">-- Sélectionner une promotion --</option>';
+            
+            if (promosDuProf.length === 0) {
+                sel.innerHTML += '<option value="" disabled>Aucune promotion avec vos cours</option>';
+                return;
+            }
+            
+            allPromotions
+                .filter(p => promosDuProf.includes(p.id))
+                .forEach(p => sel.innerHTML += `<option value="${p.id}">${escapeHtml(p.nom)}</option>`);
+        }
+        
+        // ========== ÉVÉNEMENTS ==========
+        document.getElementById('promotionSelect').addEventListener('change', function() {
+            currentPromoId = this.value;
+            const selCours = document.getElementById('coursSelect');
+            selCours.innerHTML = '<option value="">-- Sélectionner un cours --</option>';
+            
+            if (!currentPromoId) {
+                document.getElementById('exportBtn').disabled = true;
+                return;
+            }
+            
+            const mesCours = allCours.filter(c => c.promotionId === currentPromoId);
+            
+            if (mesCours.length === 0) {
+                selCours.innerHTML += '<option value="" disabled>Aucun cours pour cette promotion</option>';
+                document.getElementById('exportBtn').disabled = true;
+                return;
+            }
+            
+            mesCours.forEach(c => {
+                selCours.innerHTML += `<option value="${c.id}">${escapeHtml(c.nom)} (${c.credits||0} cr)</option>`;
+            });
+            
+            document.getElementById('exportBtn').disabled = true;
+            resetPreview();
+        });
+        
+        document.getElementById('coursSelect').addEventListener('change', function() {
+            currentCoursId = this.value;
+            document.getElementById('exportBtn').disabled = !currentCoursId;
+            resetPreview();
+        });
+        
+        function resetPreview() {
+            document.getElementById('previewCard').style.display = 'none';
+            excelData = [];
+        }
+        
+        // ========== EXPORT EXCEL ==========
+        document.getElementById('exportBtn').addEventListener('click', async function() {
+            if (!currentPromoId || !currentCoursId) {
+                showToast('Sélectionnez une promotion et un cours','warning');
+                return;
+            }
+            
+            // Rechargement instantané des cotations
+            await chargerCotationsExistantes();
+            
+            const etudiantsPromo = allEtudiants
+                .filter(e => e.promotion === currentPromoId)
+                .sort((a,b) => (a.nom||'').localeCompare(b.nom||''));
+            
+            if (etudiantsPromo.length === 0) {
+                showToast('Aucun étudiant dans cette promotion','warning');
+                return;
+            }
+            
+            const cotationMap = {};
+            allCotations.filter(c => c.coursId === currentCoursId).forEach(c => {
+                cotationMap[c.etudiantId] = c;
+            });
+            
+            const cours = allCours.find(c => c.id === currentCoursId);
+            
+            const data = [['N°', 'Matricule', 'Nom étudiant', 'Présence /2', 'TD /2', 'TP /2', 'Interro /4', 'Moyenne /10']];
+            
+            etudiantsPromo.forEach((e, i) => {
+                const cot = cotationMap[e.id] || {};
+                data.push([
+                    i + 1,
+                    e.matricule || e.id,
+                    e.nom || '',
+                    cot.presence !== undefined ? cot.presence : '',
+                    cot.td !== undefined ? cot.td : '',
+                    cot.tp !== undefined ? cot.tp : '',
+                    cot.interro !== undefined ? cot.interro : '',
+                    cot.moyenne !== undefined ? cot.moyenne : ''
+                ]);
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            ws['!cols'] = [
+                { wch: 5 }, { wch: 15 }, { wch: 30 }, { wch: 12 }, { wch: 8 }, { wch: 8 }, { wch: 12 }, { wch: 12 }
+            ];
+            
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Cotations');
+            
+            const coursNom = cours ? cours.nom.replace(/[^a-zA-Z0-9]/g, '_') : 'cours';
+            XLSX.writeFile(wb, `cotation_${coursNom}.xlsx`);
+            
+            const nbExistantes = Object.keys(cotationMap).length;
+            showToast(`✅ Fichier exporté. ${nbExistantes > 0 ? nbExistantes + ' cotes existantes pré-remplies.' : 'Complétez les cotes puis importez.'}`,'success');
+        });
+        
+        // ========== IMPORT EXCEL ==========
+        document.getElementById('excelFileInput').addEventListener('change', function(e) {
+            document.getElementById('previewImportBtn').disabled = !e.target.files[0];
+        });
+        
+        document.getElementById('previewImportBtn').addEventListener('click', async function() {
+            const file = document.getElementById('excelFileInput').files[0];
+            if (!file) return;
+            
+            if (!currentPromoId || !currentCoursId) {
+                showToast('Veuillez d\'abord sélectionner une promotion et un cours','warning');
+                return;
+            }
+            
+            try {
+                const data = await lireExcel(file);
+                
+                if (!data || data.length < 2) {
+                    showToast('Fichier vide ou invalide','danger');
+                    return;
+                }
+                
+                const header = data[0];
+                if (header.length < 7) {
+                    showToast('Structure du fichier incorrecte. Utilisez le modèle exporté.','danger');
+                    return;
+                }
+                
+                excelData = [];
+                for (let i = 1; i < data.length; i++) {
+                    const row = data[i];
+                    if (!row[1] || !row[2]) continue;
+                    
+                    excelData.push({
+                        matricule: String(row[1]).trim(),
+                        nom: String(row[2]).trim(),
+                        presence: parseFloatSafe(row[3]),
+                        td: parseFloatSafe(row[4]),
+                        tp: parseFloatSafe(row[5]),
+                        interro: parseFloatSafe(row[6])
+                    });
+                }
+                
+                showToast(`✅ ${excelData.length} lignes importées`,'success');
+                afficherApercu();
+                
+            } catch(err) {
+                console.error(err);
+                showToast('Erreur lecture du fichier: '+err.message,'danger');
+            }
+        });
+        
+        function lireExcel(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    try {
+                        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                        const sheet = wb.Sheets[wb.SheetNames[0]];
+                        const json = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+                        resolve(json);
+                    } catch(err) { reject(err); }
+                };
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        
+        // ========== APERÇU ==========
+        function afficherApercu() {
+            if (excelData.length === 0) return;
+            
+            document.getElementById('previewCard').style.display = 'block';
+            document.getElementById('previewCard').scrollIntoView({ behavior: 'smooth' });
+            
+            const etudiantsPromo = allEtudiants.filter(e => e.promotion === currentPromoId);
+            
+            const dataComplete = excelData.map(row => {
+                const etudiant = etudiantsPromo.find(e => 
+                    e.matricule === row.matricule || e.id === row.matricule
+                );
+                const moyenne = calculerMoyenne(row.presence, row.td, row.tp, row.interro);
+                return {
+                    ...row,
+                    etudiantId: etudiant ? etudiant.id : row.matricule,
+                    etudiantNom: etudiant ? etudiant.nom : row.nom,
+                    moyenne: moyenne
+                };
+            });
+            
+            const total = dataComplete.length;
+            const moyennes = dataComplete.map(d => d.moyenne);
+            const moyenneClasse = moyennes.length > 0 ? 
+                (moyennes.reduce((a,b) => a+b, 0) / moyennes.length).toFixed(2) : 0;
+            const reussis = moyennes.filter(m => m >= 5).length;
+            
+            document.getElementById('statsMini').innerHTML = `
+                <div class="stat-mini-item"><strong>${total}</strong> Étudiants</div>
+                <div class="stat-mini-item"><strong>${moyenneClasse}</strong> Moy. classe /10</div>
+                <div class="stat-mini-item"><strong>${reussis}</strong> Réussite (≥5)</div>
+                <div class="stat-mini-item"><strong>${total - reussis}</strong> Échec (<5)</div>
+            `;
+            
+            let html = `
+                <table class="cotes-table">
+                    <thead>
+                        <tr>
+                            <th>N°</th><th>Matricule</th><th>Nom étudiant</th>
+                            <th>Présence /2</th><th>TD /2</th><th>TP /2</th><th>Interro /4</th>
+                            <th>Moyenne /10</th><th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+            
+            dataComplete.forEach((d, i) => {
+                const statut = d.moyenne >= 5 ? 'Réussite' : 'Échec';
+                const statutClass = d.moyenne >= 5 ? 'text-success' : 'text-danger';
+                
+                html += `<tr>
+                    <td>${i+1}</td>
+                    <td><code>${escapeHtml(d.matricule)}</code></td>
+                    <td style="text-align:left;"><strong>${escapeHtml(d.etudiantNom)}</strong></td>
+                    <td>${d.presence}</td><td>${d.td}</td><td>${d.tp}</td><td>${d.interro}</td>
+                    <td class="moyenne-cell ${d.moyenne >= 5 ? 'reussi' : 'echoue'}">${d.moyenne.toFixed(1)}</td>
+                    <td class="${statutClass}"><small>${statut}</small></td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            document.getElementById('previewTable').innerHTML = html;
+        }
+        
+        // ========== ANNULER ==========
+        document.getElementById('cancelPreviewBtn').addEventListener('click', function() {
+            resetPreview();
+            showToast('Aperçu annulé','warning');
+        });
+        
+        // ========== PUBLICATION ==========
+        document.getElementById('publishBtn').addEventListener('click', async function() {
+            if (excelData.length === 0) { 
+                showToast('Aucune donnée à publier','warning'); 
+                return; 
+            }
+            if (!currentCoursId || !currentPromoId) { 
+                showToast('Sélectionnez une promotion et un cours','warning'); 
+                return; 
+            }
+            
+            const nbExistantes = allCotations.filter(c => c.coursId === currentCoursId).length;
+            const msg = nbExistantes > 0 
+                ? `Mettre à jour les cotes pour ${excelData.length} étudiants ?\n(${nbExistantes} cotes existantes seront mises à jour)`
+                : `Publier les cotes pour ${excelData.length} étudiants ?`;
+            
+            if (!confirm(msg)) return;
+            
+            const btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner me-2"></span> Publication...';
+            
+            try {
+                const etudiantsPromo = allEtudiants.filter(e => e.promotion === currentPromoId);
+                const cours = allCours.find(c => c.id === currentCoursId);
+                
+                const batch = db.batch();
+                let count = 0;
+                
+                excelData.forEach(row => {
+                    const etudiant = etudiantsPromo.find(e => 
+                        e.matricule === row.matricule || e.id === row.matricule
+                    );
+                    if (!etudiant) return;
+                    
+                    const moyenne = calculerMoyenne(row.presence, row.td, row.tp, row.interro);
+                    const docId = `${currentCoursId}_${etudiant.id}`;
+                    const ref = db.collection('cotations').doc(docId);
+                    
+                    batch.set(ref, {
+                        coursId: currentCoursId,
+                        coursNom: cours ? cours.nom : '',
+                        promotionId: currentPromoId,
+                        etudiantId: etudiant.id,
+                        etudiantNom: etudiant.nom,
+                        etudiantMatricule: etudiant.matricule || etudiant.id,
+                        professeurId: currentUser.id,
+                        professeurNom: currentUser.nomComplet,
+                        presence: row.presence, 
+                        td: row.td, 
+                        tp: row.tp, 
+                        interro: row.interro,
+                        moyenne: moyenne,
+                        dateMiseAJour: firebase.firestore.FieldValue.serverTimestamp(),
+                        dateCreation: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                    count++;
+                });
+                
+                if (count > 0) {
+                    await batch.commit();
+                    showToast(`✅ ${count} cotes publiées avec succès !`,'success');
+                    resetPreview();
+                    // Rechargement des cotations
+                    await chargerCotationsExistantes();
+                } else {
+                    showToast('Aucun étudiant correspondant trouvé','warning');
+                }
+            } catch(err) {
+                console.error(err);
+                showToast('Erreur: '+err.message,'danger');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cloud-upload-fill"></i> Publier les cotes';
+            }
+        });
+        
+        // ========== DÉMARRAGE INSTANTANÉ ==========
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp().then(() => {
+                // Actualisation des sélecteurs après chargement
+                actualiserSelecteursPromotions();
+                console.log('✅ Application prête - Données en temps réel');
+            });
+        });
+        
+        // Écouteur temps réel pour les modifications Firebase (optionnel)
+        db.collection('cotations')
+            .where('professeurId', '==', currentUserId)
+            .onSnapshot((snapshot) => {
+                allCotations = [];
+                snapshot.forEach(doc => {
+                    allCotations.push({ id: doc.id, ...doc.data() });
+                });
+                console.log('🔄 Mise à jour temps réel des cotations');
+            }, (error) => {
+                console.error('Erreur écouteur temps réel:', error);
+            });
+    </script>
+</body>
+</html>

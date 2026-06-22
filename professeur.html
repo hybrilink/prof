@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Espace Professeur - Faculté Agronomique</title>
+    <meta name="application-name" content="hybrilink Professeur">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="hybrilink Professeur">
+    <meta name="description" content="Espace Professeur - Faculté Agronomique">
+    <meta name="theme-color" content="#003366">
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-96x96.png">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <style>
+        :root { --primary-blue: #003366; --dark-blue: #002244; --accent-yellow: #ffb347; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
+        
+        .navbar-custom { background: var(--primary-blue); box-shadow: 0 4px 15px rgba(0,0,0,0.2); padding: 10px 0; }
+        .navbar-right { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        
+        .profile-photo {
+            width: 50px; height: 50px; border-radius: 50%;
+            background: var(--accent-yellow);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s;
+            font-weight: bold; color: var(--primary-blue); font-size: 20px;
+        }
+        .profile-photo:hover { transform: scale(1.05); }
+        
+        .home-btn {
+            background: var(--accent-yellow); color: var(--primary-blue);
+            border: none; padding: 8px 20px; border-radius: 25px;
+            font-weight: bold; transition: all 0.3s;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .home-btn:hover { background: #ff9800; transform: translateY(-2px); }
+        
+        .menu-card {
+            background: white; border-radius: 20px; padding: 30px;
+            text-align: center; cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 20px;
+            text-decoration: none; color: inherit; display: block;
+        }
+        .menu-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 30px rgba(0,0,0,0.15);
+        }
+        .menu-icon { font-size: 50px; color: var(--primary-blue); margin-bottom: 15px; }
+        .menu-title { font-size: 18px; font-weight: 700; color: var(--primary-blue); }
+        .menu-subtitle { font-size: 12px; color: #888; margin-top: 5px; }
+        
+        .content-panel {
+            background: white; border-radius: 20px; padding: 30px;
+            margin-top: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .content-panel.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .panel-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+        }
+        .panel-header h4 { color: var(--primary-blue); }
+        
+        .btn-action {
+            background: var(--primary-blue); color: white;
+            border: none; padding: 10px 20px; border-radius: 10px;
+            transition: all 0.3s;
+        }
+        .btn-action:hover { background: var(--dark-blue); transform: translateY(-2px); }
+        
+        .toast-notification { position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; }
+        .notification-toast { animation: slideInRight 0.3s ease-out; }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        .info-text {
+            text-align: center; margin-top: 25px; padding-top: 20px;
+            border-top: 1px solid #e0e0e0; font-size: 13px; color: #888;
+        }
+        .info-text i { color: var(--primary-blue); }
+        .info-text img { border-radius: 30px; }
+        
+        .footer {
+            background: var(--dark-blue); color: #fff;
+            text-align: center; padding: 15px 0; margin-top: auto; font-size: 14px;
+        }
+        
+        .welcome-card {
+            background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
+            color: white; border-radius: 20px; padding: 25px; margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        .welcome-card h4 { font-size: 24px; margin-bottom: 10px; }
+        .welcome-card h4 i { color: var(--accent-yellow); }
+        
+        .logout-btn {
+            background: transparent; color: white; border: 1px solid rgba(255,255,255,0.5);
+            padding: 8px 20px; border-radius: 25px; font-weight: bold;
+            transition: all 0.3s; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .logout-btn:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
+        
+        .sync-status {
+            font-size: 12px; padding: 5px 10px; border-radius: 20px;
+            background: #28a745; color: white; display: inline-flex; align-items: center; gap: 5px;
+        }
+        .sync-status.offline { background: #dc3545; }
+        
+        .loading-spinner {
+            display: inline-block; width: 20px; height: 20px;
+            border: 3px solid #f3f3f3; border-top: 3px solid var(--primary-blue);
+            border-radius: 50%; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .professor-name-nav {
+            color: white; font-weight: 500; font-size: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .professor-name-nav i { color: var(--accent-yellow); }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-custom">
+        <div class="container">
+            <a class="navbar-brand text-white" href="#" id="homeBrand">
+                <i class="bi bi-person-workspace"></i> Espace Professeur - Faculté Agronomique
+            </a>
+            <div class="navbar-right">
+                <div id="syncStatus" class="sync-status"><i class="bi bi-cloud-check"></i> Synchro</div>
+                <span class="professor-name-nav d-none d-md-inline-flex" id="professorNameNav">
+                    <i class="bi bi-person-badge"></i> <span id="navProfessorName">Professeur</span>
+                </span>
+                <div class="profile-photo" id="profileAvatar" title="Voir le profil">P</div>
+                <button class="logout-btn" id="logoutBtn">
+                    <i class="bi bi-box-arrow-right"></i> Déconnexion
+                </button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-notification"></div>
+    
+    <div class="container mt-4" style="flex: 1;">
+        <!-- Page d'accueil -->
+        <div id="homePage">
+            <!-- Welcome Card -->
+            <div class="welcome-card">
+                <h4><i class="bi bi-hand-wave"></i> Bonjour, <span id="welcomeName">Professeur</span> !</h4>
+                <p class="mb-0 opacity-75">Accédez à vos outils pédagogiques et suivez vos activités académiques.</p>
+            </div>
+            
+            <!-- Menu Cards -->
+            <div class="row">
+                <div class="col-md-4 col-sm-6">
+                    <a href="mes-cours.html" class="menu-card">
+                        <div class="menu-icon"><i class="bi bi-book-fill"></i></div>
+                        <div class="menu-title">Mes Cours</div>
+                        <div class="menu-subtitle">Gérer vos cours</div>
+                    </a>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <a href="mes-cotations.html" class="menu-card">
+                        <div class="menu-icon"><i class="bi bi-pencil-square"></i></div>
+                        <div class="menu-title">Mes Cotations</div>
+                        <div class="menu-subtitle">Gérer les notes</div>
+                    </a>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <a href="mon-horaire.html" class="menu-card">
+                        <div class="menu-icon"><i class="bi bi-calendar-week"></i></div>
+                        <div class="menu-title">Mon Horaire</div>
+                        <div class="menu-subtitle">Emploi du temps</div>
+                    </a>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <a href="projet.html" class="menu-card">
+                        <div class="menu-icon"><i class="bi bi-kanban-fill"></i></div>
+                        <div class="menu-title">Projets</div>
+                        <div class="menu-subtitle">Gérer vos projets</div>
+                    </a>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <a href="a-propos.html" class="menu-card">
+                        <div class="menu-icon"><i class="bi bi-info-circle-fill"></i></div>
+                        <div class="menu-title">À Propos</div>
+                        <div class="menu-subtitle">Informations</div>
+                    </a>
+                </div>
+                <div class="col-md-4 col-sm-6">
+                    <a href="profil.html" class="menu-card">
+                        <div class="menu-icon"><i class="bi bi-person-circle"></i></div>
+                        <div class="menu-title">Mon Profil</div>
+                        <div class="menu-subtitle">Voir mon profil</div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Info text -->
+    <div class="info-text">
+        <i class="bi bi-shield-check"></i> HYBRILINK-TECH votre partenaire de A à Z<br>
+        <img src="t.png" width="50px" style="border-radius:30px;" alt="HYBRILINK" onerror="this.style.display='none'">
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p class="mb-0">© 2024 HYBRILINK-TECH | Faculté des Sciences Agronomiques</p>
+        </div>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Vérification de session et affichage du nom du professeur
+        (function() {
+            const sessionData = localStorage.getItem('professeur_session');
+            if(!sessionData) { window.location.href = 'login.html'; return; }
+            
+            try {
+                const session = JSON.parse(sessionData);
+                const now = Date.now();
+                const sessionAge = now - session.timestamp;
+                const maxAge = 24 * 60 * 60 * 1000;
+                
+                if(!session.user || session.user.role !== 'professeur' || sessionAge > maxAge) {
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                const user = session.user;
+                
+                // Récupération du nom complet
+                const nomComplet = user.nomComplet || 'Professeur';
+                
+                // Affichage du NOM COMPLET dans la carte de bienvenue (modifié ici)
+                document.getElementById('welcomeName').textContent = nomComplet;
+                
+                // Affichage du nom complet dans la navbar
+                document.getElementById('navProfessorName').textContent = nomComplet;
+                
+                // Initiales pour l'avatar
+                if(nomComplet !== 'Professeur') {
+                    const initials = nomComplet.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                    document.getElementById('profileAvatar').textContent = initials;
+                }
+                
+                // Tooltip pour l'avatar avec le nom complet
+                document.getElementById('profileAvatar').title = nomComplet;
+                
+                console.log('✅ Espace Professeur - Bienvenue ' + nomComplet);
+            } catch(e) {
+                localStorage.removeItem('professeur_session');
+                window.location.href = 'login.html';
+            }
+        })();
+        
+        // Déconnexion
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            if(confirm('Voulez-vous vraiment vous déconnecter ?')) {
+                localStorage.removeItem('professeur_session');
+                window.location.href = 'login.html';
+            }
+        });
+        
+        // Bouton marque
+        document.getElementById('homeBrand')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('homePage').style.display = 'block';
+        });
+        
+        // Clic sur l'avatar pour aller au profil
+        document.getElementById('profileAvatar').addEventListener('click', () => {
+            window.location.href = 'profil.html';
+        });
+        
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const bgColor = type === 'success' ? '#28a745' : '#dc3545';
+            const icon = type === 'success' ? 'check-circle-fill' : 'x-circle-fill';
+            const toastHtml = `<div class="toast notification-toast" style="background:${bgColor};color:white;border-radius:10px;margin-bottom:10px;"><div class="toast-body"><i class="bi bi-${icon} me-2"></i>${message}</div></div>`;
+            container.insertAdjacentHTML('afterbegin', toastHtml);
+            setTimeout(() => container.firstElementChild?.remove(), 4000);
+        }
+        
+        console.log('✅ Espace Professeur - Faculté Agronomique');
+    </script>
+</body>
+</html>

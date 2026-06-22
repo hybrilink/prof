@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace Professeur - Redirection</title>
+    <meta name="theme-color" content="#003366">
+    <meta name="description" content="Connexion à l'espace étudiant de la Faculté Agronomique - UNILU">
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+    <link rel="icon" type="image/png" href="icon-96x96.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FAC Agro">
+    <style>
+        :root { --primary-blue: #003366; --dark-blue: #002244; --accent-yellow: #ffb347; }
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .loader-container { text-align: center; color: white; }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-top-color: var(--accent-yellow);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .logo { font-size: 48px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="loader-container">
+        <div class="logo">👨‍🏫</div>
+        <div class="spinner"></div>
+        <p>Vérification de votre session...</p>
+    </div>
+    <script>
+        (function() {
+            const sessionData = localStorage.getItem('professeur_session');
+            if (sessionData) {
+                try {
+                    const session = JSON.parse(sessionData);
+                    const now = Date.now();
+                    const sessionAge = now - session.timestamp;
+                    const maxAge = 24 * 60 * 60 * 1000;
+                    if (session.user && session.user.role === 'professeur' && sessionAge < maxAge) {
+                        window.location.href = 'professeur.html';
+                    } else {
+                        localStorage.removeItem('professeur_session');
+                        window.location.href = 'login.html';
+                    }
+                } catch (e) {
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                }
+            } else {
+                window.location.href = 'login.html';
+            }
+        })();
+
+        // Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
+            });
+        }
+
+
+    </script>
+</body>
+</html>

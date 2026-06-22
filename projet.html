@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Suivi Projets - Professeur</title>
+    <meta name="theme-color" content="#003366">
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-96x96.png">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        :root { 
+            --primary-blue: #003366; 
+            --dark-blue: #002244; 
+            --accent-yellow: #ffb347; 
+            --light-gray: #f0f2f5;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            background: var(--light-gray); 
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+        }
+        
+        .navbar-custom { 
+            background: var(--primary-blue); 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+            padding: 12px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1rem;
+            color: white !important;
+        }
+        
+        .btn-back {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 18px;
+            border-radius: 25px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            text-decoration: none;
+        }
+        
+        .btn-back:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateX(-3px);
+            color: white;
+        }
+        
+        .container-custom {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px 15px 40px;
+        }
+        
+        .section-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+        
+        .section-card h3 {
+            color: var(--primary-blue);
+            font-weight: 700;
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+        }
+        
+        .section-card .subtitle {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--primary-blue);
+            font-size: 0.9rem;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 12px;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 0.2rem rgba(0,51,102,0.15);
+        }
+        
+        .btn-action {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            width: 100%;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .btn-action:hover {
+            background: var(--dark-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,51,102,0.3);
+        }
+        
+        .btn-success-action {
+            background: var(--success-green);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            width: 100%;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .btn-success-action:hover {
+            background: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(40,167,69,0.3);
+        }
+        
+        .search-box {
+            position: relative;
+        }
+        
+        .search-box input {
+            padding-right: 40px;
+        }
+        
+        .search-box i {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+        }
+        
+        .student-detail-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+            border-left: 4px solid var(--primary-blue);
+        }
+        
+        .student-detail-card .detail-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        
+        .student-detail-card .detail-row i {
+            color: var(--primary-blue);
+            width: 20px;
+            text-align: center;
+        }
+        
+        .student-detail-card .detail-row strong {
+            color: var(--primary-blue);
+            min-width: 120px;
+        }
+        
+        .alert-custom {
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .loading-spinner-box {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #e0e0e0;
+            border-top: 5px solid var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        /* Info étudiant trouvé */
+        .student-found-card {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border-radius: 15px;
+            padding: 20px 25px;
+            margin-bottom: 20px;
+            border: 2px solid var(--primary-blue);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .student-found-card:hover {
+            box-shadow: 0 8px 25px rgba(0,51,102,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .student-found-card .student-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+        }
+        
+        .student-found-card .student-details {
+            font-size: 0.85rem;
+            color: #555;
+            margin-top: 5px;
+        }
+        
+        .etape-select-group {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 15px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .etape-select-group .current-etape-info {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .etape-select-group .current-etape-info strong {
+            color: var(--primary-blue);
+        }
+        
+        @media (max-width: 768px) {
+            .container-custom {
+                padding: 15px 10px 30px;
+            }
+            .section-card {
+                padding: 20px 15px;
+                border-radius: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-kanban-fill"></i> SUIVI DE PROJETS
+            </a>
+            <a href="professeur.html" class="btn-back">
+                <i class="bi bi-arrow-left"></i> Retour
+            </a>
+        </div>
+    </nav>
+    
+    <div class="container-custom" id="mainContent">
+        <div id="loadingIndicator" class="text-center mt-5">
+            <div class="spinner"></div>
+            <p class="text-muted mt-3">Chargement de vos projets...</p>
+        </div>
+    </div>
+    
+    <div class="loading-overlay" id="loadingOverlay" style="display:none;">
+        <div class="loading-spinner-box">
+            <div class="spinner"></div>
+            <p class="mb-0" id="loadingText">Traitement en cours...</p>
+        </div>
+    </div>
+
+    <script>
+        // ==================== FIREBASE ====================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBb82N2-5ns7qKjQBAj5UvDW87s2PZ27F0",
+            authDomain: "fsa-unilu.firebaseapp.com",
+            projectId: "fsa-unilu",
+            storageBucket: "fsa-unilu.firebasestorage.app",
+            messagingSenderId: "36551990738",
+            appId: "1:36551990738:web:e91fdcb53f8aab5d1b7c0b"
+        };
+        
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // ==================== LISTE DES DÉPARTEMENTS ====================
+        const DEPARTEMENTS = [
+            "Agronomie Générale",
+            "Économie Agricole",
+            "Sciences du Sol",
+            "Protection des Végétaux",
+            "Zootechnie",
+            "Génie Rural"
+        ];
+        
+        function getDepartementName(deptValue) {
+            if (DEPARTEMENTS.includes(deptValue)) return deptValue;
+            return deptValue || 'Non défini';
+        }
+        
+        // ==================== SESSION ====================
+        let currentProfessor = null;
+        
+        function checkSession() {
+            const sessionData = localStorage.getItem('professeur_session');
+            if (!sessionData) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            try {
+                const session = JSON.parse(sessionData);
+                const now = Date.now();
+                const maxAge = 24 * 60 * 60 * 1000;
+                
+                if (!session.user || session.user.role !== 'professeur' || (now - session.timestamp) > maxAge) {
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return false;
+                }
+                
+                currentProfessor = session.user;
+                return true;
+            } catch(e) {
+                window.location.href = 'login.html';
+                return false;
+            }
+        }
+        
+        // ==================== UTILITAIRES ====================
+        function showLoading(show, message = 'Traitement en cours...') {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+            document.getElementById('loadingText').textContent = message;
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function showToast(message, type = 'success') {
+            const existing = document.querySelector('.toast-custom');
+            if (existing) existing.remove();
+            
+            const colors = {
+                success: { bg: '#28a745', icon: 'check-circle-fill' },
+                warning: { bg: '#ffc107', icon: 'exclamation-triangle-fill', textColor: '#333' },
+                danger: { bg: '#dc3545', icon: 'x-circle-fill' },
+                info: { bg: '#17a2b8', icon: 'info-circle-fill' }
+            };
+            const config = colors[type] || colors.success;
+            const textColor = config.textColor || 'white';
+            
+            const toastHtml = `
+                <div class="toast-custom" style="position:fixed;top:20px;right:20px;z-index:10000;background:${config.bg};color:${textColor};padding:15px 20px;border-radius:12px;box-shadow:0 5px 20px rgba(0,0,0,0.2);max-width:350px;font-weight:500;animation:slideInRight 0.3s ease-out;">
+                    <i class="bi bi-${config.icon} me-2"></i>${message}
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', toastHtml);
+            setTimeout(() => {
+                const t = document.querySelector('.toast-custom');
+                if (t) t.remove();
+            }, 4000);
+        }
+        
+        // ==================== DONNÉES ====================
+        let allProjects = []; // Tous les projets (pour recherche)
+        let selectedProject = null;
+        
+        async function loadAllProjects() {
+            try {
+                const snapshot = await db.collection('projets').get();
+                allProjects = [];
+                snapshot.forEach(doc => {
+                    allProjects.push({ id: doc.id, ...doc.data() });
+                });
+                return allProjects;
+            } catch (error) {
+                console.error('Erreur chargement projets:', error);
+                return [];
+            }
+        }
+        
+        // ==================== RENDU ====================
+        async function renderPage() {
+            const container = document.getElementById('mainContent');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            
+            await loadAllProjects();
+            
+            let html = '';
+            
+            // Section 1 : Recherche par matricule
+            html += `
+                <div class="section-card">
+                    <h3><i class="bi bi-search me-2"></i>Rechercher un Étudiant</h3>
+                    <p class="subtitle">Entrez le matricule ou le nom d'un étudiant pour afficher ses informations et suivre son projet.</p>
+                    
+                    <div class="search-box mb-3">
+                        <input type="text" class="form-control" id="searchMatricule" 
+                               placeholder="Entrez le matricule ou le nom de l'étudiant...">
+                        <i class="bi bi-search"></i>
+                    </div>
+                    <div id="searchResult"></div>
+                </div>
+            `;
+            
+            // Section 2 : Détails et suivi (affiché si un projet est sélectionné)
+            html += `<div id="projectDetailSection"></div>`;
+            
+            container.innerHTML = html;
+            
+            // Setup recherche
+            setupSearch();
+            
+            // Si un projet était sélectionné, le réafficher
+            if (selectedProject) {
+                displayProjectDetail(selectedProject);
+            }
+        }
+        
+        function setupSearch() {
+            const input = document.getElementById('searchMatricule');
+            if (!input) return;
+            
+            input.addEventListener('input', function() {
+                const searchTerm = this.value.trim().toLowerCase();
+                const resultDiv = document.getElementById('searchResult');
+                
+                if (searchTerm.length < 2) {
+                    resultDiv.innerHTML = '';
+                    return;
+                }
+                
+                // Chercher dans tous les projets par matricule ou nom
+                const foundProjects = allProjects.filter(p => 
+                    (p.etudiantMatricule && p.etudiantMatricule.toLowerCase().includes(searchTerm)) ||
+                    (p.etudiantNom && p.etudiantNom.toLowerCase().includes(searchTerm))
+                );
+                
+                if (foundProjects.length > 0) {
+                    resultDiv.innerHTML = foundProjects.map(project => {
+                        const pourcentage = (project.etape || 0) * 25;
+                        let barColor = '#dc3545';
+                        if (pourcentage >= 100) barColor = '#28a745';
+                        else if (pourcentage >= 75) barColor = '#ffc107';
+                        else if (pourcentage >= 50) barColor = '#fd7e14';
+                        
+                        const deptName = getDepartementName(project.departementId);
+                        const isMyStudent = project.directeurId === currentProfessor.id;
+                        
+                        return `
+                            <div class="student-found-card" onclick="selectProject('${project.id}')" 
+                                 style="${isMyStudent ? '' : 'opacity:0.7; border-color:#ff9800;'}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="student-name">
+                                            <i class="bi ${isMyStudent ? 'bi-person-check-fill text-success' : 'bi-person-fill'} me-2"></i>
+                                            ${escapeHtml(project.etudiantNom || 'N/A')}
+                                            ${!isMyStudent ? '<span class="badge bg-warning text-dark ms-2" style="font-size:0.7rem;">Non assigné à vous</span>' : ''}
+                                        </div>
+                                        <div class="student-details">
+                                            Matricule: <strong>${escapeHtml(project.etudiantMatricule || 'N/A')}</strong> | 
+                                            Promotion: ${escapeHtml(project.promotion || 'N/A')} | 
+                                            Département: ${escapeHtml(deptName)}
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="mb-1">
+                                            <span style="font-weight:700;color:${barColor};">${pourcentage}%</span>
+                                        </div>
+                                        <div class="progress" style="width:80px;height:6px;background:#e0e0e0;border-radius:3px;">
+                                            <div style="width:${pourcentage}%;height:100%;background:${barColor};border-radius:3px;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-primary"><i class="bi bi-hand-index"></i> Cliquez pour voir les détails et gérer le suivi</small>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-warning alert-custom">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Aucun étudiant trouvé avec "${escapeHtml(searchTerm)}". Vérifiez le matricule ou le nom.
+                        </div>
+                    `;
+                }
+            });
+        }
+        
+        function selectProject(projectId) {
+            const project = allProjects.find(p => p.id === projectId);
+            if (!project) return;
+            
+            selectedProject = project;
+            displayProjectDetail(project);
+            
+            document.getElementById('projectDetailSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function getEtapeLabel(etape) {
+            const labels = ['Aucune étape', 'Étape 1 - 25% (Démarrage)', 'Étape 2 - 50% (Intermédiaire)', 'Étape 3 - 75% (Avancé)', 'Étape 4 - 100% (Feu Vert)'];
+            return labels[etape] || `Étape ${etape}`;
+        }
+        
+        function displayProjectDetail(project) {
+            const detailSection = document.getElementById('projectDetailSection');
+            if (!detailSection) return;
+            
+            const deptName = getDepartementName(project.departementId);
+            const currentEtape = project.etape || 0;
+            const pourcentage = currentEtape * 25;
+            
+            let barColor = '#dc3545';
+            if (pourcentage >= 100) barColor = '#28a745';
+            else if (pourcentage >= 75) barColor = '#ffc107';
+            else if (pourcentage >= 50) barColor = '#fd7e14';
+            
+            const isMyStudent = project.directeurId === currentProfessor.id;
+            
+            // Options pour le select des étapes (on peut choisir n'importe quelle étape)
+            let etapeOptions = '<option value="0">Aucune étape (0%)</option>';
+            for (let i = 1; i <= 4; i++) {
+                const selected = (currentEtape === i) ? 'selected' : '';
+                etapeOptions += `<option value="${i}" ${selected}>${getEtapeLabel(i)}</option>`;
+            }
+            
+            detailSection.innerHTML = `
+                <div class="section-card">
+                    <h3><i class="bi bi-file-earmark-text-fill me-2"></i>Détails du Projet</h3>
+                    <p class="subtitle">Suivi du projet de <strong>${escapeHtml(project.etudiantNom || 'N/A')}</strong></p>
+                    
+                    ${!isMyStudent ? `
+                        <div class="alert alert-warning alert-custom">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            <strong>Attention :</strong> Cet étudiant ne vous est pas assigné comme directeur. Vous pouvez consulter mais les modifications seront enregistrées.
+                        </div>
+                    ` : ''}
+                    
+                    <div class="student-detail-card">
+                        <div class="detail-row">
+                            <i class="bi bi-person-fill"></i>
+                            <strong>Nom complet :</strong>
+                            <span>${escapeHtml(project.etudiantNom || 'Non renseigné')}</span>
+                        </div>
+                        <div class="detail-row">
+                            <i class="bi bi-upc-scan"></i>
+                            <strong>Matricule :</strong>
+                            <span>${escapeHtml(project.etudiantMatricule || 'Non renseigné')}</span>
+                        </div>
+                        <div class="detail-row">
+                            <i class="bi bi-mortarboard-fill"></i>
+                            <strong>Promotion :</strong>
+                            <span>${escapeHtml(project.promotion || 'Non renseignée')}</span>
+                        </div>
+                        <div class="detail-row">
+                            <i class="bi bi-building"></i>
+                            <strong>Département :</strong>
+                            <span>${escapeHtml(deptName)}</span>
+                        </div>
+                        <div class="detail-row">
+                            <i class="bi bi-journal-text"></i>
+                            <strong>Sujet original :</strong>
+                            <span>${escapeHtml(project.sujet || 'Non renseigné')}</span>
+                        </div>
+                        ${project.sujetReformule ? `
+                        <div class="detail-row">
+                            <i class="bi bi-pencil-square"></i>
+                            <strong>Sujet reformulé :</strong>
+                            <span style="color:var(--accent-yellow);font-weight:500;">${escapeHtml(project.sujetReformule)}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <!-- Formulaire de modification du sujet -->
+                    <div class="mt-4">
+                        <h5 class="mb-3"><i class="bi bi-pencil-fill me-2"></i>Modifier / Reformuler le sujet</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="editDepartement" class="form-label">Département</label>
+                                <select class="form-select" id="editDepartement">
+                                    <option value="">-- Sélectionner --</option>
+                                    ${DEPARTEMENTS.map(dept => `
+                                        <option value="${dept}" ${project.departementId === dept ? 'selected' : ''}>
+                                            ${dept}
+                                        </option>
+                                    `).join('')}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="editSujetReformule" class="form-label">Sujet reformulé</label>
+                                <textarea class="form-control" id="editSujetReformule" rows="3" 
+                                          placeholder="Reformulez le sujet si nécessaire...">${escapeHtml(project.sujetReformule || '')}</textarea>
+                            </div>
+                        </div>
+                        
+                        <button class="btn-action mb-4" onclick="updateProjectSubject('${project.id}')">
+                            <i class="bi bi-save me-2"></i> Enregistrer les modifications
+                        </button>
+                    </div>
+                    
+                    <!-- Gestion des étapes avec SELECT -->
+                    <hr>
+                    <h5 class="mb-3"><i class="bi bi-check-circle-fill me-2"></i>Validation des étapes (Feu Vert)</h5>
+                    
+                    <div class="etape-select-group">
+                        <div class="current-etape-info">
+                            <i class="bi bi-info-circle me-1"></i> 
+                            Étape actuelle : <strong>${getEtapeLabel(currentEtape)}</strong>
+                        </div>
+                        
+                        <div class="row align-items-end">
+                            <div class="col-md-8 mb-3">
+                                <label for="etapeSelect" class="form-label">
+                                    <i class="bi bi-list-check me-1"></i> Sélectionner l'étape à valider
+                                </label>
+                                <select class="form-select" id="etapeSelect">
+                                    ${etapeOptions}
+                                </select>
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle"></i> 
+                                    Vous pouvez sélectionner n'importe quelle étape, même sauter des étapes. 
+                                    L'étudiant verra la progression correspondante.
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <button class="btn-success-action" onclick="validateEtape('${project.id}')">
+                                    <i class="bi bi-check-lg me-2"></i> Valider cette étape
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Progression actuelle -->
+                    <div class="mt-3">
+                        <label class="form-label">Progression actuelle : ${pourcentage}%</label>
+                        <div class="progress" style="height: 25px; border-radius: 12px;">
+                            <div class="progress-bar ${pourcentage >= 100 ? 'bg-success' : pourcentage >= 75 ? 'bg-warning' : pourcentage >= 50 ? '' : 'bg-danger'}" 
+                                 role="progressbar" 
+                                 style="width: ${pourcentage}%; font-weight:700; background:${barColor};"
+                                 aria-valuenow="${pourcentage}" aria-valuemin="0" aria-valuemax="100">
+                                ${pourcentage}%
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${pourcentage >= 100 ? `
+                        <div class="alert alert-success alert-custom mt-3">
+                            <i class="bi bi-trophy-fill me-2"></i>
+                            <strong>Félicitations !</strong> Le Feu Vert a été accordé pour ce projet. L'étudiant peut maintenant télécharger son document.
+                        </div>
+                    ` : `
+                        <div class="alert alert-info alert-custom mt-3">
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                            Quand l'étudiant atteindra 100%, il pourra télécharger son document Feu Vert.
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+        
+        async function validateEtape(projectId) {
+            const etapeSelect = document.getElementById('etapeSelect');
+            if (!etapeSelect) return;
+            
+            const nouvelleEtape = parseInt(etapeSelect.value);
+            const project = allProjects.find(p => p.id === projectId);
+            if (!project) return;
+            
+            const currentEtape = project.etape || 0;
+            
+            if (nouvelleEtape === currentEtape) {
+                showToast('Cette étape est déjà la progression actuelle', 'info');
+                return;
+            }
+            
+            const etapeLabels = ['Aucune étape (0%)', 'Étape 1 - 25%', 'Étape 2 - 50%', 'Étape 3 - 75%', 'Étape 4 - 100% (Feu Vert)'];
+            const direction = nouvelleEtape > currentEtape ? 'avancer' : 'reculer';
+            
+            if (!confirm(`Confirmer le changement de progression pour l'étudiant ${project.etudiantNom || project.etudiantMatricule} ?\n\nDe : ${etapeLabels[currentEtape]}\nÀ : ${etapeLabels[nouvelleEtape]}\n\nAction : ${direction === 'avancer' ? 'Avancer' : 'Reculer'} la progression`)) {
+                // Remettre l'ancienne valeur dans le select
+                etapeSelect.value = currentEtape;
+                return;
+            }
+            
+            showLoading(true, `Mise à jour de la progression...`);
+            
+            try {
+                await db.collection('projets').doc(projectId).update({
+                    etape: nouvelleEtape
+                });
+                
+                // Mettre à jour localement
+                project.etape = nouvelleEtape;
+                selectedProject = project;
+                
+                showLoading(false);
+                showToast(`✅ Progression mise à jour : ${etapeLabels[nouvelleEtape]}`, 'success');
+                
+                // Rafraîchir l'affichage
+                displayProjectDetail(project);
+                
+            } catch (error) {
+                showLoading(false);
+                console.error('Erreur validation étape:', error);
+                showToast('❌ Erreur : ' + error.message, 'danger');
+            }
+        }
+        
+        async function updateProjectSubject(projectId) {
+            const departement = document.getElementById('editDepartement').value;
+            const sujetReformule = document.getElementById('editSujetReformule').value.trim();
+            
+            if (!departement) {
+                showToast('Veuillez sélectionner un département', 'warning');
+                return;
+            }
+            
+            showLoading(true, 'Mise à jour du sujet...');
+            
+            try {
+                await db.collection('projets').doc(projectId).update({
+                    departementId: departement,
+                    sujetReformule: sujetReformule
+                });
+                
+                const project = allProjects.find(p => p.id === projectId);
+                if (project) {
+                    project.departementId = departement;
+                    project.sujetReformule = sujetReformule;
+                    selectedProject = project;
+                }
+                
+                showLoading(false);
+                showToast('✅ Sujet mis à jour avec succès !', 'success');
+                
+                displayProjectDetail(project);
+                
+            } catch (error) {
+                showLoading(false);
+                console.error('Erreur mise à jour sujet:', error);
+                showToast('❌ Erreur : ' + error.message, 'danger');
+            }
+        }
+        
+        // ==================== INITIALISATION ====================
+        async function init() {
+            if (!checkSession()) return;
+            console.log('🚀 Page Suivi Projets - Professeur');
+            console.log('👤 Professeur:', currentProfessor.nomComplet);
+            console.log('📝 Recherche libre - Tous les étudiants accessibles');
+            console.log('🔀 Les étapes peuvent être sautées librement');
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideInRight {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            await renderPage();
+            console.log('✅ Page Suivi Projets prête');
+        }
+        
+        init();
+    </script>
+</body>
+</html>
