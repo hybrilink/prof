@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Connexion Professeur - Faculté Agronomique</title>
-     <meta name="theme-color" content="#003366">
-    <meta name="description" content="Connexion à l'espace étudiant de la Faculté Agronomique - UNILU">
+    <meta name="theme-color" content="#003366">
+    <meta name="description" content="Connexion à l'espace professeur de la Faculté Agronomique - UNILU">
     
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
@@ -14,11 +14,13 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="FAC Agro">
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/png" href="icon-96x96.png">
-    <link rel="apple-touch-icon" href="icon-192x192.png">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <!-- EmailJS -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
     <style>
         :root { --primary-blue: #003366; --dark-blue: #002244; --accent-yellow: #ffb347; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -39,6 +41,17 @@
             width: 100%;
             max-width: 450px;
             animation: slideUp 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--accent-yellow), var(--primary-blue));
         }
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(30px); }
@@ -54,8 +67,30 @@
             color: var(--accent-yellow);
             font-size: 40px;
         }
+        .login-icon img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
         .login-title { color: var(--primary-blue); font-weight: bold; margin-bottom: 5px; }
         .login-subtitle { color: #888; font-size: 14px; }
+        
+        .auth-badge {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            font-size: 11px;
+            padding: 2px 12px;
+            border-radius: 20px;
+            margin-left: 8px;
+        }
+        .twofa-badge {
+            display: inline-block;
+            background: #ffc107;
+            color: #003366;
+            font-size: 10px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+
         .form-control {
             border-radius: 10px; padding: 12px;
             border: 2px solid #e0e0e0; transition: all 0.3s;
@@ -101,43 +136,276 @@
             border-top: 1px solid #e0e0e0; font-size: 13px; color: #888;
         }
         .info-text i { color: var(--primary-blue); }
+
+        /* ===== STYLES 2FA ===== */
+        .verification-container {
+            display: none;
+            animation: fadeInUp 0.5s ease-out;
+        }
+        .verification-container.active { display: block; }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .verification-icon { font-size: 60px; color: #003366; margin-bottom: 15px; }
+        .verification-title { font-size: 20px; font-weight: bold; color: #003366; margin-bottom: 10px; }
+        .verification-subtitle { font-size: 14px; color: #666; margin-bottom: 20px; }
+
+        .verification-device {
+            background: #f0f7ff;
+            border-radius: 15px;
+            padding: 15px 20px;
+            margin: 15px 0;
+            border: 1px solid #003366;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .verification-device i { font-size: 30px; color: #003366; }
+        .verification-device .device-info { flex: 1; }
+        .verification-device .device-info .device-name { font-weight: bold; color: #003366; }
+        .verification-device .device-info .device-detail { font-size: 12px; color: #888; }
+
+        .verification-code-input {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .verification-code-input input {
+            width: 50px;
+            height: 60px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: #f8f9fa;
+            transition: all 0.3s;
+        }
+        .verification-code-input input:focus {
+            outline: none;
+            border-color: #003366;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+        }
+        .verification-code-input input.correct {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .verification-code-input input.error {
+            border-color: #dc3545;
+            background: #f8d7da;
+            animation: shake 0.3s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .verification-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .verification-actions .btn-verify {
+            flex: 2;
+            padding: 14px;
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .verification-actions .btn-verify:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+        .verification-actions .btn-cancel {
+            flex: 1;
+            padding: 14px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .verification-actions .btn-cancel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+        }
+
+        .verification-timer {
+            font-size: 13px;
+            color: #888;
+            margin-top: 15px;
+        }
+        .verification-timer span { font-weight: bold; color: #dc3545; }
+        .resend-link {
+            color: #003366;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+        .resend-link:hover { color: #ffb347; }
+
+        .code-sent-info {
+            background: #e8f4fd;
+            border-radius: 12px;
+            padding: 12px 15px;
+            margin: 15px 0;
+            border-left: 4px solid #003366;
+            font-size: 13px;
+            display: none;
+        }
+        .code-sent-info.show { display: block; }
+        .code-sent-info i { color: #003366; margin-right: 8px; }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        .loading-overlay.active { display: flex; }
+
+        .loading-spinner {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 20px;
+            text-align: center;
+        }
+        .loading-spinner .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #003366;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-spinner p { color: #003366; font-weight: bold; margin: 0; }
     </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>⏳ Envoi du code en cours...</p>
+        </div>
+    </div>
+
     <div id="toastContainer" class="toast-notification"></div>
     
     <div class="login-card">
         <div class="login-header">
-            <div class="login-icon"><img src="ti.png"></div>
-            <h3 class="login-title">Espace Professeur</h3>
-            <p class="login-subtitle">Faculté des Sciences Agronomiques</p>
+            <div class="login-icon"><img src="ti.png" alt="Professeur"></div>
+            <h3 class="login-title">Espace Professeur <span class="auth-badge"><i class="bi bi-shield-lock-fill"></i> Sécurisé</span></h3>
+            <p class="login-subtitle">Faculté des Sciences Agronomiques <span class="twofa-badge"><i class="bi bi-shield-check"></i> 2FA</span></p>
         </div>
         
-        <form id="loginForm">
-            <div class="mb-3">
-                <label class="form-label"><i class="bi bi-envelope-fill"></i> Email professionnel</label>
-                <input type="email" class="form-control" id="email" required 
-                    placeholder="professeur@fsa-unilu.com" autocomplete="email">
-            </div>
-            
-            <div class="mb-4">
-                <label class="form-label"><i class="bi bi-lock-fill"></i> Mot de passe</label>
-                <div class="input-group">
-                    <input type="password" class="form-control" id="password" required 
-                        placeholder="••••••••" autocomplete="current-password">
-                    <span class="input-group-text password-toggle" id="togglePassword">
-                        <i class="bi bi-eye-fill"></i>
-                    </span>
+        <!-- Formulaire de connexion -->
+        <div id="loginFormContainer">
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label class="form-label"><i class="bi bi-envelope-fill"></i> Email professionnel</label>
+                    <input type="email" class="form-control" id="email" required 
+                        placeholder="professeur@fsa-unilu.com" autocomplete="email">
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label"><i class="bi bi-lock-fill"></i> Mot de passe</label>
+                    <div class="input-group">
+                        <input type="password" class="form-control" id="password" required 
+                            placeholder="••••••••" autocomplete="current-password">
+                        <span class="input-group-text password-toggle" id="togglePassword">
+                            <i class="bi bi-eye-fill"></i>
+                        </span>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <i class="bi bi-box-arrow-in-right"></i> Se connecter
+                </button>
+            </form>
+        </div>
+        
+        <!-- Vérification 2FA -->
+        <div id="verificationContainer" class="verification-container">
+            <div class="text-center">
+                <div class="verification-icon">
+                    <i class="bi bi-shield-lock-fill"></i>
+                </div>
+                <div class="verification-title">Validation en deux étapes</div>
+                <div class="verification-subtitle">
+                    Afin de protéger votre compte, nous avons envoyé un code de vérification sur votre email.
+                </div>
+                
+                <div class="code-sent-info show" id="codeSentInfo">
+                    <i class="bi bi-envelope-check-fill"></i>
+                    <strong>Code envoyé à :</strong> <span id="verifEmail">---</span>
+                    <br><small>Vérifiez votre boîte mail (y compris les spams).</small>
+                </div>
+                
+                <div class="verification-device">
+                    <i class="bi bi-envelope-fill"></i>
+                    <div class="device-info">
+                        <div class="device-name"><i class="bi bi-key"></i> Code de sécurité</div>
+                        <div class="device-detail">
+                            Entrez le code à 6 chiffres reçu par email
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="verification-code-input">
+                    <input type="text" id="code1" maxlength="1" autofocus>
+                    <input type="text" id="code2" maxlength="1">
+                    <input type="text" id="code3" maxlength="1">
+                    <input type="text" id="code4" maxlength="1">
+                    <input type="text" id="code5" maxlength="1">
+                    <input type="text" id="code6" maxlength="1">
+                </div>
+                
+                <div id="codeError" style="display: none; color: #dc3545; font-size: 14px; margin-bottom: 10px;">
+                    <i class="bi bi-exclamation-circle"></i> Code invalide. Veuillez réessayer.
+                </div>
+                
+                <div class="verification-actions">
+                    <button class="btn-verify" id="btnVerifyCode" onclick="verifierCode()">
+                        <i class="bi bi-check-circle-fill"></i> Vérifier le code
+                    </button>
+                    <button class="btn-cancel" onclick="annulerConnexion()">
+                        <i class="bi bi-x-circle"></i> Annuler
+                    </button>
+                </div>
+                
+                <div class="verification-timer">
+                    <i class="bi bi-clock"></i> Code valable pendant <span id="timerCount">120</span> secondes
+                    <br>
+                    <a class="resend-link" onclick="renvoyerCode()">Renvoyer le code</a>
                 </div>
             </div>
-            
-            <button type="submit" class="btn-login" id="loginBtn">
-                <i class="bi bi-box-arrow-in-right"></i> Se connecter
-            </button>
-        </form>
-        
-        <div class="text-center mt-3">
-          
         </div>
         
         <div class="info-text">
@@ -149,7 +417,24 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    
     <script>
+        // ============================================================
+        // ⭐ CONFIGURATION EMAILJS - MÊME QUE POUR LES AUTRES
+        // ============================================================
+        const EMAILJS_CONFIG = {
+            publicKey: 'wT5imuU9YJ4abDUca',
+            serviceID: 'service_irq5o0b',
+            templateID: 'template_n8fue2f'
+        };
+        
+        // Initialiser EmailJS
+        emailjs.init(EMAILJS_CONFIG.publicKey);
+        
+        // ============================================================
+        // ⭐ CONFIGURATION FIREBASE
+        // ============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyBb82N2-5ns7qKjQBAj5UvDW87s2PZ27F0",
             authDomain: "fsa-unilu.firebaseapp.com",
@@ -160,15 +445,381 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const auth = firebase.auth();
+        
+        // ============================================================
+        // ⭐ VARIABLES GLOBALES
+        // ============================================================
+        let currentEmail = '';
+        let currentPassword = '';
+        let currentUserData = null;
+        let currentCode = '';
+        let codeExpireTimer = null;
+        let timerSeconds = 120;
+        let isVerifying = false;
+        
+        // ============================================================
+        // ⭐ FONCTIONS 2FA
+        // ============================================================
+        
+        function genererCode() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+        
+        function showLoading(show) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (show) {
+                overlay.classList.add('active');
+            } else {
+                overlay.classList.remove('active');
+            }
+        }
+        
+        async function envoyerCodeParEmail(email, code, nom) {
+            try {
+                showLoading(true);
+                
+                const templateParams = {
+                    to_name: nom || 'Professeur',
+                    code: code,
+                    email: email
+                };
+                
+                console.log('📧 Envoi du code par EmailJS...');
+                console.log('📧 Email:', email);
+                console.log('🔐 Code:', code);
+                
+                const response = await emailjs.send(
+                    EMAILJS_CONFIG.serviceID,
+                    EMAILJS_CONFIG.templateID,
+                    templateParams
+                );
+                
+                console.log('✅ Email envoyé avec succès!', response);
+                showLoading(false);
+                
+                const docId = `${email}_${Date.now()}`;
+                await db.collection('verificationCodes').doc(docId).set({
+                    email: email,
+                    code: code,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    expiresAt: new Date(Date.now() + 120000),
+                    used: false
+                });
+                
+                return true;
+                
+            } catch (error) {
+                console.error('❌ Erreur envoi email:', error);
+                console.error('❌ Détails:', error.text);
+                showLoading(false);
+                showToast('❌ Erreur envoi email: ' + (error.text || error.message), 'danger');
+                return false;
+            }
+        }
+        
+        async function envoyerCode() {
+            if (!currentEmail) return false;
+            
+            currentCode = genererCode();
+            showToast('📧 Envoi du code en cours...', 'info');
+            
+            const success = await envoyerCodeParEmail(
+                currentEmail, 
+                currentCode, 
+                currentUserData?.nomComplet || 'Professeur'
+            );
+            
+            if (success) {
+                document.getElementById('verifEmail').textContent = currentEmail;
+                document.getElementById('codeSentInfo').classList.add('show');
+                showToast('✅ Code envoyé sur votre email', 'success');
+                return true;
+            } else {
+                showToast('❌ Erreur lors de l\'envoi du code', 'danger');
+                return false;
+            }
+        }
+        
+        function afficherVerification() {
+            document.getElementById('loginFormContainer').style.display = 'none';
+            document.getElementById('verificationContainer').classList.add('active');
+            
+            document.querySelectorAll('.verification-code-input input').forEach(input => {
+                input.value = '';
+                input.className = '';
+            });
+            document.getElementById('codeError').style.display = 'none';
+            
+            setTimeout(() => {
+                document.getElementById('code1').focus();
+            }, 300);
+            
+            timerSeconds = 120;
+            document.getElementById('timerCount').textContent = timerSeconds;
+            
+            if (codeExpireTimer) clearInterval(codeExpireTimer);
+            codeExpireTimer = setInterval(() => {
+                timerSeconds--;
+                document.getElementById('timerCount').textContent = timerSeconds;
+                if (timerSeconds <= 0) {
+                    clearInterval(codeExpireTimer);
+                    document.getElementById('timerCount').textContent = '0';
+                    document.getElementById('btnVerifyCode').disabled = true;
+                    showToast('⏰ Le code a expiré. Cliquez sur "Renvoyer".', 'warning');
+                }
+            }, 1000);
+        }
+        
+        function annulerConnexion() {
+            clearInterval(codeExpireTimer);
+            document.getElementById('loginFormContainer').style.display = 'block';
+            document.getElementById('verificationContainer').classList.remove('active');
+            document.getElementById('btnVerifyCode').disabled = false;
+            document.getElementById('btnVerifyCode').innerHTML = '<i class="bi bi-check-circle-fill"></i> Vérifier le code';
+            isVerifying = false;
+            currentEmail = '';
+            currentPassword = '';
+            currentCode = '';
+            document.getElementById('codeSentInfo').classList.remove('show');
+        }
+        
+        function renvoyerCode() {
+            if (isVerifying) return;
+            
+            currentCode = genererCode();
+            envoyerCodeParEmail(currentEmail, currentCode, currentUserData?.nomComplet || 'Professeur');
+            
+            timerSeconds = 120;
+            document.getElementById('timerCount').textContent = timerSeconds;
+            document.getElementById('btnVerifyCode').disabled = false;
+            
+            if (codeExpireTimer) clearInterval(codeExpireTimer);
+            codeExpireTimer = setInterval(() => {
+                timerSeconds--;
+                document.getElementById('timerCount').textContent = timerSeconds;
+                if (timerSeconds <= 0) {
+                    clearInterval(codeExpireTimer);
+                    document.getElementById('timerCount').textContent = '0';
+                    document.getElementById('btnVerifyCode').disabled = true;
+                    showToast('⏰ Le code a expiré. Cliquez sur "Renvoyer".', 'warning');
+                }
+            }, 1000);
+            
+            document.querySelectorAll('.verification-code-input input').forEach(input => {
+                input.value = '';
+                input.className = '';
+            });
+            document.getElementById('codeError').style.display = 'none';
+            document.getElementById('code1').focus();
+            
+            showToast('📧 Nouveau code envoyé', 'success');
+        }
+        
+        function getCodeFromInputs() {
+            let code = '';
+            for (let i = 1; i <= 6; i++) {
+                const input = document.getElementById(`code${i}`);
+                if (input) code += input.value;
+            }
+            return code;
+        }
+        
+        async function verifierCode() {
+            if (isVerifying) return;
+            if (timerSeconds <= 0) {
+                showToast('⏰ Le code a expiré. Cliquez sur "Renvoyer".', 'warning');
+                return;
+            }
+            
+            const codeSaisi = getCodeFromInputs();
+            
+            if (codeSaisi.length !== 6) {
+                document.getElementById('codeError').style.display = 'block';
+                document.getElementById('codeError').innerHTML = '<i class="bi bi-exclamation-circle"></i> Veuillez entrer les 6 chiffres du code.';
+                return;
+            }
+            
+            isVerifying = true;
+            const btn = document.getElementById('btnVerifyCode');
+            btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Vérification...';
+            btn.disabled = true;
+            
+            try {
+                const snapshot = await db.collection('verificationCodes')
+                    .where('email', '==', currentEmail)
+                    .where('code', '==', codeSaisi)
+                    .where('used', '==', false)
+                    .get();
+                
+                if (snapshot.empty) {
+                    document.getElementById('codeError').style.display = 'block';
+                    document.getElementById('codeError').innerHTML = '<i class="bi bi-exclamation-circle"></i> Code invalide ou expiré.';
+                    
+                    document.querySelectorAll('.verification-code-input input').forEach(input => {
+                        input.classList.add('error');
+                        setTimeout(() => input.classList.remove('error'), 500);
+                    });
+                    
+                    isVerifying = false;
+                    btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Vérifier le code';
+                    btn.disabled = false;
+                    return;
+                }
+                
+                snapshot.forEach(async doc => {
+                    await doc.ref.update({
+                        used: true,
+                        verifiedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
+                
+                document.querySelectorAll('.verification-code-input input').forEach(input => {
+                    input.classList.add('correct');
+                });
+                
+                document.getElementById('codeError').style.display = 'none';
+                clearInterval(codeExpireTimer);
+                await finaliserConnexion();
+                
+            } catch (error) {
+                console.error('Erreur vérification:', error);
+                showToast('❌ Erreur: ' + error.message, 'danger');
+                isVerifying = false;
+                btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Vérifier le code';
+                btn.disabled = false;
+            }
+        }
+        
+        async function finaliserConnexion() {
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(currentEmail, currentPassword);
+                const uid = userCredential.user.uid;
+                
+                const userDoc = await db.collection('utilisateurs').doc(uid).get();
+                
+                if (!userDoc.exists) {
+                    showToast('❌ Compte non trouvé', 'danger');
+                    await auth.signOut();
+                    annulerConnexion();
+                    return;
+                }
+                
+                const userData = userDoc.data();
+                
+                // ⭐ VÉRIFICATION DU RÔLE PROFESSEUR
+                if (userData.role !== 'professeur') {
+                    showToast('❌ Accès non autorisé - Vous n\'êtes pas professeur', 'danger');
+                    await auth.signOut();
+                    annulerConnexion();
+                    return;
+                }
+                
+                // ⭐ SESSION 8 HEURES
+                const sessionData = {
+                    uid: uid,
+                    id: uid,
+                    nomComplet: userData.nomComplet,
+                    email: userData.email,
+                    role: userData.role,
+                    specialite: userData.specialite || '',
+                    departement: userData.departement || '',
+                    verified2FA: true,
+                    expires: Date.now() + (8 * 60 * 60 * 1000) // 8 heures
+                };
+                
+                localStorage.setItem('professeur_session', JSON.stringify(sessionData));
+                
+                await db.collection('utilisateurs').doc(uid).update({
+                    derniereConnexion: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(() => {});
+                
+                showToast('✅ Connexion réussie ! Bienvenue Professeur', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = 'professeur.html';
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Erreur finalisation:', error);
+                showToast('❌ Erreur: ' + error.message, 'danger');
+                annulerConnexion();
+            }
+        }
+        
+        // ============================================================
+        // ⭐ AUTO-COMPLÉTION DES CHAMPS DE CODE
+        // ============================================================
+        document.querySelectorAll('.verification-code-input input').forEach((input, index) => {
+            input.addEventListener('input', function(e) {
+                this.value = this.value.replace(/\D/g, '');
+                
+                if (this.value.length === 1) {
+                    if (index < 5) {
+                        document.getElementById(`code${index + 2}`).focus();
+                    } else {
+                        document.getElementById('btnVerifyCode').click();
+                    }
+                }
+                
+                document.getElementById('codeError').style.display = 'none';
+                this.classList.remove('error', 'correct');
+            });
+            
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && this.value === '' && index > 0) {
+                    document.getElementById(`code${index}`).focus();
+                }
+                if (e.key === 'Enter') {
+                    document.getElementById('btnVerifyCode').click();
+                }
+            });
+            
+            input.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const paste = (e.clipboardData || window.clipboardData).getData('text');
+                const digits = paste.replace(/\D/g, '').slice(0, 6);
+                for (let i = 0; i < digits.length && i < 6; i++) {
+                    const field = document.getElementById(`code${i + 1}`);
+                    if (field) {
+                        field.value = digits[i];
+                    }
+                }
+                const lastIndex = Math.min(digits.length, 5);
+                if (lastIndex < 5) {
+                    document.getElementById(`code${lastIndex + 1}`).focus();
+                }
+                if (digits.length === 6) {
+                    document.getElementById('btnVerifyCode').click();
+                }
+            });
+        });
+        
+        // ============================================================
+        // ⭐ FONCTIONS UTILITAIRES
+        // ============================================================
         
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
-            const bgColor = type === 'success' ? '#28a745' : '#dc3545';
-            const icon = type === 'success' ? 'check-circle-fill' : 'x-circle-fill';
-            const toastHtml = `<div class="toast notification-toast" style="background:${bgColor};color:white;border-radius:10px;margin-bottom:10px;"><div class="toast-body"><i class="bi bi-${icon} me-2"></i>${message}</div></div>`;
+            const bgColor = type === 'success' ? '#28a745' : (type === 'warning' ? '#ffc107' : (type === 'info' ? '#17a2b8' : '#dc3545'));
+            const textColor = type === 'warning' ? '#333' : 'white';
+            const icon = type === 'success' ? 'check-circle-fill' : (type === 'warning' ? 'exclamation-triangle-fill' : (type === 'info' ? 'info-circle-fill' : 'x-circle-fill'));
+            
+            const toastHtml = `
+                <div class="toast notification-toast" style="background: ${bgColor}; color: ${textColor}; border-radius: 10px; margin-bottom: 10px;">
+                    <div class="toast-body">
+                        <i class="bi bi-${icon} me-2"></i>
+                        ${message}
+                    </div>
+                </div>
+            `;
             container.insertAdjacentHTML('afterbegin', toastHtml);
-            setTimeout(() => container.firstElementChild?.remove(), 4000);
+            setTimeout(() => container.firstElementChild?.remove(), 5000);
         }
+        
+        // ============================================================
+        // ⭐ FORMULAIRE DE CONNEXION
+        // ============================================================
         
         document.getElementById('togglePassword').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');
@@ -184,48 +835,146 @@
         
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('loginBtn');
+            
+            if (isVerifying) return;
+            
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             
+            if (!email || !password) {
+                showToast('Veuillez entrer votre email et mot de passe', 'warning');
+                return;
+            }
+            
+            const btn = document.getElementById('loginBtn');
+            const originalText = btn.innerHTML;
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Connexion...';
             
             try {
+                // 1. Vérifier si l'utilisateur existe dans Firestore
                 const usersRef = db.collection('utilisateurs');
-                const q = await usersRef.where('email','==',email).where('role','==','professeur').get();
+                const q = await usersRef.where('email', '==', email).where('role', '==', 'professeur').get();
                 
-                if(q.empty) {
-                    showToast('Email ou mot de passe incorrect','danger');
+                if (q.empty) {
+                    showToast('❌ Email ou mot de passe incorrect', 'danger');
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Se connecter';
+                    btn.innerHTML = originalText;
                     return;
                 }
                 
                 let userFound = null;
                 q.forEach(doc => {
-                    const userData = doc.data();
-                    if(userData.motDePasse === password) userFound = { id: doc.id, ...userData };
+                    userFound = { id: doc.id, ...doc.data() };
                 });
                 
-                if(userFound) {
-                    const sessionData = { user: userFound, timestamp: Date.now(), role: 'professeur' };
-                    localStorage.setItem('professeur_session', JSON.stringify(sessionData));
-                    showToast(`Bienvenue ${userFound.nomComplet} !`,'success');
-                    setTimeout(() => { window.location.href = 'professeur.html'; }, 500);
-                } else {
-                    showToast('Email ou mot de passe incorrect','danger');
+                if (!userFound) {
+                    showToast('❌ Compte non trouvé', 'danger');
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Se connecter';
+                    btn.innerHTML = originalText;
+                    return;
                 }
-            } catch(err) {
-                console.error('Erreur connexion:', err);
-                showToast('Erreur de connexion','danger');
+                
+                // 2. Vérifier le mot de passe via Auth
+                try {
+                    const tempUser = await auth.signInWithEmailAndPassword(email, password);
+                    await auth.signOut();
+                } catch (authError) {
+                    if (authError.code === 'auth/user-not-found') {
+                        try {
+                            const newUser = await auth.createUserWithEmailAndPassword(email, password);
+                            await newUser.user.delete();
+                            await auth.signOut();
+                        } catch (createError) {
+                            if (createError.code !== 'auth/email-already-in-use') {
+                                showToast('❌ Email ou mot de passe incorrect', 'danger');
+                                btn.disabled = false;
+                                btn.innerHTML = originalText;
+                                return;
+                            }
+                        }
+                    } else if (authError.code === 'auth/wrong-password') {
+                        showToast('❌ Email ou mot de passe incorrect', 'danger');
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        return;
+                    } else {
+                        showToast('❌ Erreur: ' + authError.message, 'danger');
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                        return;
+                    }
+                }
+                
+                // 3. Stocker les informations
+                currentEmail = email;
+                currentPassword = password;
+                currentUserData = userFound;
+                
+                // 4. Envoyer le code de vérification
+                const codeEnvoye = await envoyerCode();
+                
+                if (!codeEnvoye) {
+                    showToast('❌ Erreur lors de l\'envoi du code de vérification', 'danger');
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    return;
+                }
+                
+                // 5. Afficher l'interface de vérification
+                afficherVerification();
+                document.getElementById('loginForm').reset();
                 btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Se connecter';
+                btn.innerHTML = originalText;
+                
+            } catch (error) {
+                console.error('Erreur de connexion:', error);
+                showToast('❌ Erreur: ' + error.message, 'danger');
+                btn.disabled = false;
+                btn.innerHTML = originalText;
             }
         });
-
+        
+        // ============================================================
+        // ⭐ VÉRIFICATION DE SESSION EXISTANTE
+        // ============================================================
+        
+        function checkExistingSession() {
+            const session = localStorage.getItem('professeur_session');
+            if (session) {
+                try {
+                    const sessionData = JSON.parse(session);
+                    if (Date.now() < sessionData.expires && sessionData.verified2FA === true) {
+                        window.location.href = 'professeur.html';
+                        return true;
+                    } else {
+                        localStorage.removeItem('professeur_session');
+                    }
+                } catch (e) {
+                    localStorage.removeItem('professeur_session');
+                }
+            }
+            return false;
+        }
+        
+        // ============================================================
+        // ⭐ INITIALISATION
+        // ============================================================
+        
+        // Vérifier si l'utilisateur a déjà une session
+        if (!checkExistingSession()) {
+            document.getElementById('email').focus();
+        }
+        
+        // Exposer les fonctions globalement
+        window.verifierCode = verifierCode;
+        window.annulerConnexion = annulerConnexion;
+        window.renvoyerCode = renvoyerCode;
+        
+        console.log('✅ Page de connexion Professeur - Sécurisée avec Firebase Auth + 2FA EmailJS');
+        console.log('📧 Service ID:', EMAILJS_CONFIG.serviceID);
+        console.log('📧 Template ID:', EMAILJS_CONFIG.templateID);
+        
         // Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
