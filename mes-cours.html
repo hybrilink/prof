@@ -14,6 +14,21 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+
+    <script>
+        if (window.eruda) {
+            eruda.init();
+            console.log('✅ Eruda console activée');
+        } else {
+            document.addEventListener('DOMContentLoaded', function () {
+                if (window.eruda) {
+                    eruda.init();
+                    console.log('✅ Eruda console activée');
+                }
+            });
+        }
+    </script>
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -22,6 +37,7 @@
             --dark-blue: #002244; 
             --accent-yellow: #ffb347; 
             --light-gray: #f0f2f5;
+            --success-green: #28a745;
         }
         
         body { 
@@ -65,7 +81,15 @@
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; transition: all 0.3s;
             font-weight: bold; color: var(--primary-blue); font-size: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
         }
+        .profile-photo:hover { transform: scale(1.05); border-color: white; }
+        
+        .prof-name-nav {
+            color: white; font-weight: 500; font-size: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .prof-name-nav i { color: var(--accent-yellow); }
         
         .logout-btn {
             background: transparent; color: white;
@@ -92,13 +116,12 @@
             gap: 5px;
             font-weight: 500;
         }
-        .sync-badge.online { background: #28a745; color: white; }
+        .sync-badge.online { background: var(--success-green); color: white; }
         .sync-badge.offline { background: #ffc107; color: #333; }
         .sync-badge.cache { background: #17a2b8; color: white; }
         
         .last-sync-text { font-size: 11px; color: #888; }
         
-        /* Stats cards */
         .stats-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -119,7 +142,6 @@
         .stat-number { font-size: 28px; font-weight: bold; color: var(--primary-blue); }
         .stat-label { font-size: 12px; color: #888; margin-top: 5px; }
         
-        /* Content card */
         .content-card {
             background: white;
             border-radius: 20px;
@@ -140,7 +162,6 @@
         }
         .section-header h4 { color: var(--primary-blue); margin: 0; font-weight: bold; }
         
-        /* Barre de recherche */
         .search-export-bar {
             background: #f8f9fa;
             padding: 15px;
@@ -156,8 +177,8 @@
         .search-input-group i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #999; }
         .search-input-group input { padding-left: 35px; }
         .clear-search { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #999; display: none; }
+        .clear-search:hover { color: #dc3545; }
         
-        /* Tableau */
         .cours-table {
             width: 100%;
             border-collapse: collapse;
@@ -251,40 +272,61 @@
         }
         .footer-info img { border-radius: 20px; vertical-align: middle; }
         
+        .loading-spinner-small {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
         @media (max-width: 768px) {
             .stats-row { grid-template-columns: repeat(2, 1fr); }
             .cours-table thead th, .cours-table tbody td { padding: 10px 8px; font-size: 12px; }
+            .content-card { padding: 15px; }
+            .search-export-bar { padding: 10px; }
+            .prof-name-nav { font-size: 12px; }
+            .navbar-right { gap: 10px; }
         }
     </style>
 </head>
 <body>
+    <!-- ===== NAVBAR ===== -->
     <nav class="navbar navbar-custom">
         <div class="container">
             <a class="navbar-brand text-white" href="#">
                 <i class="bi bi-person-workspace"></i> Espace Professeur
             </a>
             <div class="navbar-right">
-                <div class="profile-photo" id="profileAvatar">P</div>
+                <span class="prof-name-nav d-none d-md-inline-flex" id="profNameNav">
+                    <i class="bi bi-person-badge"></i> <span id="navProfessorName">Professeur</span>
+                </span>
+                <div class="profile-photo" id="profileAvatar" title="Voir le profil">P</div>
                 <a href="professeur.html" class="back-btn">
                     <i class="bi bi-house-door-fill"></i> Accueil
                 </a>
-                <button class="logout-btn" id="logoutBtn">
+                <button class="logout-btn" id="logoutBtn" title="Déconnexion">
                     <i class="bi bi-box-arrow-right"></i>
                 </button>
             </div>
         </div>
     </nav>
     
+    <!-- ===== MAIN CONTENT ===== -->
     <div class="container mt-4" style="flex: 1;">
         <div id="toastContainer" class="toast-notification"></div>
         
-        <!-- Bannière hors-ligne -->
         <div class="offline-banner" id="offlineBanner">
             <i class="bi bi-wifi-off"></i>
             <span>Mode hors-ligne - Données affichées depuis le cache local</span>
         </div>
         
-        <!-- Statistiques -->
         <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-icon"><i class="bi bi-book-fill"></i></div>
@@ -308,7 +350,6 @@
             </div>
         </div>
         
-        <!-- Liste des cours -->
         <div class="content-card">
             <div class="section-header">
                 <h4><i class="bi bi-book-fill"></i> Mes Cours Assignés</h4>
@@ -320,7 +361,6 @@
                 </div>
             </div>
             
-            <!-- Barre de recherche -->
             <div class="search-export-bar">
                 <div class="search-group">
                     <label style="font-weight:600;color:var(--primary-blue);font-size:13px;">
@@ -337,12 +377,12 @@
                 </div>
             </div>
             
-            <!-- Tableau -->
             <div id="coursContainer">
                 <div class="empty-state">
                     <i class="bi bi-inbox"></i>
                     <h5>Chargement...</h5>
                     <p>Récupération des données en cours...</p>
+                    <div class="loading-spinner-small mt-2"></div>
                 </div>
             </div>
         </div>
@@ -356,7 +396,9 @@
     </div>
 
     <script>
-        // ========== CONFIGURATION FIREBASE ==========
+        // ============================================================
+        // ⭐ CONFIGURATION FIREBASE
+        // ============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyBb82N2-5ns7qKjQBAj5UvDW87s2PZ27F0",
             authDomain: "fsa-unilu.firebaseapp.com",
@@ -365,14 +407,31 @@
             messagingSenderId: "36551990738",
             appId: "1:36551990738:web:e91fdcb53f8aab5d1b7c0b"
         };
-        
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.firestore();
-        
-        db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
-        
-        // ========== VARIABLES ==========
+
+        db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+            console.warn('⚠️ Persistence non activée:', err);
+        });
+
+        // ============================================================
+        // ⭐ CONSTANTES
+        // ============================================================
+        const SESSION_DUREE_HEURES = 24;
+        const CACHE_KEY_COURS = 'cache_cours_professeur';
+        const CACHE_KEY_PROMOS = 'cache_promotions';
+        const CACHE_KEY_ETUDIANTS = 'cache_etudiants';
+        const CACHE_KEY_LAST_SYNC = 'cache_last_sync';
+        const CACHE_DURATION = 30 * 60 * 1000;
+
+        // ============================================================
+        // ⭐ VARIABLES
+        // ============================================================
         let currentUser = null;
+        let currentUserId = null;
         let allCours = [];
         let allPromotions = [];
         let allEtudiants = [];
@@ -381,25 +440,18 @@
         let unsubscribeCours = null;
         let unsubscribePromotions = null;
         let unsubscribeEtudiants = null;
-        
-        const CACHE_KEY_COURS = 'cache_cours_professeur';
-        const CACHE_KEY_PROMOS = 'cache_promotions';
-        const CACHE_KEY_ETUDIANTS = 'cache_etudiants';
-        const CACHE_KEY_LAST_SYNC = 'cache_last_sync';
-        const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
-        
-        // ========== SYSTÈME DE CACHE LOCAL ==========
+        let isLoading = true;
+
+        // ============================================================
+        // ⭐ SYSTÈME DE CACHE LOCAL
+        // ============================================================
         class LocalCache {
             static set(key, data) {
                 try {
-                    const cacheData = {
-                        data: data,
-                        timestamp: Date.now()
-                    };
+                    const cacheData = { data: data, timestamp: Date.now() };
                     localStorage.setItem(key, JSON.stringify(cacheData));
                 } catch(e) {
-                    console.warn('Cache saturé, nettoyage...');
-                    LocalCache.clearOldCache();
+                    console.warn('Cache saturé');
                 }
             }
             
@@ -407,8 +459,7 @@
                 try {
                     const raw = localStorage.getItem(key);
                     if (!raw) return null;
-                    const cacheData = JSON.parse(raw);
-                    return cacheData;
+                    return JSON.parse(raw);
                 } catch(e) {
                     return null;
                 }
@@ -417,11 +468,6 @@
             static isValid(cacheData) {
                 if (!cacheData) return false;
                 return (Date.now() - cacheData.timestamp) < CACHE_DURATION;
-            }
-            
-            static clearOldCache() {
-                const keys = [CACHE_KEY_COURS, CACHE_KEY_PROMOS, CACHE_KEY_ETUDIANTS, CACHE_KEY_LAST_SYNC];
-                keys.forEach(k => localStorage.removeItem(k));
             }
             
             static getDerniereSynchro() {
@@ -434,35 +480,93 @@
                 return null;
             }
         }
-        
-        // ========== SESSION ==========
+
+        // ============================================================
+        // ⭐ VÉRIFICATION DE SESSION
+        // ============================================================
         (function() {
+            console.log('🔍 Vérification de la session...');
+            
             const sessionData = localStorage.getItem('professeur_session');
-            if (!sessionData) { window.location.href = 'login.html'; return; }
+            if (!sessionData) { 
+                console.log('❌ Aucune session trouvée');
+                window.location.href = 'login.html'; 
+                return; 
+            }
+            
             try {
                 const session = JSON.parse(sessionData);
                 const now = Date.now();
-                if (!session.user || session.user.role !== 'professeur' || (now - session.timestamp) > 86400000) {
+                
+                console.log('📦 Session brute:', session);
+                
+                // ✅ Vérifier directement les propriétés de session
+                if (!session.role || session.role !== 'professeur') {
+                    console.log('❌ Rôle non professeur:', session.role);
                     localStorage.removeItem('professeur_session');
                     window.location.href = 'login.html';
                     return;
                 }
-                currentUser = session.user;
-                const initials = (currentUser.nomComplet || 'P').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                document.getElementById('profileAvatar').textContent = initials;
                 
-                // Charger d'abord le cache pour affichage instantané
+                if (!session.expires || now > session.expires) {
+                    console.log('⏰ Session expirée');
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                if (!session.verified2FA) {
+                    console.log('❌ 2FA non vérifiée');
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // ✅ STOCKER DIRECTEMENT LA SESSION
+                currentUser = session;
+                currentUserId = session.id || session.uid;
+                
+                const nomComplet = session.nomComplet || 'Professeur';
+                const specialite = session.specialite || '';
+                const departement = session.departement || '';
+                
+                console.log('✅ Session valide - Bienvenue ' + nomComplet);
+                console.log('🆔 ID professeur:', currentUserId);
+                console.log('📚 Spécialité:', specialite);
+                console.log('🏛️ Département:', departement);
+                
+                // === AFFICHAGE DANS LA NAVBAR ===
+                const navName = document.getElementById('navProfessorName');
+                if (navName) {
+                    navName.textContent = nomComplet;
+                    console.log('✅ Nom affiché dans navbar:', nomComplet);
+                }
+                
+                const initials = nomComplet.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                const avatar = document.getElementById('profileAvatar');
+                if (avatar) {
+                    avatar.textContent = initials;
+                    avatar.title = nomComplet + (specialite ? ' - ' + specialite : '');
+                    console.log('✅ Avatar mis à jour:', initials);
+                }
+                
+                document.title = 'Mes Cours - ' + nomComplet;
+                
+                // === CHARGEMENT DES DONNÉES ===
+                console.log('🚀 Chargement des données...');
                 chargerDepuisCache();
-                
-                // Puis initialiser le temps réel
                 initRealtime();
+                
             } catch(e) {
+                console.error('❌ Erreur session:', e);
                 localStorage.removeItem('professeur_session');
                 window.location.href = 'login.html';
             }
         })();
-        
-        // ========== CHARGEMENT DEPUIS LE CACHE ==========
+
+        // ============================================================
+        // ⭐ CHARGEMENT DEPUIS LE CACHE
+        // ============================================================
         function chargerDepuisCache() {
             const cacheCours = LocalCache.get(CACHE_KEY_COURS);
             const cachePromos = LocalCache.get(CACHE_KEY_PROMOS);
@@ -470,90 +574,106 @@
             
             let cacheUtilise = false;
             
-            // Restaurer les promotions depuis le cache
             if (cachePromos && LocalCache.isValid(cachePromos)) {
                 allPromotions = cachePromos.data;
                 cacheUtilise = true;
                 console.log('📦 Promotions chargées depuis le cache');
             }
             
-            // Restaurer les étudiants depuis le cache
             if (cacheEtudiants && LocalCache.isValid(cacheEtudiants)) {
                 allEtudiants = cacheEtudiants.data;
                 cacheUtilise = true;
                 console.log('📦 Étudiants chargés depuis le cache');
             }
             
-            // Restaurer les cours depuis le cache
             if (cacheCours && LocalCache.isValid(cacheCours)) {
                 allCours = cacheCours.data;
                 cacheUtilise = true;
                 console.log('📦 Cours chargés depuis le cache');
-                
+                isLoading = false;
                 afficherCours();
                 mettreAJourStats();
             }
             
-            // Afficher la dernière synchro
             const derniereSynchro = LocalCache.getDerniereSynchro();
             if (derniereSynchro) {
-                document.getElementById('lastSyncText').textContent = `Dernière synchro: ${derniereSynchro}`;
+                const lastSyncText = document.getElementById('lastSyncText');
+                if (lastSyncText) {
+                    lastSyncText.textContent = `Dernière synchro: ${derniereSynchro}`;
+                }
             }
             
-            // Mettre à jour le badge
             if (cacheUtilise && !isOnline) {
-                document.getElementById('syncBadge').className = 'sync-badge offline';
-                document.getElementById('syncBadge').innerHTML = '<i class="bi bi-circle-fill" style="font-size:8px;"></i> Hors-ligne (cache)';
-                document.getElementById('offlineBanner').classList.add('show');
+                const badge = document.getElementById('syncBadge');
+                if (badge) {
+                    badge.className = 'sync-badge offline';
+                    badge.innerHTML = '<i class="bi bi-circle-fill" style="font-size:8px;"></i> Hors-ligne (cache)';
+                }
+                const banner = document.getElementById('offlineBanner');
+                if (banner) banner.classList.add('show');
             }
             
             return cacheUtilise;
         }
-        
-        // ========== ÉCOUTEURS TEMPS RÉEL + CACHE ==========
+
+        // ============================================================
+        // ⭐ ÉCOUTEURS TEMPS RÉEL + CACHE
+        // ============================================================
         function initRealtime() {
+            console.log('🔄 Initialisation des écouteurs temps réel...');
+            
             // Écouteur promotions
-            unsubscribePromotions = db.collection('promotions').onSnapshot(snapshot => {
+            unsubscribePromotions = db.collection('promotions').onSnapshot((snapshot) => {
                 allPromotions = [];
-                snapshot.forEach(doc => allPromotions.push({ id: doc.id, ...doc.data() }));
-                
-                // Mettre en cache
+                snapshot.forEach(doc => {
+                    allPromotions.push({ id: doc.id, ...doc.data() });
+                });
                 LocalCache.set(CACHE_KEY_PROMOS, allPromotions);
-                
                 afficherCours();
-            }, error => {
-                console.error('Erreur écoute promotions:', error);
-                // Fallback au cache
+                mettreAJourStats();
+                if (isLoading) isLoading = false;
+            }, (error) => {
+                console.error('❌ Erreur promotions:', error);
                 const cachePromos = LocalCache.get(CACHE_KEY_PROMOS);
-                if (cachePromos) allPromotions = cachePromos.data;
+                if (cachePromos && cachePromos.data) allPromotions = cachePromos.data;
             });
             
             // Écouteur étudiants
-            unsubscribeEtudiants = db.collection('etudiants').onSnapshot(snapshot => {
+            unsubscribeEtudiants = db.collection('etudiants').onSnapshot((snapshot) => {
                 allEtudiants = [];
-                snapshot.forEach(doc => allEtudiants.push({ id: doc.id, ...doc.data() }));
-                
-                // Mettre en cache
+                snapshot.forEach(doc => {
+                    allEtudiants.push({ id: doc.id, ...doc.data() });
+                });
                 LocalCache.set(CACHE_KEY_ETUDIANTS, allEtudiants);
-                
                 afficherCours();
-            }, error => {
-                console.error('Erreur écoute étudiants:', error);
+                mettreAJourStats();
+            }, (error) => {
+                console.error('❌ Erreur étudiants:', error);
                 const cacheEtudiants = LocalCache.get(CACHE_KEY_ETUDIANTS);
-                if (cacheEtudiants) allEtudiants = cacheEtudiants.data;
+                if (cacheEtudiants && cacheEtudiants.data) allEtudiants = cacheEtudiants.data;
             });
             
-            // Écouteur cours
-            unsubscribeCours = db.collection('cours').onSnapshot(snapshot => {
+            // ⭐ ÉCOUTEUR COURS AVEC FILTRAGE
+            unsubscribeCours = db.collection('cours').onSnapshot((snapshot) => {
+                console.log('📚 Mise à jour des cours en temps réel...');
+                
                 allCours = [];
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    if (data.professeurId === currentUser.id) {
+                    
+                    // ✅ Vérifier si le cours appartient au professeur connecté
+                    const isProfessorMatch = 
+                        data.professeurId === currentUserId ||
+                        data.professeurId === currentUser?.uid ||
+                        (Array.isArray(data.professeurId) && data.professeurId.includes(currentUserId)) ||
+                        (Array.isArray(data.professeurId) && data.professeurId.includes(currentUser?.uid));
+                    
+                    if (isProfessorMatch) {
                         allCours.push({ id: doc.id, ...data });
                     }
                 });
                 
-                // Tri par date décroissante
+                // Tri par date décroissante (plus récent en premier)
                 allCours.sort((a, b) => {
                     const da = a.dateCreation?.toDate?.() || new Date(0);
                     const db2 = b.dateCreation?.toDate?.() || new Date(0);
@@ -570,84 +690,119 @@
                 mettreAJourStats();
                 mettreAJourDerniereSynchro();
                 
-            }, error => {
-                console.error('Erreur écoute cours:', error);
-                mettreAJourStatutConnexion(false);
+                if (isLoading) isLoading = false;
+                console.log(`✅ ${allCours.length} cours chargés pour le professeur`);
                 
-                // Fallback au cache
+            }, (error) => {
+                console.error('❌ Erreur écoute cours:', error);
+                mettreAJourStatutConnexion(false);
                 const cacheCours = LocalCache.get(CACHE_KEY_COURS);
-                if (cacheCours) {
+                if (cacheCours && cacheCours.data) {
                     allCours = cacheCours.data;
-                    document.getElementById('offlineBanner').classList.add('show');
+                    const banner = document.getElementById('offlineBanner');
+                    if (banner) banner.classList.add('show');
+                    afficherCours();
+                    mettreAJourStats();
                 }
-                afficherCours();
             });
         }
-        
+
+        // ============================================================
+        // ⭐ GESTION DE LA CONNEXION
+        // ============================================================
         function mettreAJourStatutConnexion(online) {
             isOnline = online;
             const badge = document.getElementById('syncBadge');
             const banner = document.getElementById('offlineBanner');
             
             if (online) {
-                badge.className = 'sync-badge online';
-                badge.innerHTML = '<i class="bi bi-circle-fill" style="font-size:8px;"></i> En ligne';
-                banner.classList.remove('show');
+                if (badge) {
+                    badge.className = 'sync-badge online';
+                    badge.innerHTML = '<i class="bi bi-circle-fill" style="font-size:8px;"></i> En ligne';
+                }
+                if (banner) banner.classList.remove('show');
             } else {
-                badge.className = 'sync-badge offline';
-                badge.innerHTML = '<i class="bi bi-circle-fill" style="font-size:8px;"></i> Hors-ligne (cache)';
-                banner.classList.add('show');
+                if (badge) {
+                    badge.className = 'sync-badge offline';
+                    badge.innerHTML = '<i class="bi bi-circle-fill" style="font-size:8px;"></i> Hors-ligne (cache)';
+                }
+                if (banner) banner.classList.add('show');
             }
         }
-        
+
         function mettreAJourDerniereSynchro() {
             const derniereSynchro = LocalCache.getDerniereSynchro();
-            if (derniereSynchro) {
-                document.getElementById('lastSyncText').textContent = `Dernière synchro: ${derniereSynchro}`;
+            const lastSyncText = document.getElementById('lastSyncText');
+            if (lastSyncText && derniereSynchro) {
+                lastSyncText.textContent = `Dernière synchro: ${derniereSynchro}`;
             }
         }
-        
-        // ========== ÉVÉNEMENTS CONNEXION ==========
+
         window.addEventListener('online', () => {
             mettreAJourStatutConnexion(true);
-            console.log('🟢 Connecté');
+            showToast('📶 Connexion rétablie', 'success');
         });
-        
+
         window.addEventListener('offline', () => {
             mettreAJourStatutConnexion(false);
-            console.log('🔴 Hors-ligne - Utilisation du cache');
+            showToast('📶 Connexion perdue - Mode hors-ligne', 'warning');
         });
-        
-        // ========== FONCTIONS D'AFFICHAGE ==========
-        function escapeHtml(t) { if(!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
-        
+
+        // ============================================================
+        // ⭐ FONCTIONS D'AFFICHAGE
+        // ============================================================
+        function escapeHtml(t) { 
+            if (!t) return ''; 
+            const d = document.createElement('div'); 
+            d.textContent = t; 
+            return d.innerHTML; 
+        }
+
         function formaterDate(timestamp) {
             if (!timestamp) return 'Date inconnue';
             try {
                 const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
                 return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
-            } catch(e) { return 'Date invalide'; }
+            } catch(e) { 
+                return 'Date invalide'; 
+            }
         }
-        
+
         function getCoursFiltres() {
             if (!searchTerm) return allCours;
             const term = searchTerm.toLowerCase();
             const promoMap = {};
             allPromotions.forEach(p => promoMap[p.id] = (p.nom || '').toLowerCase());
+            
             return allCours.filter(c => {
                 return (c.nom || '').toLowerCase().includes(term) ||
                        (c.promotionNom || promoMap[c.promotionId] || '').toLowerCase().includes(term) ||
-                       (c.creeParNom || '').toLowerCase().includes(term);
+                       (c.professeurNom || '').toLowerCase().includes(term) ||
+                       (c.code || '').toLowerCase().includes(term);
             });
         }
-        
+
         function afficherCours() {
             const container = document.getElementById('coursContainer');
             if (!container) return;
             
             const coursFiltres = getCoursFiltres();
-            document.getElementById('resultCount').textContent = 
-                allCours.length > 0 ? `${coursFiltres.length} cours affiché(s) sur ${allCours.length}` : '';
+            const resultCount = document.getElementById('resultCount');
+            if (resultCount) {
+                resultCount.textContent = allCours.length > 0 ? 
+                    `${coursFiltres.length} cours affiché(s) sur ${allCours.length}` : '';
+            }
+            
+            if (isLoading) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h5>Chargement...</h5>
+                        <p>Récupération des données en cours...</p>
+                        <div class="loading-spinner-small mt-2"></div>
+                    </div>`;
+                return;
+            }
             
             if (allCours.length === 0) {
                 container.innerHTML = `
@@ -655,6 +810,7 @@
                         <i class="bi bi-inbox"></i>
                         <h5>Aucun cours assigné</h5>
                         <p>Les cours qui vous sont assignés apparaîtront ici en temps réel.</p>
+                        <p class="text-muted small mt-2">ID professeur: ${currentUserId?.substring(0, 8) || 'N/A'}</p>
                     </div>`;
                 return;
             }
@@ -665,6 +821,9 @@
                         <i class="bi bi-search"></i>
                         <h5>Aucun résultat</h5>
                         <p>Aucun cours ne correspond à "${escapeHtml(searchTerm)}".</p>
+                        <button class="btn btn-sm btn-outline-primary mt-3" onclick="resetRecherche()">
+                            <i class="bi bi-arrow-counterclockwise"></i> Réinitialiser
+                        </button>
                     </div>`;
                 return;
             }
@@ -682,7 +841,7 @@
                                 <th style="width:100px;">Crédits</th>
                                 <th>Promotion</th>
                                 <th style="width:120px;">Étudiants</th>
-                                <th>Créé par</th>
+                                <th>Professeur</th>
                                 <th style="width:130px;">Date création</th>
                             </tr>
                         </thead>
@@ -691,70 +850,157 @@
             coursFiltres.forEach((cours, i) => {
                 const promoNom = promoMap[cours.promotionId] || cours.promotionNom || 'N/A';
                 const nbEtudiants = allEtudiants.filter(e => e.promotion === cours.promotionId).length;
+                const codeCours = cours.code ? ` [${cours.code}]` : '';
                 
                 html += `
                     <tr>
                         <td style="text-align:center;font-weight:bold;color:#888;">${i + 1}</td>
-                        <td class="cours-nom-cell"><i class="bi bi-book-fill"></i> ${escapeHtml(cours.nom)}</td>
-                        <td style="text-align:center;"><span class="badge-credit"><i class="bi bi-star-fill"></i> ${cours.credits || 0}</span></td>
-                        <td><span class="badge-promo"><i class="bi bi-trophy-fill"></i> ${escapeHtml(promoNom)}</span></td>
-                        <td style="text-align:center;"><span class="badge-etudiants"><i class="bi bi-people-fill"></i> ${nbEtudiants}</span></td>
-                        <td><i class="bi bi-person-badge" style="color:var(--primary-blue);"></i> ${escapeHtml(cours.creeParNom || 'Administration')}</td>
-                        <td><span class="badge-date"><i class="bi bi-calendar-check"></i> ${formaterDate(cours.dateCreation)}</span></td>
+                        <td class="cours-nom-cell">
+                            <i class="bi bi-book-fill"></i> 
+                            ${escapeHtml(cours.nom)}${escapeHtml(codeCours)}
+                        </td>
+                        <td style="text-align:center;">
+                            <span class="badge-credit"><i class="bi bi-star-fill"></i> ${cours.credits || 0}</span>
+                        </td>
+                        <td>
+                            <span class="badge-promo"><i class="bi bi-trophy-fill"></i> ${escapeHtml(promoNom)}</span>
+                        </td>
+                        <td style="text-align:center;">
+                            <span class="badge-etudiants"><i class="bi bi-people-fill"></i> ${nbEtudiants}</span>
+                        </td>
+                        <td>
+                            <i class="bi bi-person-badge" style="color:var(--primary-blue);"></i> 
+                            ${escapeHtml(cours.professeurNom || 'N/A')}
+                        </td>
+                        <td>
+                            <span class="badge-date"><i class="bi bi-calendar-check"></i> ${formaterDate(cours.dateCreation)}</span>
+                        </td>
                     </tr>`;
             });
             
             html += '</tbody></table></div>';
             container.innerHTML = html;
         }
-        
-        function mettreAJourStats() {
-            document.getElementById('totalCours').textContent = allCours.length;
-            document.getElementById('totalCredits').textContent = allCours.reduce((s, c) => s + (c.credits || 0), 0);
-            
-            const promosUniques = new Set(allCours.map(c => c.promotionId));
-            document.getElementById('totalPromotions').textContent = promosUniques.size;
-            
-            let totalEt = 0;
-            promosUniques.forEach(pid => { totalEt += allEtudiants.filter(e => e.promotion === pid).length; });
-            document.getElementById('totalEtudiants').textContent = totalEt;
+
+        function resetRecherche() {
+            const searchInput = document.getElementById('searchCours');
+            if (searchInput) {
+                searchInput.value = '';
+                searchTerm = '';
+                const clearBtn = document.getElementById('clearSearchCours');
+                if (clearBtn) clearBtn.style.display = 'none';
+                afficherCours();
+                searchInput.focus();
+            }
         }
-        
-        // ========== RECHERCHE ==========
+
+        function mettreAJourStats() {
+            const totalCours = document.getElementById('totalCours');
+            const totalCredits = document.getElementById('totalCredits');
+            const totalPromotions = document.getElementById('totalPromotions');
+            const totalEtudiants = document.getElementById('totalEtudiants');
+            
+            if (totalCours) totalCours.textContent = allCours.length;
+            if (totalCredits) totalCredits.textContent = allCours.reduce((s, c) => s + (c.credits || 0), 0);
+            if (totalPromotions) {
+                const promosUniques = new Set(allCours.map(c => c.promotionId));
+                totalPromotions.textContent = promosUniques.size;
+            }
+            if (totalEtudiants) {
+                let totalEt = 0;
+                const promosUniques = new Set(allCours.map(c => c.promotionId));
+                promosUniques.forEach(pid => { 
+                    totalEt += allEtudiants.filter(e => e.promotion === pid).length; 
+                });
+                totalEtudiants.textContent = totalEt;
+            }
+        }
+
+        // ============================================================
+        // ⭐ RECHERCHE
+        // ============================================================
         document.getElementById('searchCours').addEventListener('input', function(e) {
             searchTerm = e.target.value;
-            document.getElementById('clearSearchCours').style.display = searchTerm ? 'block' : 'none';
+            const clearBtn = document.getElementById('clearSearchCours');
+            if (clearBtn) clearBtn.style.display = searchTerm ? 'block' : 'none';
             afficherCours();
         });
-        
-        document.getElementById('clearSearchCours').addEventListener('click', function() {
-            document.getElementById('searchCours').value = '';
-            searchTerm = '';
-            this.style.display = 'none';
-            afficherCours();
-        });
-        
-        // ========== DÉCONNEXION ==========
-        document.getElementById('logoutBtn').addEventListener('click', () => {
+
+        document.getElementById('clearSearchCours').addEventListener('click', resetRecherche);
+
+        // ============================================================
+        // ⭐ FONCTION TOAST
+        // ============================================================
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            
+            const bgColor = type === 'success' ? '#28a745' : 
+                           type === 'warning' ? '#ffc107' : 
+                           type === 'info' ? '#17a2b8' : '#dc3545';
+            const textColor = type === 'warning' ? '#333' : 'white';
+            const icon = type === 'success' ? 'check-circle-fill' : 
+                        type === 'warning' ? 'exclamation-triangle-fill' : 
+                        type === 'info' ? 'info-circle-fill' : 'x-circle-fill';
+            
+            const toastHtml = `
+                <div class="toast notification-toast" style="background:${bgColor};color:${textColor};border-radius:10px;margin-bottom:10px;box-shadow:0 5px 15px rgba(0,0,0,0.2);">
+                    <div class="toast-body" style="padding:12px 20px;">
+                        <i class="bi bi-${icon} me-2"></i>
+                        ${message}
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('afterbegin', toastHtml);
+            setTimeout(() => {
+                if (container.firstElementChild) container.firstElementChild.remove();
+            }, 4000);
+        }
+
+        // ============================================================
+        // ⭐ DÉCONNEXION
+        // ============================================================
+        document.getElementById('logoutBtn').addEventListener('click', function() {
             if (confirm('Voulez-vous vous déconnecter ?')) {
-                // Nettoyer les écouteurs
                 if (unsubscribeCours) unsubscribeCours();
                 if (unsubscribePromotions) unsubscribePromotions();
                 if (unsubscribeEtudiants) unsubscribeEtudiants();
                 localStorage.removeItem('professeur_session');
-                // Garder le cache pour la prochaine connexion
                 window.location.href = 'login.html';
             }
         });
-        
-        // ========== NETTOYAGE ==========
+
+        // ============================================================
+        // ⭐ CLIC SUR L'AVATAR
+        // ============================================================
+        document.getElementById('profileAvatar').addEventListener('click', function() {
+            window.location.href = 'profil.html';
+        });
+
+        // ============================================================
+        // ⭐ NETTOYAGE
+        // ============================================================
         window.addEventListener('beforeunload', () => {
             if (unsubscribeCours) unsubscribeCours();
             if (unsubscribePromotions) unsubscribePromotions();
             if (unsubscribeEtudiants) unsubscribeEtudiants();
         });
-        
+
+        // ============================================================
+        // ⭐ INITIALISATION
+        // ============================================================
         console.log('✅ Page Mes Cours - Temps réel + Cache local activé');
+        console.log(`⏰ Session: ${SESSION_DUREE_HEURES} heures`);
+        console.log(`📦 Cache valable: ${CACHE_DURATION / 60000} minutes`);
+        console.log(`👤 ID professeur: ${currentUserId}`);
+        
+        window.showToast = showToast;
+        window.resetRecherche = resetRecherche;
+        
+        setTimeout(() => {
+            const nom = currentUser?.nomComplet || 'Professeur';
+            showToast(`👋 Bienvenue ${nom} - Mes Cours`, 'success');
+        }, 800);
     </script>
 </body>
 </html>
