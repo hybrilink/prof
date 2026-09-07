@@ -17,7 +17,14 @@
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary-blue: #003366; --dark-blue: #002244; --accent-yellow: #ffb347; --light-gray: #f0f2f5; }
+        :root { 
+            --primary-blue: #003366; 
+            --dark-blue: #002244; 
+            --accent-yellow: #ffb347; 
+            --light-gray: #f0f2f5;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+        }
         
         body { background: var(--light-gray); font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
         
@@ -38,7 +45,25 @@
             width: 45px; height: 45px; border-radius: 50%;
             background: var(--accent-yellow); display: flex; align-items: center; justify-content: center;
             cursor: pointer; font-weight: bold; color: var(--primary-blue); font-size: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            transition: all 0.3s;
         }
+        .profile-photo:hover { transform: scale(1.05); border-color: white; }
+        
+        .prof-name-nav {
+            color: white; font-weight: 500; font-size: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .prof-name-nav i { color: var(--accent-yellow); }
+        
+        .logout-btn {
+            background: transparent; color: white;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 8px 15px; border-radius: 25px;
+            font-weight: bold; transition: all 0.3s;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+        }
+        .logout-btn:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
         
         .content-card {
             background: white; border-radius: 20px; padding: 30px;
@@ -54,7 +79,12 @@
         }
         .section-header h4 { color: var(--primary-blue); margin: 0; font-weight: bold; }
         
-        .sync-badge { background: #28a745; color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; }
+        .sync-badge { 
+            background: var(--success-green); color: white; 
+            padding: 5px 12px; border-radius: 20px; font-size: 12px; 
+            display: inline-flex; align-items: center; gap: 5px; 
+        }
+        .sync-badge.offline { background: var(--danger-red); }
         
         /* Sélecteur de semaine */
         .semaine-nav {
@@ -73,6 +103,11 @@
             background: #f8f9fa;
             cursor: pointer;
             font-size: 15px;
+            min-width: 250px;
+        }
+        .semaine-nav select:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0,51,102,0.25);
         }
         .semaine-badge-status {
             padding: 5px 12px;
@@ -96,7 +131,9 @@
             border-radius: 15px;
             padding: 12px;
             min-height: 200px;
+            transition: all 0.3s;
         }
+        .jour-colonne:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
         
         .jour-titre {
             background: var(--primary-blue);
@@ -108,24 +145,63 @@
             font-size: 13px;
             margin-bottom: 12px;
         }
+        .jour-titre.aujourdhui {
+            background: var(--accent-yellow);
+            color: var(--primary-blue);
+        }
+        .jour-titre i { margin-right: 5px; }
         
         .horaire-item {
             background: white;
             border-radius: 10px;
             padding: 10px;
             margin-bottom: 8px;
-            border-left: 3px solid var(--accent-yellow);
+            border-left: 4px solid var(--accent-yellow);
             font-size: 12px;
             transition: all 0.3s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
-        .horaire-item:hover { transform: translateX(3px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .horaire-item:hover { 
+            transform: translateX(3px); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+        .horaire-item.passe {
+            opacity: 0.6;
+            border-left-color: #6c757d;
+        }
+        .horaire-item.en-cours {
+            border-left-color: var(--success-green);
+            background: #f0fff4;
+        }
         .horaire-heure { font-weight: bold; color: var(--primary-blue); font-size: 13px; }
         .horaire-cours { font-weight: 600; color: #333; }
         .horaire-salle { color: #888; font-size: 11px; }
-        .horaire-promo { display: inline-block; background: #fff3cd; color: #856404; padding: 2px 8px; border-radius: 10px; font-size: 10px; margin-top: 4px; }
+        .horaire-promo { 
+            display: inline-block; 
+            background: #fff3cd; 
+            color: #856404; 
+            padding: 2px 8px; 
+            border-radius: 10px; 
+            font-size: 10px; 
+            margin-top: 4px; 
+        }
+        .horaire-progress {
+            width: 100%;
+            height: 3px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            margin-top: 6px;
+            overflow: hidden;
+        }
+        .horaire-progress-bar {
+            height: 100%;
+            background: var(--success-green);
+            border-radius: 3px;
+            transition: width 1s ease;
+        }
         
-        .empty-state { text-align: center; padding: 60px 20px; color: #888; }
-        .empty-state i { font-size: 70px; color: #ccc; margin-bottom: 20px; }
+        .empty-state { text-align: center; padding: 40px 20px; color: #888; }
+        .empty-state i { font-size: 50px; color: #ccc; margin-bottom: 15px; }
         
         .toast-notification { position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; }
         @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -134,28 +210,77 @@
         .footer-info { text-align: center; margin-top: auto; padding: 20px 0; border-top: 1px solid #e0e0e0; font-size: 12px; color: #888; }
         .footer-info img { border-radius: 20px; vertical-align: middle; }
         
-        @media (max-width: 992px) { .semaine-grid { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 576px) { .semaine-grid { grid-template-columns: repeat(2, 1fr); } }
+        .badge-nb-cours {
+            background: var(--primary-blue);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            margin-left: 5px;
+        }
+        
+        .loading-spinner-small {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .last-sync-text { font-size: 11px; color: #888; }
+        
+        @media (max-width: 992px) { 
+            .semaine-grid { grid-template-columns: repeat(3, 1fr); } 
+        }
+        @media (max-width: 576px) { 
+            .semaine-grid { grid-template-columns: repeat(2, 1fr); }
+            .semaine-nav select { min-width: 100%; }
+            .content-card { padding: 20px; }
+            .navbar-right { gap: 10px; }
+        }
     </style>
 </head>
 <body>
+    <!-- ===== NAVBAR ===== -->
     <nav class="navbar navbar-custom">
         <div class="container">
-            <a class="navbar-brand text-white" href="#"><i class="bi bi-person-workspace"></i> Espace Professeur</a>
+            <a class="navbar-brand text-white" href="#">
+                <i class="bi bi-person-workspace"></i> Espace Professeur
+            </a>
             <div class="navbar-right">
-                <div class="profile-photo" id="profileAvatar">P</div>
-                <a href="professeur.html" class="back-btn"><i class="bi bi-house-door-fill"></i> Accueil</a>
+                <span class="prof-name-nav d-none d-md-inline-flex" id="profNameNav">
+                    <i class="bi bi-person-badge"></i> <span id="navProfessorName">Professeur</span>
+                </span>
+                <div class="profile-photo" id="profileAvatar" title="Voir le profil">P</div>
+                <a href="professeur.html" class="back-btn">
+                    <i class="bi bi-house-door-fill"></i> Accueil
+                </a>
+                <button class="logout-btn" id="logoutBtn" title="Déconnexion">
+                    <i class="bi bi-box-arrow-right"></i>
+                </button>
             </div>
         </div>
     </nav>
     
+    <!-- ===== MAIN CONTENT ===== -->
     <div class="container mt-4" style="flex: 1;">
         <div id="toastContainer" class="toast-notification"></div>
         
         <div class="content-card">
             <div class="section-header">
                 <h4><i class="bi bi-calendar-week"></i> Mon Emploi du Temps</h4>
-                <span class="sync-badge"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Temps réel</span>
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <span class="sync-badge" id="syncBadge">
+                        <i class="bi bi-circle-fill" style="font-size:8px;"></i> En ligne
+                    </span>
+                    <span class="last-sync-text" id="lastSyncText"></span>
+                </div>
             </div>
             
             <!-- Navigation semaine -->
@@ -165,13 +290,21 @@
                     <option value="">Chargement...</option>
                 </select>
                 <span id="semaineStatus"></span>
+                <span class="badge-nb-cours" id="nbCoursBadge">0 cours</span>
             </div>
             
             <!-- Grille -->
-            <div class="semaine-grid" id="semaineGrid"></div>
+            <div id="semaineGridContainer">
+                <div class="empty-state">
+                    <div class="loading-spinner-small mb-3"></div>
+                    <h5>Chargement...</h5>
+                    <p>Récupération de votre emploi du temps...</p>
+                </div>
+            </div>
         </div>
     </div>
     
+    <!-- ===== FOOTER ===== -->
     <div class="container">
         <div class="footer-info">
             <i class="bi bi-shield-check"></i> HYBRILINK-TECH - Votre partenaire digital de A à Z<br>
@@ -180,6 +313,9 @@
     </div>
 
     <script>
+        // ============================================================
+        // ⭐ CONFIGURATION FIREBASE
+        // ============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyBb82N2-5ns7qKjQBAj5UvDW87s2PZ27F0",
             authDomain: "fsa-unilu.firebaseapp.com",
@@ -188,40 +324,99 @@
             messagingSenderId: "36551990738",
             appId: "1:36551990738:web:e91fdcb53f8aab5d1b7c0b"
         };
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.firestore();
         db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
         
+        // ============================================================
+        // ⭐ CONSTANTES
+        // ============================================================
+        const SESSION_DUREE_HEURES = 24;
+        const CACHE_KEY_HORAIRES = 'cache_horaires_professeur';
+        const CACHE_KEY_LAST_SYNC = 'cache_last_sync_horaires';
+        const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
+        
+        // ============================================================
+        // ⭐ VARIABLES
+        // ============================================================
         let currentUser = null;
+        let currentUserId = null;
         let allHoraires = [];
         let selectedSemaineId = '';
         let unsubscribe = null;
+        let isLoading = true;
+        let isOnline = navigator.onLine;
         
-        // Génération semaines
+        // ============================================================
+        // ⭐ SYSTÈME DE CACHE LOCAL
+        // ============================================================
+        class LocalCache {
+            static set(key, data) {
+                try {
+                    const cacheData = { data: data, timestamp: Date.now() };
+                    localStorage.setItem(key, JSON.stringify(cacheData));
+                } catch(e) {
+                    console.warn('Cache saturé');
+                }
+            }
+            
+            static get(key) {
+                try {
+                    const raw = localStorage.getItem(key);
+                    if (!raw) return null;
+                    return JSON.parse(raw);
+                } catch(e) {
+                    return null;
+                }
+            }
+            
+            static isValid(cacheData) {
+                if (!cacheData) return false;
+                return (Date.now() - cacheData.timestamp) < CACHE_DURATION;
+            }
+            
+            static getDerniereSynchro() {
+                const cacheData = LocalCache.get(CACHE_KEY_LAST_SYNC);
+                if (cacheData && cacheData.data) {
+                    return new Date(cacheData.data).toLocaleTimeString('fr-FR', {
+                        hour: '2-digit', minute: '2-digit'
+                    });
+                }
+                return null;
+            }
+        }
+        
+        // ============================================================
+        // ⭐ FONCTIONS DE SEMAINE
+        // ============================================================
         function getLundiDate(date, decalage = 0) {
             const d = new Date(date);
             d.setDate(d.getDate() + (decalage * 7));
             const jour = d.getDay();
             const diff = d.getDate() - jour + (jour === 0 ? -6 : 1);
             const lundi = new Date(d.setDate(diff));
-            lundi.setHours(0,0,0,0);
+            lundi.setHours(0, 0, 0, 0);
             return lundi;
         }
         
         function genererSemaines() {
             const semaines = [];
             const maintenant = new Date();
-            for (let i = 0; i <= 2; i++) {
+            for (let i = -1; i <= 3; i++) {
                 const debut = getLundiDate(maintenant, i);
                 const fin = new Date(debut);
-                fin.setDate(fin.getDate() + 5);
-                const debutStr = debut.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit' });
-                const finStr = fin.toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
+                fin.setDate(fin.getDate() + 6);
+                const debutStr = debut.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+                const finStr = fin.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
                 semaines.push({
                     id: `S${debut.getFullYear()}-${String(debut.getMonth()+1).padStart(2,'0')}-${String(debut.getDate()).padStart(2,'0')}`,
                     debut, fin,
                     label: `Semaine du ${debutStr} au ${finStr}`,
-                    debutISO: debut.toISOString().split('T')[0]
+                    debutISO: debut.toISOString().split('T')[0],
+                    estActuelle: i === 1
                 });
             }
             return semaines;
@@ -229,107 +424,463 @@
         
         const semainesDisponibles = genererSemaines();
         
-        // Session
+        // ============================================================
+        // ⭐ VÉRIFICATION DE SESSION - CORRIGÉE
+        // ============================================================
         (function() {
-            const s = localStorage.getItem('professeur_session');
-            if (!s) { window.location.href = 'login.html'; return; }
-            try {
-                const d = JSON.parse(s);
-                if (!d.user || d.user.role !== 'professeur' || (Date.now() - d.timestamp) > 86400000) {
-                    localStorage.removeItem('professeur_session');
-                    window.location.href = 'login.html'; return;
-                }
-                currentUser = d.user;
-                document.getElementById('profileAvatar').textContent = (d.user.nomComplet || 'P').split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
-                init();
-            } catch(e) { localStorage.removeItem('professeur_session'); window.location.href = 'login.html'; }
-        })();
-        
-        function init() {
-            // Init select semaine
-            const sel = document.getElementById('semaineSelect');
-            sel.innerHTML = '';
-            semainesDisponibles.forEach((s, i) => {
-                sel.innerHTML += `<option value="${s.id}">${i===0?'📍 ':''}${s.label}</option>`;
-            });
+            console.log('🔍 Vérification de la session...');
             
-            // Présélectionner semaine actuelle
-            if (semainesDisponibles.length > 0) {
-                sel.value = semainesDisponibles[0].id;
-                selectedSemaineId = semainesDisponibles[0].id;
-                updateSemaineStatus();
+            const sessionData = localStorage.getItem('professeur_session');
+            if (!sessionData) { 
+                console.log('❌ Aucune session trouvée');
+                window.location.href = 'login.html'; 
+                return; 
             }
             
-            sel.addEventListener('change', function() {
-                selectedSemaineId = this.value;
-                updateSemaineStatus();
+            try {
+                const session = JSON.parse(sessionData);
+                const now = Date.now();
+                
+                console.log('📦 Session brute:', session);
+                
+                // ✅ Vérifier directement les propriétés de session
+                if (!session.role || session.role !== 'professeur') {
+                    console.log('❌ Rôle non professeur:', session.role);
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                if (!session.expires || now > session.expires) {
+                    console.log('⏰ Session expirée');
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                if (!session.verified2FA) {
+                    console.log('❌ 2FA non vérifiée');
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // ✅ STOCKER DIRECTEMENT LA SESSION
+                currentUser = session;
+                currentUserId = session.id || session.uid;
+                
+                const nomComplet = session.nomComplet || 'Professeur';
+                const specialite = session.specialite || '';
+                
+                console.log('✅ Session valide - Bienvenue ' + nomComplet);
+                console.log('🆔 ID professeur:', currentUserId);
+                
+                // Affichage du nom dans la navbar
+                const navName = document.getElementById('navProfessorName');
+                if (navName) navName.textContent = nomComplet;
+                
+                // Initiales pour l'avatar
+                const initials = nomComplet.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                const avatar = document.getElementById('profileAvatar');
+                if (avatar) {
+                    avatar.textContent = initials;
+                    avatar.title = nomComplet + (specialite ? ' - ' + specialite : '');
+                }
+                
+                // Mise à jour du titre
+                document.title = 'Mon Horaire - ' + nomComplet;
+                
+                console.log('🚀 Chargement des données...');
+                chargerDepuisCache();
+                initRealtime();
+                
+            } catch(e) {
+                console.error('❌ Erreur session:', e);
+                localStorage.removeItem('professeur_session');
+                window.location.href = 'login.html';
+            }
+        })();
+        
+        // ============================================================
+        // ⭐ CHARGEMENT DEPUIS LE CACHE
+        // ============================================================
+        function chargerDepuisCache() {
+            const cacheHoraires = LocalCache.get(CACHE_KEY_HORAIRES);
+            
+            if (cacheHoraires && LocalCache.isValid(cacheHoraires)) {
+                allHoraires = cacheHoraires.data;
+                console.log('📦 Horaires chargés depuis le cache');
+                isLoading = false;
+                initialiserSelecteurs();
                 afficherGrille();
+                mettreAJourStats();
+            }
+            
+            const derniereSynchro = LocalCache.getDerniereSynchro();
+            if (derniereSynchro) {
+                const lastSyncText = document.getElementById('lastSyncText');
+                if (lastSyncText) {
+                    lastSyncText.textContent = `Dernière synchro: ${derniereSynchro}`;
+                }
+            }
+        }
+        
+        // ============================================================
+        // ⭐ INITIALISATION TEMPS RÉEL
+        // ============================================================
+        function initRealtime() {
+            console.log('🔄 Initialisation des écouteurs temps réel...');
+            console.log('👤 ID professeur pour filtrage:', currentUserId);
+            
+            // ⭐ ÉCOUTEUR HORAIRES AVEC FILTRAGE
+            unsubscribe = db.collection('horaires')
+                .where('professeurId', '==', currentUserId)
+                .onSnapshot((snapshot) => {
+                    console.log('📅 Mise à jour des horaires en temps réel...');
+                    
+                    allHoraires = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        // Vérification supplémentaire au cas où le filtre ne fonctionne pas
+                        if (data.professeurId === currentUserId || data.professeurId === currentUser?.uid) {
+                            allHoraires.push({ id: doc.id, ...data });
+                        }
+                    });
+                    
+                    // Mettre en cache
+                    LocalCache.set(CACHE_KEY_HORAIRES, allHoraires);
+                    LocalCache.set(CACHE_KEY_LAST_SYNC, Date.now());
+                    
+                    if (isLoading) isLoading = false;
+                    
+                    // Mettre à jour l'UI
+                    mettreAJourStatutConnexion(true);
+                    initialiserSelecteurs();
+                    afficherGrille();
+                    mettreAJourStats();
+                    mettreAJourDerniereSynchro();
+                    
+                    console.log(`✅ ${allHoraires.length} horaires chargés`);
+                }, (error) => {
+                    console.error('❌ Erreur écoute horaires:', error);
+                    mettreAJourStatutConnexion(false);
+                });
+        }
+        
+        // ============================================================
+        // ⭐ GESTION DE LA CONNEXION
+        // ============================================================
+        function mettreAJourStatutConnexion(online) {
+            isOnline = online;
+            const badge = document.getElementById('syncBadge');
+            
+            if (online) {
+                if (badge) {
+                    badge.className = 'sync-badge';
+                    badge.innerHTML = '<i class="bi bi-circle-fill" style="font-size:8px;"></i> En ligne';
+                }
+            } else {
+                if (badge) {
+                    badge.className = 'sync-badge offline';
+                    badge.innerHTML = '<i class="bi bi-circle-fill" style="font-size:8px;"></i> Hors-ligne (cache)';
+                }
+                showToast('📶 Connexion perdue - Mode hors-ligne', 'warning');
+            }
+        }
+        
+        function mettreAJourDerniereSynchro() {
+            const derniereSynchro = LocalCache.getDerniereSynchro();
+            const lastSyncText = document.getElementById('lastSyncText');
+            if (lastSyncText && derniereSynchro) {
+                lastSyncText.textContent = `Dernière synchro: ${derniereSynchro}`;
+            }
+        }
+        
+        window.addEventListener('online', () => {
+            mettreAJourStatutConnexion(true);
+            showToast('📶 Connexion rétablie', 'success');
+        });
+        
+        window.addEventListener('offline', () => {
+            mettreAJourStatutConnexion(false);
+            showToast('📶 Connexion perdue - Mode hors-ligne', 'warning');
+        });
+        
+        // ============================================================
+        // ⭐ INITIALISATION DES SÉLECTEURS
+        // ============================================================
+        function initialiserSelecteurs() {
+            const sel = document.getElementById('semaineSelect');
+            if (!sel) return;
+            
+            const valeurActuelle = sel.value;
+            
+            sel.innerHTML = '';
+            semainesDisponibles.forEach((s, i) => {
+                const prefix = s.estActuelle ? '📍 ' : '';
+                sel.innerHTML += `<option value="${s.id}">${prefix}${s.label}</option>`;
             });
             
-            // Écouteur temps réel
-            unsubscribe = db.collection('horaires')
-                .where('professeurId', '==', currentUser.id)
-                .onSnapshot(snap => {
-                    allHoraires = [];
-                    snap.forEach(d => allHoraires.push({ id: d.id, ...d.data() }));
-                    afficherGrille();
-                }, err => console.error(err));
+            // Présélectionner la semaine actuelle ou la première
+            if (valeurActuelle && semainesDisponibles.some(s => s.id === valeurActuelle)) {
+                sel.value = valeurActuelle;
+            } else {
+                const semaineActuelle = semainesDisponibles.find(s => s.estActuelle);
+                sel.value = semaineActuelle ? semaineActuelle.id : semainesDisponibles[0]?.id || '';
+            }
+            
+            selectedSemaineId = sel.value;
+            updateSemaineStatus();
         }
+        
+        // ============================================================
+        // ⭐ ÉVÉNEMENTS
+        // ============================================================
+        document.getElementById('semaineSelect')?.addEventListener('change', function() {
+            selectedSemaineId = this.value;
+            updateSemaineStatus();
+            afficherGrille();
+            mettreAJourStats();
+        });
         
         function updateSemaineStatus() {
             const statusEl = document.getElementById('semaineStatus');
+            if (!statusEl) return;
+            
             const semaine = semainesDisponibles.find(s => s.id === selectedSemaineId);
             if (!semaine) return;
             
             const maintenant = new Date();
             if (maintenant > semaine.fin) {
-                statusEl.innerHTML = '<span class="semaine-badge-status passee">Semaine passée</span>';
+                statusEl.innerHTML = '<span class="semaine-badge-status passee">📅 Semaine passée</span>';
             } else if (maintenant >= semaine.debut && maintenant <= semaine.fin) {
-                statusEl.innerHTML = '<span class="semaine-badge-status active">Semaine en cours</span>';
+                statusEl.innerHTML = '<span class="semaine-badge-status active">🟢 Semaine en cours</span>';
             } else {
-                statusEl.innerHTML = '<span class="semaine-badge-status future">Semaine à venir</span>';
+                statusEl.innerHTML = '<span class="semaine-badge-status future">🔵 Semaine à venir</span>';
             }
         }
         
+        // ============================================================
+        // ⭐ AFFICHAGE DE LA GRILLE
+        // ============================================================
         function afficherGrille() {
-            const grid = document.getElementById('semaineGrid');
+            const container = document.getElementById('semaineGridContainer');
+            if (!container) return;
+            
             const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+            
+            if (isLoading) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="loading-spinner-small mb-3"></div>
+                        <h5>Chargement...</h5>
+                        <p>Récupération de votre emploi du temps...</p>
+                    </div>`;
+                return;
+            }
             
             // Filtrer par semaine
             const horairesSemaine = allHoraires.filter(h => h.semaineId === selectedSemaineId);
             
-            let html = '';
-            jours.forEach(jour => {
+            const maintenant = new Date();
+            const aujourdhui = maintenant.getDay();
+            const joursSemaine = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+            const jourActuelIndex = aujourdhui === 0 ? 5 : aujourdhui - 1;
+            
+            let html = '<div class="semaine-grid">';
+            let totalCours = 0;
+            
+            jours.forEach((jour, index) => {
+                const estAujourdhui = index === jourActuelIndex;
                 const horairesDuJour = horairesSemaine
                     .filter(h => h.jour === jour)
                     .sort((a, b) => (a.debut || '').localeCompare(b.debut || ''));
                 
+                totalCours += horairesDuJour.length;
+                
                 html += `<div class="jour-colonne">
-                    <div class="jour-titre">${jour}</div>`;
+                    <div class="jour-titre ${estAujourdhui ? 'aujourdhui' : ''}">
+                        ${estAujourdhui ? '<i class="bi bi-star-fill"></i> ' : ''}
+                        ${jour}
+                        <span style="font-size:10px;opacity:0.7;display:block;font-weight:normal;">
+                            ${horairesDuJour.length} cours
+                        </span>
+                    </div>`;
                 
                 if (horairesDuJour.length === 0) {
                     html += `<div style="text-align:center;padding:20px;color:#ccc;">
                         <i class="bi bi-dash-circle" style="font-size:24px;"></i>
-                        <p style="font-size:11px;">Aucun cours</p>
+                        <p style="font-size:11px;margin-top:5px;">Aucun cours</p>
                     </div>`;
                 } else {
                     horairesDuJour.forEach(h => {
+                        const estPasse = estCoursPasse(h, maintenant);
+                        const estEnCours = estCoursEnCours(h, maintenant);
+                        const classeCours = estEnCours ? 'en-cours' : (estPasse ? 'passe' : '');
+                        
                         html += `
-                        <div class="horaire-item">
-                            <div class="horaire-heure"><i class="bi bi-clock"></i> ${h.debut} - ${h.fin}</div>
+                        <div class="horaire-item ${classeCours}">
+                            <div class="horaire-heure">
+                                <i class="bi bi-clock"></i> ${h.debut || '--:--'} - ${h.fin || '--:--'}
+                                ${estEnCours ? ' <span style="color:#28a745;font-size:10px;">● En cours</span>' : ''}
+                            </div>
                             <div class="horaire-cours">${h.coursNom || 'Cours'}</div>
-                            <div class="horaire-salle"><i class="bi bi-geo-alt"></i> ${h.salle || 'N/A'}</div>
+                            <div class="horaire-salle">
+                                <i class="bi bi-geo-alt"></i> ${h.salle || 'N/A'}
+                            </div>
                             <span class="horaire-promo">${h.promotionNom || ''}</span>
+                            ${estEnCours ? calculerProgresCours(h) : ''}
                         </div>`;
                     });
                 }
                 html += `</div>`;
             });
             
-            grid.innerHTML = html;
+            html += '</div>';
+            container.innerHTML = html;
+            
+            // Mettre à jour le badge du nombre de cours
+            const nbBadge = document.getElementById('nbCoursBadge');
+            if (nbBadge) nbBadge.textContent = `${totalCours} cours`;
         }
         
-        window.addEventListener('beforeunload', () => { if(unsubscribe) unsubscribe(); });
+        // ============================================================
+        // ⭐ FONCTIONS POUR L'ÉTAT DES COURS
+        // ============================================================
+        function estCoursPasse(horaire, maintenant) {
+            if (!horaire.fin) return false;
+            try {
+                const [h, m] = horaire.fin.split(':').map(Number);
+                const finCours = new Date(maintenant);
+                finCours.setHours(h, m, 0, 0);
+                return maintenant > finCours;
+            } catch(e) { return false; }
+        }
+        
+        function estCoursEnCours(horaire, maintenant) {
+            if (!horaire.debut || !horaire.fin) return false;
+            try {
+                const [hD, mD] = horaire.debut.split(':').map(Number);
+                const [hF, mF] = horaire.fin.split(':').map(Number);
+                
+                const debutCours = new Date(maintenant);
+                debutCours.setHours(hD, mD, 0, 0);
+                
+                const finCours = new Date(maintenant);
+                finCours.setHours(hF, mF, 0, 0);
+                
+                return maintenant >= debutCours && maintenant <= finCours;
+            } catch(e) { return false; }
+        }
+        
+        function calculerProgresCours(horaire) {
+            if (!horaire.debut || !horaire.fin) return '';
+            
+            try {
+                const maintenant = new Date();
+                const [hD, mD] = horaire.debut.split(':').map(Number);
+                const [hF, mF] = horaire.fin.split(':').map(Number);
+                
+                const debutCours = new Date(maintenant);
+                debutCours.setHours(hD, mD, 0, 0);
+                
+                const finCours = new Date(maintenant);
+                finCours.setHours(hF, mF, 0, 0);
+                
+                const total = finCours - debutCours;
+                const ecoule = maintenant - debutCours;
+                const pourcentage = Math.min(100, Math.max(0, (ecoule / total) * 100));
+                
+                return `
+                    <div class="horaire-progress">
+                        <div class="horaire-progress-bar" style="width:${pourcentage}%;"></div>
+                    </div>
+                    <small style="font-size:9px;color:#888;">${Math.round(pourcentage)}%</small>
+                `;
+            } catch(e) { return ''; }
+        }
+        
+        // ============================================================
+        // ⭐ STATISTIQUES
+        // ============================================================
+        function mettreAJourStats() {
+            const horairesSemaine = allHoraires.filter(h => h.semaineId === selectedSemaineId);
+            const total = horairesSemaine.length;
+            
+            const nbBadge = document.getElementById('nbCoursBadge');
+            if (nbBadge) nbBadge.textContent = `${total} cours`;
+        }
+        
+        // ============================================================
+        // ⭐ FONCTION TOAST
+        // ============================================================
+        function showToast(msg, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            
+            const bgColor = type === 'success' ? '#28a745' : 
+                           type === 'warning' ? '#ffc107' : 
+                           type === 'info' ? '#17a2b8' : '#dc3545';
+            const textColor = type === 'warning' ? '#333' : 'white';
+            const icon = type === 'success' ? 'check-circle-fill' : 
+                        type === 'warning' ? 'exclamation-triangle-fill' : 
+                        type === 'info' ? 'info-circle-fill' : 'x-circle-fill';
+            
+            const toastHtml = `
+                <div class="toast notification-toast" style="background:${bgColor};color:${textColor};border-radius:10px;margin-bottom:10px;box-shadow:0 5px 15px rgba(0,0,0,0.2);">
+                    <div class="toast-body" style="padding:12px 20px;">
+                        <i class="bi bi-${icon} me-2"></i>
+                        ${msg}
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('afterbegin', toastHtml);
+            setTimeout(() => {
+                if (container.firstElementChild) {
+                    container.firstElementChild.remove();
+                }
+            }, 4000);
+        }
+        
+        // ============================================================
+        // ⭐ DÉCONNEXION
+        // ============================================================
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            if (confirm('Voulez-vous vous déconnecter ?')) {
+                if (unsubscribe) unsubscribe();
+                localStorage.removeItem('professeur_session');
+                window.location.href = 'login.html';
+            }
+        });
+        
+        // ============================================================
+        // ⭐ CLIC SUR L'AVATAR
+        // ============================================================
+        document.getElementById('profileAvatar').addEventListener('click', function() {
+            window.location.href = 'profil.html';
+        });
+        
+        // ============================================================
+        // ⭐ NETTOYAGE
+        // ============================================================
+        window.addEventListener('beforeunload', () => {
+            if (unsubscribe) unsubscribe();
+        });
+        
+        // ============================================================
+        // ⭐ INITIALISATION
+        // ============================================================
+        console.log('✅ Page Mon Horaire - Temps réel + Cache local activé');
+        console.log(`⏰ Session: ${SESSION_DUREE_HEURES} heures`);
+        console.log(`📦 Cache valable: ${CACHE_DURATION / 60000} minutes`);
+        console.log(`👤 ID professeur: ${currentUserId}`);
+        
+        window.showToast = showToast;
+        
+        setTimeout(() => {
+            const nom = currentUser?.nomComplet || 'Professeur';
+            showToast(`👋 Bienvenue ${nom} - Mon Horaire`, 'success');
+        }, 600);
     </script>
 </body>
 </html>
