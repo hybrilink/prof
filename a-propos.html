@@ -13,11 +13,41 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     
     <style>
-        :root { --primary-blue: #003366; --dark-blue: #002244; --accent-yellow: #ffb347; }
+        :root { 
+            --primary-blue: #003366; 
+            --dark-blue: #002244; 
+            --accent-yellow: #ffb347; 
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
         
         .navbar-custom { background: var(--primary-blue); box-shadow: 0 4px 15px rgba(0,0,0,0.2); padding: 10px 0; }
+        
+        .navbar-right { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        
+        .profile-photo {
+            width: 45px; height: 45px; border-radius: 50%;
+            background: var(--accent-yellow); display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-weight: bold; color: var(--primary-blue); font-size: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            transition: all 0.3s;
+        }
+        .profile-photo:hover { transform: scale(1.05); border-color: white; }
+        
+        .prof-name-nav {
+            color: white; font-weight: 500; font-size: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .prof-name-nav i { color: var(--accent-yellow); }
+        
+        .logout-btn {
+            background: transparent; color: white;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 8px 15px; border-radius: 25px;
+            font-weight: bold; transition: all 0.3s;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+        }
+        .logout-btn:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
         
         .home-btn {
             background: var(--accent-yellow); color: var(--primary-blue);
@@ -161,23 +191,46 @@
         }
         .footer a { color: var(--accent-yellow); text-decoration: none; }
         .footer a:hover { text-decoration: underline; }
+        
+        .toast-notification { position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast { animation: slideInRight 0.3s ease-out; }
+        
+        @media (max-width: 768px) {
+            .about-container { padding: 20px; }
+            .navbar-right { gap: 10px; }
+            .prof-name-nav { font-size: 12px; }
+            .services-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
-    <!-- Navbar -->
+    <!-- ===== NAVBAR ===== -->
     <nav class="navbar navbar-custom">
         <div class="container">
             <a class="navbar-brand text-white" href="professeur.html">
                 <i class="bi bi-person-workspace"></i> Espace Professeur
             </a>
-            <a href="professeur.html" class="home-btn">
-                <i class="bi bi-house-door-fill"></i> Accueil
-            </a>
+            <div class="navbar-right">
+                <span class="prof-name-nav d-none d-md-inline-flex" id="profNameNav">
+                    <i class="bi bi-person-badge"></i> <span id="navProfessorName">Professeur</span>
+                </span>
+                <div class="profile-photo" id="profileAvatar" title="Voir le profil">P</div>
+                <a href="professeur.html" class="home-btn">
+                    <i class="bi bi-house-door-fill"></i> Accueil
+                </a>
+                <button class="logout-btn" id="logoutBtn" title="Déconnexion">
+                    <i class="bi bi-box-arrow-right"></i>
+                </button>
+            </div>
         </div>
     </nav>
     
+    <!-- ===== TOAST CONTAINER ===== -->
+    <div id="toastContainer" class="toast-notification"></div>
+    
+    <!-- ===== MAIN CONTENT ===== -->
     <div class="container mt-4" style="flex: 1;">
-        <!-- À propos -->
         <div class="about-container">
             <div class="about-logo">
                 <img src="t.png" alt="HYBRILINK-TECH Logo" onerror="this.src='https://via.placeholder.com/120x120?text=HT'">
@@ -247,13 +300,13 @@
         </div>
     </div>
     
-    <!-- Info text -->
+    <!-- ===== INFO TEXT ===== -->
     <div class="info-text">
         <i class="bi bi-shield-check"></i> HYBRILINK-TECH votre partenaire de A à Z<br>
         <img src="t.png" width="50px" style="border-radius: 30px;" alt="HYBRILINK" onerror="this.style.display='none'">
     </div>
     
-    <!-- Footer -->
+    <!-- ===== FOOTER ===== -->
     <footer class="footer">
         <div class="container">
             <p class="mb-0">© 2024 HYBRILINK-TECH | Votre partenaire tech de A à Z</p>
@@ -262,29 +315,142 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Vérification de session
+        // ============================================================
+        // ⭐ VÉRIFICATION DE SESSION - CORRIGÉE
+        // ============================================================
         (function() {
+            console.log('🔍 Vérification de la session...');
+            
             const sessionData = localStorage.getItem('professeur_session');
-            if(!sessionData) { window.location.href = 'login.html'; return; }
+            if (!sessionData) { 
+                console.log('❌ Aucune session trouvée');
+                window.location.href = 'login.html'; 
+                return; 
+            }
             
             try {
                 const session = JSON.parse(sessionData);
                 const now = Date.now();
-                const sessionAge = now - session.timestamp;
-                const maxAge = 24 * 60 * 60 * 1000;
                 
-                if(!session.user || session.user.role !== 'professeur' || sessionAge > maxAge) {
+                console.log('📦 Session brute:', session);
+                
+                // ✅ Vérifier directement les propriétés de session
+                if (!session.role || session.role !== 'professeur') {
+                    console.log('❌ Rôle non professeur:', session.role);
                     localStorage.removeItem('professeur_session');
                     window.location.href = 'login.html';
                     return;
                 }
+                
+                if (!session.expires || now > session.expires) {
+                    console.log('⏰ Session expirée');
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                if (!session.verified2FA) {
+                    console.log('❌ 2FA non vérifiée');
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // ✅ STOCKER DIRECTEMENT LA SESSION
+                const nomComplet = session.nomComplet || 'Professeur';
+                const specialite = session.specialite || '';
+                
+                console.log('✅ Session valide - Bienvenue ' + nomComplet);
+                console.log('📚 Spécialité:', specialite);
+                console.log('🏛️ Département:', session.departement || 'Non défini');
+                
+                // Affichage du nom dans la navbar
+                const navName = document.getElementById('navProfessorName');
+                if (navName) navName.textContent = nomComplet;
+                
+                // Initiales pour l'avatar
+                const initials = nomComplet.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                const avatar = document.getElementById('profileAvatar');
+                if (avatar) {
+                    avatar.textContent = initials;
+                    avatar.title = nomComplet + (specialite ? ' - ' + specialite : '');
+                }
+                
+                // Mise à jour du titre
+                document.title = 'À Propos - ' + nomComplet;
+                
             } catch(e) {
+                console.error('❌ Erreur session:', e);
                 localStorage.removeItem('professeur_session');
                 window.location.href = 'login.html';
             }
         })();
         
+        // ============================================================
+        // ⭐ FONCTION TOAST
+        // ============================================================
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            
+            const bgColor = type === 'success' ? '#28a745' : 
+                           type === 'warning' ? '#ffc107' : 
+                           type === 'info' ? '#17a2b8' : '#dc3545';
+            const textColor = type === 'warning' ? '#333' : 'white';
+            const icon = type === 'success' ? 'check-circle-fill' : 
+                        type === 'warning' ? 'exclamation-triangle-fill' : 
+                        type === 'info' ? 'info-circle-fill' : 'x-circle-fill';
+            
+            const toastHtml = `
+                <div class="toast notification-toast" style="background:${bgColor};color:${textColor};border-radius:10px;margin-bottom:10px;box-shadow:0 5px 15px rgba(0,0,0,0.2);">
+                    <div class="toast-body" style="padding:12px 20px;">
+                        <i class="bi bi-${icon} me-2"></i>
+                        ${message}
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('afterbegin', toastHtml);
+            setTimeout(() => {
+                if (container.firstElementChild) container.firstElementChild.remove();
+            }, 4000);
+        }
+        
+        // ============================================================
+        // ⭐ DÉCONNEXION
+        // ============================================================
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            if (confirm('Voulez-vous vous déconnecter ?')) {
+                localStorage.removeItem('professeur_session');
+                window.location.href = 'login.html';
+            }
+        });
+        
+        // ============================================================
+        // ⭐ CLIC SUR L'AVATAR
+        // ============================================================
+        document.getElementById('profileAvatar').addEventListener('click', function() {
+            window.location.href = 'profil.html';
+        });
+        
+        // ============================================================
+        // ⭐ INITIALISATION
+        // ============================================================
         console.log('✅ Page À Propos - Espace Professeur');
+        
+        // Exposer la fonction showToast globalement
+        window.showToast = showToast;
+        
+        // Message de bienvenue
+        setTimeout(() => {
+            const sessionData = localStorage.getItem('professeur_session');
+            if (sessionData) {
+                try {
+                    const session = JSON.parse(sessionData);
+                    const nom = session.nomComplet || 'Professeur';
+                    showToast(`👋 Bienvenue ${nom} - À Propos`, 'success');
+                } catch(e) {}
+            }
+        }, 500);
     </script>
 </body>
 </html>
