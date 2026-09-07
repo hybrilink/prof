@@ -13,11 +13,34 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     
     <style>
-        :root { --primary-blue: #003366; --dark-blue: #002244; --accent-yellow: #ffb347; }
+        :root { 
+            --primary-blue: #003366; 
+            --dark-blue: #002244; 
+            --accent-yellow: #ffb347; 
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; flex-direction: column; }
         
         .navbar-custom { background: var(--primary-blue); box-shadow: 0 4px 15px rgba(0,0,0,0.2); padding: 10px 0; }
+        
+        .navbar-right { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        
+        .profile-photo-nav {
+            width: 45px; height: 45px;
+            border-radius: 50%;
+            background: var(--accent-yellow);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s;
+            font-weight: bold; color: var(--primary-blue); font-size: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .profile-photo-nav:hover { transform: scale(1.05); border-color: white; }
+        
+        .prof-name-nav {
+            color: white; font-weight: 500; font-size: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .prof-name-nav i { color: var(--accent-yellow); }
         
         .home-btn {
             background: var(--accent-yellow); color: var(--primary-blue);
@@ -26,6 +49,15 @@
             display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
         }
         .home-btn:hover { background: #ff9800; transform: translateY(-2px); color: var(--primary-blue); }
+        
+        .logout-btn {
+            background: transparent; color: white;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 8px 15px; border-radius: 25px;
+            font-weight: bold; transition: all 0.3s;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+        }
+        .logout-btn:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
         
         .profile-container {
             background: white;
@@ -182,26 +214,42 @@
         .footer a:hover { text-decoration: underline; }
         
         .spinner-border-sm { width: 20px; height: 20px; border-width: 2px; }
+        
+        @media (max-width: 768px) {
+            .profile-container { padding: 20px; }
+            .navbar-right { gap: 10px; }
+            .prof-name-nav { font-size: 12px; }
+            .profile-avatar { width: 90px; height: 90px; font-size: 36px; }
+        }
     </style>
 </head>
 <body>
-    <!-- Navbar -->
+    <!-- ===== NAVBAR ===== -->
     <nav class="navbar navbar-custom">
         <div class="container">
             <a class="navbar-brand text-white" href="professeur.html">
                 <i class="bi bi-person-workspace"></i> Espace Professeur
             </a>
-            <a href="professeur.html" class="home-btn">
-                <i class="bi bi-house-door-fill"></i> Accueil
-            </a>
+            <div class="navbar-right">
+                <span class="prof-name-nav d-none d-md-inline-flex" id="profNameNav">
+                    <i class="bi bi-person-badge"></i> <span id="navProfessorName">Professeur</span>
+                </span>
+                <div class="profile-photo-nav" id="profileAvatarNav" title="Mon Profil">P</div>
+                <a href="professeur.html" class="home-btn">
+                    <i class="bi bi-house-door-fill"></i> Accueil
+                </a>
+                <button class="logout-btn" id="logoutBtn" title="Déconnexion">
+                    <i class="bi bi-box-arrow-right"></i>
+                </button>
+            </div>
         </div>
     </nav>
     
-    <!-- Toast Container -->
+    <!-- ===== TOAST CONTAINER ===== -->
     <div id="toastContainer" class="toast-notification"></div>
     
+    <!-- ===== MAIN CONTENT ===== -->
     <div class="container mt-4" style="flex: 1;">
-        <!-- Profil -->
         <div class="profile-container">
             <!-- En-tête profil -->
             <div class="profile-header">
@@ -240,6 +288,14 @@
                     <div class="detail-content">
                         <div class="detail-label">ID Professeur</div>
                         <div class="detail-value" id="detailId" style="font-family: monospace;">-</div>
+                    </div>
+                </div>
+                
+                <div class="detail-item">
+                    <div class="detail-icon"><i class="bi bi-telephone-fill"></i></div>
+                    <div class="detail-content">
+                        <div class="detail-label">Téléphone</div>
+                        <div class="detail-value" id="detailTelephone">-</div>
                     </div>
                 </div>
                 
@@ -291,13 +347,13 @@
         </div>
     </div>
     
-    <!-- Info text -->
+    <!-- ===== INFO TEXT ===== -->
     <div class="info-text">
         <i class="bi bi-shield-check"></i> HYBRILINK-TECH votre partenaire de A à Z<br>
         <img src="t.png" width="50px" style="border-radius: 30px;" alt="HYBRILINK" onerror="this.style.display='none'">
     </div>
     
-    <!-- Footer -->
+    <!-- ===== FOOTER ===== -->
     <footer class="footer">
         <div class="container">
             <p class="mb-0">© 2024 HYBRILINK-TECH | Votre partenaire tech de A à Z</p>
@@ -308,7 +364,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script>
-        // Configuration Firebase
+        // ============================================================
+        // ⭐ CONFIGURATION FIREBASE
+        // ============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyBb82N2-5ns7qKjQBAj5UvDW87s2PZ27F0",
             authDomain: "fsa-unilu.firebaseapp.com",
@@ -317,87 +375,202 @@
             messagingSenderId: "36551990738",
             appId: "1:36551990738:web:e91fdcb53f8aab5d1b7c0b"
         };
-        firebase.initializeApp(firebaseConfig);
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const db = firebase.firestore();
         
+        // ============================================================
+        // ⭐ VARIABLES
+        // ============================================================
         let currentUser = null;
+        let currentUserId = null;
         
-        // Vérification de session
+        // ============================================================
+        // ⭐ VÉRIFICATION DE SESSION - CORRIGÉE
+        // ============================================================
         (function() {
+            console.log('🔍 Vérification de la session...');
+            
             const sessionData = localStorage.getItem('professeur_session');
-            if(!sessionData) { window.location.href = 'login.html'; return; }
+            if (!sessionData) { 
+                console.log('❌ Aucune session trouvée');
+                window.location.href = 'login.html'; 
+                return; 
+            }
             
             try {
                 const session = JSON.parse(sessionData);
                 const now = Date.now();
-                const sessionAge = now - session.timestamp;
-                const maxAge = 24 * 60 * 60 * 1000;
                 
-                if(!session.user || session.user.role !== 'professeur' || sessionAge > maxAge) {
+                console.log('📦 Session brute:', session);
+                
+                // ✅ Vérifier directement les propriétés de session
+                if (!session.role || session.role !== 'professeur') {
+                    console.log('❌ Rôle non professeur:', session.role);
                     localStorage.removeItem('professeur_session');
                     window.location.href = 'login.html';
                     return;
                 }
                 
-                currentUser = session.user;
-                afficherProfil(currentUser);
+                if (!session.expires || now > session.expires) {
+                    console.log('⏰ Session expirée');
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                if (!session.verified2FA) {
+                    console.log('❌ 2FA non vérifiée');
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // ✅ STOCKER DIRECTEMENT LA SESSION
+                currentUser = session;
+                currentUserId = session.id || session.uid;
+                
+                const nomComplet = session.nomComplet || 'Professeur';
+                
+                console.log('✅ Session valide - Bienvenue ' + nomComplet);
+                console.log('🆔 ID:', currentUserId);
+                
+                // Affichage du nom dans la navbar
+                const navName = document.getElementById('navProfessorName');
+                if (navName) navName.textContent = nomComplet;
+                
+                // Initiales pour l'avatar
+                const initials = nomComplet.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                const avatar = document.getElementById('profileAvatarNav');
+                if (avatar) {
+                    avatar.textContent = initials;
+                    avatar.title = nomComplet;
+                }
+                
+                // Mise à jour du titre
+                document.title = 'Mon Profil - ' + nomComplet;
+                
+                // Afficher les informations du profil
+                afficherProfil(session);
+                
+                // Rafraîchir les données depuis Firestore pour avoir les infos les plus récentes
+                rafraichirProfilDepuisFirestore();
+                
             } catch(e) {
+                console.error('❌ Erreur session:', e);
                 localStorage.removeItem('professeur_session');
                 window.location.href = 'login.html';
             }
         })();
         
-        // Afficher les informations du profil
+        // ============================================================
+        // ⭐ RAFRAÎCHIR LE PROFIL DEPUIS FIRESTORE
+        // ============================================================
+        async function rafraichirProfilDepuisFirestore() {
+            try {
+                const doc = await db.collection('utilisateurs').doc(currentUserId).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    // Mettre à jour currentUser avec les données fraîches
+                    Object.keys(data).forEach(key => {
+                        if (key !== 'uid' && key !== 'id') {
+                            currentUser[key] = data[key];
+                        }
+                    });
+                    afficherProfil(currentUser);
+                    console.log('✅ Profil rafraîchi depuis Firestore');
+                }
+            } catch(e) {
+                console.warn('Impossible de rafraîchir le profil:', e);
+            }
+        }
+        
+        // ============================================================
+        // ⭐ AFFICHER LE PROFIL
+        // ============================================================
         function afficherProfil(user) {
-            // Avatar
-            const initials = (user.nomComplet || 'P')
+            if (!user) return;
+            
+            const nomComplet = user.nomComplet || 'Professeur';
+            
+            // Avatar large
+            const initials = nomComplet
                 .split(' ')
                 .map(n => n[0])
                 .join('')
                 .substring(0, 2)
                 .toUpperCase();
-            document.getElementById('profileAvatarLarge').textContent = initials;
+            
+            const avatarLarge = document.getElementById('profileAvatarLarge');
+            if (avatarLarge) {
+                avatarLarge.textContent = initials;
+            }
             
             // Nom
-            document.getElementById('profileName').textContent = user.nomComplet || 'Professeur';
+            const profileName = document.getElementById('profileName');
+            if (profileName) profileName.textContent = nomComplet;
             
             // Détails
-            document.getElementById('detailNom').textContent = user.nomComplet || '-';
+            document.getElementById('detailNom').textContent = nomComplet || '-';
             document.getElementById('detailEmail').textContent = user.email || '-';
-            document.getElementById('detailId').textContent = user.id || '-';
-            document.getElementById('detailSpecialite').textContent = user.specialite || '-';
-            document.getElementById('detailDepartement').textContent = user.departement || '-';
+            document.getElementById('detailId').textContent = user.id || user.uid || '-';
+            document.getElementById('detailTelephone').textContent = user.telephone || 'Non renseigné';
+            document.getElementById('detailSpecialite').textContent = user.specialite || 'Non renseignée';
+            document.getElementById('detailDepartement').textContent = user.departement || 'Non renseigné';
             
             // Date de création
-            if(user.dateCreation && user.dateCreation.toDate) {
-                document.getElementById('detailDateCreation').textContent = 
-                    new Date(user.dateCreation.toDate()).toLocaleDateString('fr-FR', {
+            const dateEl = document.getElementById('detailDateCreation');
+            if (dateEl) {
+                if (user.dateCreation && user.dateCreation.toDate) {
+                    dateEl.textContent = new Date(user.dateCreation.toDate()).toLocaleDateString('fr-FR', {
                         day: 'numeric', month: 'long', year: 'numeric'
                     });
-            } else if(user.dateCreation) {
-                document.getElementById('detailDateCreation').textContent = 
-                    new Date(user.dateCreation).toLocaleDateString('fr-FR', {
+                } else if (user.dateCreation) {
+                    dateEl.textContent = new Date(user.dateCreation).toLocaleDateString('fr-FR', {
                         day: 'numeric', month: 'long', year: 'numeric'
                     });
-            } else {
-                document.getElementById('detailDateCreation').textContent = '-';
+                } else {
+                    dateEl.textContent = '-';
+                }
             }
+            
+            console.log('✅ Profil affiché pour:', nomComplet);
         }
         
-        // Toast
+        // ============================================================
+        // ⭐ FONCTION TOAST
+        // ============================================================
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
-            const bgColor = type === 'success' ? '#28a745' : '#dc3545';
-            const icon = type === 'success' ? 'check-circle-fill' : 'x-circle-fill';
+            if (!container) return;
+            
+            const bgColor = type === 'success' ? '#28a745' : 
+                           type === 'warning' ? '#ffc107' : 
+                           type === 'info' ? '#17a2b8' : '#dc3545';
+            const textColor = type === 'warning' ? '#333' : 'white';
+            const icon = type === 'success' ? 'check-circle-fill' : 
+                        type === 'warning' ? 'exclamation-triangle-fill' : 
+                        type === 'info' ? 'info-circle-fill' : 'x-circle-fill';
+            
             const toastHtml = `
-                <div class="toast notification-toast" style="background:${bgColor};color:white;border-radius:10px;margin-bottom:10px;">
-                    <div class="toast-body"><i class="bi bi-${icon} me-2"></i>${message}</div>
-                </div>`;
+                <div class="toast notification-toast" style="background:${bgColor};color:${textColor};border-radius:10px;margin-bottom:10px;box-shadow:0 5px 15px rgba(0,0,0,0.2);">
+                    <div class="toast-body" style="padding:12px 20px;">
+                        <i class="bi bi-${icon} me-2"></i>
+                        ${message}
+                    </div>
+                </div>
+            `;
             container.insertAdjacentHTML('afterbegin', toastHtml);
-            setTimeout(() => container.firstElementChild?.remove(), 4000);
+            setTimeout(() => {
+                if (container.firstElementChild) container.firstElementChild.remove();
+            }, 4000);
         }
         
-        // Changement de mot de passe
+        // ============================================================
+        // ⭐ CHANGEMENT DE MOT DE PASSE
+        // ============================================================
         document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -405,51 +578,69 @@
             const confirmPassword = document.getElementById('confirmNewPassword').value;
             const btn = document.getElementById('changePasswordBtn');
             
-            // Validation
-            if(newPassword.length < 6) {
-                showToast('Le mot de passe doit contenir au moins 6 caractères', 'danger');
+            if (newPassword.length < 6) {
+                showToast('Le mot de passe doit contenir au moins 6 caractères', 'warning');
                 return;
             }
             
-            if(newPassword !== confirmPassword) {
+            if (newPassword !== confirmPassword) {
                 showToast('Les mots de passe ne correspondent pas', 'danger');
                 return;
             }
             
-            // Désactiver le bouton
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Modification en cours...';
             
             try {
                 // Mettre à jour dans Firestore
-                await db.collection('utilisateurs').doc(currentUser.id).update({
+                await db.collection('utilisateurs').doc(currentUserId).update({
                     motDePasse: newPassword
                 });
                 
                 // Mettre à jour la session locale
                 currentUser.motDePasse = newPassword;
                 const sessionData = {
-                    user: currentUser,
-                    timestamp: Date.now(),
-                    role: 'professeur'
+                    ...currentUser,
+                    timestamp: Date.now()
                 };
                 localStorage.setItem('professeur_session', JSON.stringify(sessionData));
                 
                 showToast('✅ Mot de passe modifié avec succès', 'success');
-                
-                // Réinitialiser le formulaire
                 document.getElementById('changePasswordForm').reset();
                 
             } catch(error) {
-                console.error('Erreur modification mot de passe:', error);
-                showToast('Erreur lors de la modification du mot de passe', 'danger');
+                console.error('❌ Erreur modification mot de passe:', error);
+                showToast('❌ Erreur lors de la modification: ' + error.message, 'danger');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bi bi-shield-check"></i> Modifier le mot de passe';
             }
         });
         
+        // ============================================================
+        // ⭐ DÉCONNEXION
+        // ============================================================
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            if (confirm('Voulez-vous vous déconnecter ?')) {
+                localStorage.removeItem('professeur_session');
+                window.location.href = 'login.html';
+            }
+        });
+        
+        // ============================================================
+        // ⭐ CLIC SUR L'AVATAR (déjà sur la page profil)
+        // ============================================================
+        document.getElementById('profileAvatarNav').addEventListener('click', function() {
+            // Déjà sur la page profil, juste rafraîchir
+            rafraichirProfilDepuisFirestore();
+            showToast('🔄 Profil actualisé', 'info');
+        });
+        
+        // ============================================================
+        // ⭐ INITIALISATION
+        // ============================================================
         console.log('✅ Page Profil - Espace Professeur');
+        console.log('👤 Professeur:', currentUser?.nomComplet || 'Non chargé');
     </script>
 </body>
 </html>
