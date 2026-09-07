@@ -2,10 +2,10 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Espace Professeur - Redirection</title>
     <meta name="theme-color" content="#003366">
-    <meta name="description" content="Connexion à l'espace étudiant de la Faculté Agronomique - UNILU">
+    <meta name="description" content="Connexion à l'espace professeur de la Faculté Agronomique - UNILU">
     
     <!-- PWA -->
     <link rel="manifest" href="manifest.json">
@@ -14,8 +14,19 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="FAC Agro">
+    
+    <!-- Font Awesome pour les icônes professionnelles -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
     <style>
-        :root { --primary-blue: #003366; --dark-blue: #002244; --accent-yellow: #ffb347; }
+        :root { 
+            --primary-blue: #003366; 
+            --dark-blue: #002244; 
+            --accent-yellow: #ffb347; 
+        }
         body {
             margin: 0;
             padding: 0;
@@ -26,57 +37,311 @@
             background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
             font-family: 'Segoe UI', sans-serif;
         }
-        .loader-container { text-align: center; color: white; }
+        .loader-container { 
+            text-align: center; 
+            color: white; 
+            padding: 20px;
+        }
         .spinner {
-            width: 50px; height: 50px;
+            width: 50px; 
+            height: 50px;
             border: 5px solid rgba(255,255,255,0.3);
             border-top-color: var(--accent-yellow);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
             margin: 0 auto 20px;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .logo { font-size: 48px; margin-bottom: 20px; }
+        @keyframes spin { 
+            to { transform: rotate(360deg); } 
+        }
+        
+        /* ===== ICÔNE PROFESSEUR PROFESSIONNELLE ===== */
+        .professor-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .professor-icon:hover {
+            transform: scale(1.05);
+            border-color: var(--accent-yellow);
+            box-shadow: 0 0 30px rgba(255,179,71,0.3);
+        }
+        .professor-icon i {
+            font-size: 50px;
+            color: var(--accent-yellow);
+        }
+        /* Anneau décoratif autour de l'icône */
+        .professor-icon::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top-color: var(--accent-yellow);
+            animation: spin 3s linear infinite;
+        }
+        
+        .loader-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            letter-spacing: 0.5px;
+        }
+        .loader-subtitle {
+            font-size: 15px;
+            opacity: 0.75;
+            margin-bottom: 5px;
+            font-weight: 300;
+        }
+        .loader-role {
+            display: inline-block;
+            background: rgba(255,179,71,0.15);
+            color: var(--accent-yellow);
+            padding: 6px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 10px;
+            border: 1px solid rgba(255,179,71,0.2);
+        }
+        .loader-role i {
+            margin-right: 8px;
+            font-size: 12px;
+        }
+        .error-box {
+            background: rgba(220, 53, 69, 0.15);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            border-radius: 12px;
+            padding: 20px 25px;
+            margin-top: 20px;
+            max-width: 400px;
+            backdrop-filter: blur(10px);
+        }
+        .error-box .btn-retry {
+            background: var(--accent-yellow);
+            color: var(--primary-blue);
+            border: none;
+            padding: 10px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .error-box .btn-retry:hover {
+            transform: scale(1.05);
+            background: #ff9800;
+        }
+        .redirect-timer {
+            font-size: 13px;
+            opacity: 0.6;
+            margin-top: 15px;
+            font-weight: 300;
+        }
+        .redirect-timer i {
+            margin-right: 5px;
+        }
+        .footer-credit {
+            margin-top: 30px;
+            font-size: 12px;
+            opacity: 0.4;
+            letter-spacing: 1px;
+        }
+        
+        /* ===== VARIANTE AVEC IMAGE ===== */
+        /* Si tu préfères utiliser une image PNG au lieu d'une icône */
+        .professor-icon-img {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.2);
+            object-fit: cover;
+            transition: all 0.3s ease;
+        }
+        .professor-icon-img:hover {
+            transform: scale(1.05);
+            border-color: var(--accent-yellow);
+            box-shadow: 0 0 30px rgba(255,179,71,0.3);
+        }
+        
+        @media (max-width: 480px) {
+            .professor-icon {
+                width: 80px;
+                height: 80px;
+            }
+            .professor-icon i {
+                font-size: 38px;
+            }
+            .loader-title {
+                font-size: 22px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="loader-container">
-        <div class="logo">👨‍🏫</div>
+        <!-- ===== ICÔNE PROFESSEUR PROFESSIONNELLE ===== -->
+        <div class="professor-icon">
+            <!-- Option 1: Font Awesome - Professeur -->
+            <i class="fas fa-chalkboard-teacher"></i>
+            
+            <!-- Option 2: Bootstrap Icons - Professeur -->
+            <!-- <i class="bi bi-person-workspace"></i> -->
+            
+            <!-- Option 3: Font Awesome - Diplôme -->
+            <!-- <i class="fas fa-graduation-cap"></i> -->
+            
+            <!-- Option 4: Font Awesome - Mortarboard -->
+            <!-- <i class="fas fa-user-graduate"></i> -->
+        </div>
+        
+        <!-- ===== OU AVEC UNE IMAGE ===== -->
+        <!-- Décommente cette section et commente celle du dessus pour utiliser une image -->
+        <!-- 
+        <img src="professor-icon.png" alt="Professeur" class="professor-icon-img">
+        -->
+        
+        <div class="loader-title">Faculté Agronomique</div>
+        <div class="loader-subtitle">Espace Professeur</div>
         <div class="spinner"></div>
-        <p>Vérification de votre session...</p>
+        <div class="loader-role">
+            <i class="fas fa-shield-alt"></i> 
+            <span id="roleBadge">🔒 Professeur</span>
+        </div>
+        <div id="errorContainer" style="display:none;">
+            <div class="error-box">
+                <p id="errorMessage" style="margin:0 0 10px 0;">❌ Erreur de session</p>
+                <button class="btn-retry" onclick="window.location.href='login.html'">
+                    <i class="fas fa-sign-in-alt"></i> Se connecter
+                </button>
+            </div>
+        </div>
+        <div class="redirect-timer" id="redirectTimer">
+            <i class="fas fa-clock"></i> Vérification en cours...
+        </div>
+        <div class="footer-credit">HYBRILINK-TECH</div>
     </div>
+
     <script>
+        // ============================================================
+        // ⭐ VÉRIFICATION DE SESSION - CORRIGÉE
+        // ============================================================
         (function() {
+            console.log('🔍 Vérification de la session...');
+            
             const sessionData = localStorage.getItem('professeur_session');
-            if (sessionData) {
-                try {
-                    const session = JSON.parse(sessionData);
-                    const now = Date.now();
-                    const sessionAge = now - session.timestamp;
-                    const maxAge = 24 * 60 * 60 * 1000;
-                    if (session.user && session.user.role === 'professeur' && sessionAge < maxAge) {
-                        window.location.href = 'professeur.html';
-                    } else {
-                        localStorage.removeItem('professeur_session');
-                        window.location.href = 'login.html';
-                    }
-                } catch (e) {
+            
+            if (!sessionData) {
+                console.log('❌ Aucune session trouvée, redirection vers login.html');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            try {
+                const session = JSON.parse(sessionData);
+                const now = Date.now();
+                
+                console.log('📦 Session brute:', session);
+                
+                // ✅ Vérifier directement les propriétés de session
+                if (!session.role || session.role !== 'professeur') {
+                    console.log('❌ Rôle non professeur détecté:', session.role);
                     localStorage.removeItem('professeur_session');
                     window.location.href = 'login.html';
+                    return;
                 }
-            } else {
-                window.location.href = 'login.html';
+                
+                if (!session.expires || now > session.expires) {
+                    console.log('⏰ Session expirée');
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                if (!session.verified2FA) {
+                    console.log('❌ 2FA non vérifiée');
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                // ✅ Session valide
+                const nomComplet = session.nomComplet || 'Professeur';
+                const specialite = session.specialite || '';
+                
+                console.log('✅ Session valide - Bienvenue ' + nomComplet);
+                console.log('📧 Email:', session.email);
+                console.log('📚 Spécialité:', specialite);
+                console.log('🏛️ Département:', session.departement || 'Non défini');
+                console.log('⏰ Expire:', new Date(session.expires).toLocaleString());
+                
+                // Mettre à jour l'interface
+                const roleBadge = document.getElementById('roleBadge');
+                if (roleBadge) {
+                    roleBadge.textContent = nomComplet + (specialite ? ' | ' + specialite : '');
+                }
+                
+                // Afficher le temps restant
+                const timerElement = document.getElementById('redirectTimer');
+                if (timerElement) {
+                    const tempsRestantMs = session.expires - now;
+                    if (tempsRestantMs > 0) {
+                        const heures = Math.floor(tempsRestantMs / (60 * 60 * 1000));
+                        const minutes = Math.floor((tempsRestantMs % (60 * 60 * 1000)) / (60 * 1000));
+                        timerElement.innerHTML = `<i class="fas fa-clock"></i> Redirection dans quelques secondes... (${heures}h ${minutes}min restants)`;
+                    }
+                }
+                
+                // ✅ Redirection vers professeur.html
+                setTimeout(() => {
+                    window.location.href = 'professeur.html';
+                }, 1000);
+                
+            } catch(e) {
+                console.error('❌ Erreur lors du parsing de la session:', e);
+                localStorage.removeItem('professeur_session');
+                
+                // Afficher l'erreur
+                const errorContainer = document.getElementById('errorContainer');
+                if (errorContainer) {
+                    errorContainer.style.display = 'block';
+                    const errorMsg = document.getElementById('errorMessage');
+                    if (errorMsg) {
+                        errorMsg.textContent = '❌ Erreur de session: ' + e.message;
+                    }
+                }
+                
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 3000);
             }
         })();
 
-        // Service Worker
+        // ============================================================
+        // ⭐ SERVICE WORKER
+        // ============================================================
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
+                navigator.serviceWorker.register('sw.js')
+                    .then(() => console.log('✅ Service Worker enregistré'))
+                    .catch(err => console.log('❌ SW error:', err));
             });
         }
 
-
+        console.log('🚀 Page de redirection - Faculté Agronomique');
     </script>
 </body>
 </html>
