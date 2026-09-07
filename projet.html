@@ -48,6 +48,34 @@
             color: white !important;
         }
         
+        .navbar-right { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        
+        .profile-photo {
+            width: 45px; height: 45px;
+            border-radius: 50%;
+            background: var(--accent-yellow);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s;
+            font-weight: bold; color: var(--primary-blue); font-size: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .profile-photo:hover { transform: scale(1.05); border-color: white; }
+        
+        .prof-name-nav {
+            color: white; font-weight: 500; font-size: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .prof-name-nav i { color: var(--accent-yellow); }
+        
+        .logout-btn {
+            background: transparent; color: white;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 8px 15px; border-radius: 25px;
+            font-weight: bold; transition: all 0.3s;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+        }
+        .logout-btn:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
+        
         .btn-back {
             background: rgba(255,255,255,0.15);
             color: white;
@@ -278,26 +306,40 @@
             transition: width 0.5s ease;
         }
         
+        .toast-notification { position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast { animation: slideInRight 0.3s ease-out; }
+        
+        .footer-info { text-align: center; margin-top: auto; padding: 20px 0; border-top: 1px solid #e0e0e0; font-size: 12px; color: #888; }
+        .footer-info img { border-radius: 20px; vertical-align: middle; }
+        
         @media (max-width: 768px) {
-            .container-custom {
-                padding: 15px 10px 30px;
-            }
-            .section-card {
-                padding: 20px 15px;
-                border-radius: 15px;
-            }
+            .container-custom { padding: 15px 10px 30px; }
+            .section-card { padding: 20px 15px; border-radius: 15px; }
+            .navbar-right { gap: 10px; }
+            .prof-name-nav { font-size: 12px; }
         }
     </style>
 </head>
 <body>
+    <!-- ===== NAVBAR ===== -->
     <nav class="navbar navbar-custom">
         <div class="container">
             <a class="navbar-brand" href="#">
                 <i class="bi bi-kanban-fill"></i> SUIVI DE PROJETS
             </a>
-            <a href="professeur.html" class="btn-back">
-                <i class="bi bi-arrow-left"></i> Retour
-            </a>
+            <div class="navbar-right">
+                <span class="prof-name-nav d-none d-md-inline-flex" id="profNameNav">
+                    <i class="bi bi-person-badge"></i> <span id="navProfessorName">Professeur</span>
+                </span>
+                <div class="profile-photo" id="profileAvatar" title="Voir le profil">P</div>
+                <a href="professeur.html" class="btn-back">
+                    <i class="bi bi-arrow-left"></i> Accueil
+                </a>
+                <button class="logout-btn" id="logoutBtn" title="Déconnexion">
+                    <i class="bi bi-box-arrow-right"></i>
+                </button>
+            </div>
         </div>
     </nav>
     
@@ -314,9 +356,19 @@
             <p class="mb-0" id="loadingText">Traitement en cours...</p>
         </div>
     </div>
+    
+    <!-- ===== FOOTER ===== -->
+    <div class="container">
+        <div class="footer-info">
+            <i class="bi bi-shield-check"></i> HYBRILINK-TECH - Votre partenaire digital de A à Z<br>
+            <img src="t.png" width="40px" alt="HYBRILINK" onerror="this.style.display='none'">
+        </div>
+    </div>
 
     <script>
-        // ==================== FIREBASE ====================
+        // ============================================================
+        // ⭐ CONFIGURATION FIREBASE
+        // ============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyBb82N2-5ns7qKjQBAj5UvDW87s2PZ27F0",
             authDomain: "fsa-unilu.firebaseapp.com",
@@ -329,7 +381,9 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         
-        // ==================== LISTE DES DÉPARTEMENTS ====================
+        // ============================================================
+        // ⭐ LISTE DES DÉPARTEMENTS
+        // ============================================================
         const DEPARTEMENTS = [
             "Agronomie Générale",
             "Économie Agricole",
@@ -344,35 +398,87 @@
             return deptValue || 'Non défini';
         }
         
-        // ==================== SESSION ====================
-        let currentProfessor = null;
+        // ============================================================
+        // ⭐ VÉRIFICATION DE SESSION - CORRIGÉE
+        // ============================================================
+        let currentUser = null;
+        let currentUserId = null;
         
         function checkSession() {
+            console.log('🔍 Vérification de la session...');
+            
             const sessionData = localStorage.getItem('professeur_session');
             if (!sessionData) {
+                console.log('❌ Aucune session trouvée');
                 window.location.href = 'login.html';
                 return false;
             }
+            
             try {
                 const session = JSON.parse(sessionData);
                 const now = Date.now();
-                const maxAge = 24 * 60 * 60 * 1000;
                 
-                if (!session.user || session.user.role !== 'professeur' || (now - session.timestamp) > maxAge) {
+                console.log('📦 Session brute:', session);
+                
+                // ✅ Vérifier directement les propriétés de session
+                if (!session.role || session.role !== 'professeur') {
+                    console.log('❌ Rôle non professeur:', session.role);
                     localStorage.removeItem('professeur_session');
                     window.location.href = 'login.html';
                     return false;
                 }
                 
-                currentProfessor = session.user;
+                if (!session.expires || now > session.expires) {
+                    console.log('⏰ Session expirée');
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return false;
+                }
+                
+                if (!session.verified2FA) {
+                    console.log('❌ 2FA non vérifiée');
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return false;
+                }
+                
+                // ✅ STOCKER DIRECTEMENT LA SESSION
+                currentUser = session;
+                currentUserId = session.id || session.uid;
+                
+                const nomComplet = session.nomComplet || 'Professeur';
+                const specialite = session.specialite || '';
+                
+                console.log('✅ Session valide - Bienvenue ' + nomComplet);
+                console.log('🆔 ID professeur:', currentUserId);
+                
+                // Affichage du nom dans la navbar
+                const navName = document.getElementById('navProfessorName');
+                if (navName) navName.textContent = nomComplet;
+                
+                // Initiales pour l'avatar
+                const initials = nomComplet.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                const avatar = document.getElementById('profileAvatar');
+                if (avatar) {
+                    avatar.textContent = initials;
+                    avatar.title = nomComplet + (specialite ? ' - ' + specialite : '');
+                }
+                
+                document.title = 'Suivi Projets - ' + nomComplet;
+                
                 return true;
+                
             } catch(e) {
+                console.error('❌ Erreur session:', e);
+                localStorage.removeItem('professeur_session');
                 window.location.href = 'login.html';
                 return false;
             }
         }
         
-        // ==================== UTILITAIRES ====================
+        // ============================================================
+        // ⭐ UTILITAIRES
+        // ============================================================
         function showLoading(show, message = 'Traitement en cours...') {
             document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
             document.getElementById('loadingText').textContent = message;
@@ -386,38 +492,41 @@
         }
         
         function showToast(message, type = 'success') {
-            const existing = document.querySelector('.toast-custom');
-            if (existing) existing.remove();
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
             
-            const colors = {
-                success: { bg: '#28a745', icon: 'check-circle-fill' },
-                warning: { bg: '#ffc107', icon: 'exclamation-triangle-fill', textColor: '#333' },
-                danger: { bg: '#dc3545', icon: 'x-circle-fill' },
-                info: { bg: '#17a2b8', icon: 'info-circle-fill' }
-            };
-            const config = colors[type] || colors.success;
-            const textColor = config.textColor || 'white';
+            const bgColor = type === 'success' ? '#28a745' : 
+                           type === 'warning' ? '#ffc107' : 
+                           type === 'info' ? '#17a2b8' : '#dc3545';
+            const textColor = type === 'warning' ? '#333' : 'white';
+            const icon = type === 'success' ? 'check-circle-fill' : 
+                        type === 'warning' ? 'exclamation-triangle-fill' : 
+                        type === 'info' ? 'info-circle-fill' : 'x-circle-fill';
             
             const toastHtml = `
-                <div class="toast-custom" style="position:fixed;top:20px;right:20px;z-index:10000;background:${config.bg};color:${textColor};padding:15px 20px;border-radius:12px;box-shadow:0 5px 20px rgba(0,0,0,0.2);max-width:350px;font-weight:500;">
-                    <i class="bi bi-${config.icon} me-2"></i>${message}
+                <div class="toast notification-toast" style="background:${bgColor};color:${textColor};border-radius:10px;margin-bottom:10px;box-shadow:0 5px 15px rgba(0,0,0,0.2);">
+                    <div class="toast-body" style="padding:12px 20px;">
+                        <i class="bi bi-${icon} me-2"></i>
+                        ${message}
+                    </div>
                 </div>
             `;
-            document.body.insertAdjacentHTML('beforeend', toastHtml);
+            container.insertAdjacentHTML('afterbegin', toastHtml);
             setTimeout(() => {
-                const t = document.querySelector('.toast-custom');
-                if (t) t.remove();
+                if (container.firstElementChild) container.firstElementChild.remove();
             }, 4000);
         }
         
-        // ==================== DONNÉES ====================
+        // ============================================================
+        // ⭐ DONNÉES
+        // ============================================================
         let myProjects = [];
         let allPromotions = [];
         
         async function loadMyProjects() {
             try {
                 const snapshot = await db.collection('projets')
-                    .where('directeurId', '==', currentProfessor.id)
+                    .where('directeurId', '==', currentUserId)
                     .get();
                 myProjects = [];
                 snapshot.forEach(doc => {
@@ -430,7 +539,6 @@
             }
         }
         
-        // Charger les promotions pour résoudre les noms
         async function loadPromotions() {
             try {
                 const snapshot = await db.collection('promotions').get();
@@ -445,17 +553,16 @@
             }
         }
         
-        // Obtenir le nom lisible d'une promotion à partir de son ID
         function getPromotionName(promotionId) {
             if (!promotionId) return 'Non définie';
-            // Chercher dans la liste des promotions chargées
             const promo = allPromotions.find(p => p.id === promotionId);
             if (promo) return promo.nom;
-            // Si non trouvé, retourner l'ID tel quel (fallback)
             return promotionId;
         }
         
-        // ==================== RENDU ====================
+        // ============================================================
+        // ⭐ RENDU
+        // ============================================================
         async function renderPage() {
             const container = document.getElementById('mainContent');
             const loadingIndicator = document.getElementById('loadingIndicator');
@@ -464,10 +571,11 @@
             await loadPromotions();
             await loadMyProjects();
             
-            let html = '';
-            
-            // Section : Recherche par matricule
-            html += `
+            let html = `
+                <!-- Toast Container -->
+                <div id="toastContainer" class="toast-notification"></div>
+                
+                <!-- Section : Recherche par matricule -->
                 <div class="section-card">
                     <h3><i class="bi bi-search me-2"></i>Rechercher un Étudiant</h3>
                     <p class="subtitle">Entrez le matricule d'un étudiant pour afficher ses informations et suivre son projet. (${myProjects.length} étudiant(s) sous votre direction)</p>
@@ -479,10 +587,10 @@
                     </div>
                     <div id="searchResult"></div>
                 </div>
+                
+                <!-- Section : Détails et suivi -->
+                <div id="projectDetailSection"></div>
             `;
-            
-            // Section : Détails et suivi (apparaît après recherche)
-            html += `<div id="projectDetailSection"></div>`;
             
             container.innerHTML = html;
             
@@ -518,7 +626,6 @@
                         </div>
                     `;
                     
-                    // Afficher directement les détails
                     displayProjectDetail(project.id);
                 } else {
                     resultDiv.innerHTML = '<p class="text-muted mt-2"><i class="bi bi-exclamation-circle"></i> Aucun de vos étudiants ne correspond à ce matricule.</p>';
@@ -539,7 +646,6 @@
             const currentEtape = project.etape || 0;
             const pourcentage = currentEtape * 25;
             
-            // Déterminer la classe du badge d'étape
             let stageClass = 'stage-0';
             if (currentEtape === 1) stageClass = 'stage-1';
             else if (currentEtape === 2) stageClass = 'stage-2';
@@ -673,11 +779,12 @@
                 </div>
             `;
             
-            // Scroll vers les détails
             detailSection.scrollIntoView({ behavior: 'smooth' });
         }
         
-        // Validation depuis le select (permet de sauter des étapes)
+        // ============================================================
+        // ⭐ FONCTIONS D'ACTION
+        // ============================================================
         async function validateEtapeFromSelect(projectId) {
             const select = document.getElementById('etapeSelect');
             if (!select) return;
@@ -708,13 +815,11 @@
                     etape: nouvelleEtape
                 });
                 
-                // Mettre à jour localement
                 project.etape = nouvelleEtape;
                 
                 showLoading(false);
                 showToast(`✅ ${etapeLabels[nouvelleEtape]} validée avec succès !`, 'success');
                 
-                // Rafraîchir l'affichage
                 displayProjectDetail(projectId);
                 
             } catch (error) {
@@ -759,23 +864,39 @@
             }
         }
         
-        // ==================== INITIALISATION ====================
+        // ============================================================
+        // ⭐ DÉCONNEXION
+        // ============================================================
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            if (confirm('Voulez-vous vous déconnecter ?')) {
+                localStorage.removeItem('professeur_session');
+                window.location.href = 'login.html';
+            }
+        });
+        
+        // ============================================================
+        // ⭐ CLIC SUR L'AVATAR
+        // ============================================================
+        document.getElementById('profileAvatar').addEventListener('click', function() {
+            window.location.href = 'profil.html';
+        });
+        
+        // ============================================================
+        // ⭐ INITIALISATION
+        // ============================================================
         async function init() {
             if (!checkSession()) return;
             console.log('🚀 Page Suivi Projets - Professeur');
-            console.log('👤 Professeur:', currentProfessor.nomComplet);
-            
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes slideInRight {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-            `;
-            document.head.appendChild(style);
+            console.log('👤 Professeur:', currentUser.nomComplet);
             
             await renderPage();
             console.log('✅ Page Suivi Projets prête');
+            
+            // Exposer les fonctions globalement
+            window.displayProjectDetail = displayProjectDetail;
+            window.validateEtapeFromSelect = validateEtapeFromSelect;
+            window.updateProjectSubject = updateProjectSubject;
+            window.showToast = showToast;
         }
         
         init();
