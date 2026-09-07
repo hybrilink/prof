@@ -47,13 +47,25 @@
             width: 45px; height: 45px; border-radius: 50%;
             background: var(--accent-yellow); display: flex; align-items: center; justify-content: center;
             cursor: pointer; font-weight: bold; color: var(--primary-blue); font-size: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            transition: all 0.3s;
         }
+        .profile-photo:hover { transform: scale(1.05); border-color: white; }
         
         .prof-name-nav {
             color: white; font-weight: 500; font-size: 14px;
             display: flex; align-items: center; gap: 8px;
         }
         .prof-name-nav i { color: var(--accent-yellow); }
+        
+        .logout-btn {
+            background: transparent; color: white;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 8px 15px; border-radius: 25px;
+            font-weight: bold; transition: all 0.3s;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+        }
+        .logout-btn:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
         
         .content-card {
             background: white; border-radius: 20px; padding: 30px;
@@ -122,6 +134,28 @@
         .btn-publish:hover { background: #ff9800; transform: translateY(-2px); }
         .btn-publish:disabled { opacity: 0.6; cursor: not-allowed; }
         
+        .btn-history-export {
+            background: #6f42c1; color: white;
+            border: none; padding: 8px 16px; border-radius: 10px;
+            font-weight: 600; transition: all 0.3s; cursor: pointer;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-history-export:hover { background: #5a379a; transform: translateY(-2px); }
+        
+        .btn-history-export-excel {
+            background: #28a745; color: white;
+            border: none; padding: 8px 16px; border-radius: 10px;
+            font-weight: 600; transition: all 0.3s; cursor: pointer;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-history-export-excel:hover { background: #218838; transform: translateY(-2px); }
+        
         .info-alert {
             background: #e8f4fd; border-left: 4px solid var(--primary-blue);
             border-radius: 10px; padding: 15px; margin-bottom: 20px; font-size: 14px;
@@ -152,6 +186,7 @@
             vertical-align: middle; text-align: center;
         }
         .cotes-table tbody tr:hover { background: #f8f9fa; }
+        .cotes-table tbody tr:last-child td { border-bottom: none; }
         
         .moyenne-cell { font-weight: bold; font-size: 14px; }
         .moyenne-cell.reussi { color: #28a745; }
@@ -175,6 +210,8 @@
         .stat-mini-item {
             background: #f8f9fa; border-radius: 10px;
             padding: 10px 15px; text-align: center; font-size: 13px;
+            flex: 1;
+            min-width: 80px;
         }
         .stat-mini-item strong { color: var(--primary-blue); font-size: 18px; display: block; }
         
@@ -189,26 +226,90 @@
         }
         .btn-outline-action:hover { background: var(--primary-blue); color: white; }
         
+        /* Historique */
+        .history-item {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--primary-blue);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        .history-item:hover {
+            background: #e9ecef;
+            transform: translateX(3px);
+        }
+        .history-item .h-info {
+            flex: 1;
+            min-width: 200px;
+        }
+        .history-item .h-info .h-title {
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+        .history-item .h-info .h-detail {
+            font-size: 13px;
+            color: #666;
+        }
+        .history-item .h-date {
+            font-size: 12px;
+            color: #888;
+        }
+        .history-item .h-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .history-empty {
+            text-align: center;
+            padding: 30px;
+            color: #888;
+        }
+        .history-empty i {
+            font-size: 40px;
+            color: #ccc;
+            margin-bottom: 15px;
+        }
+        
         @media (max-width: 768px) {
             .content-card { padding: 20px; }
             .card-header-custom { margin: -20px -20px 20px -20px; padding: 15px 20px; }
+            .navbar-right { gap: 10px; }
+            .prof-name-nav { font-size: 12px; }
+            .history-item { flex-direction: column; align-items: flex-start; }
+            .history-item .h-actions { width: 100%; }
+            .history-item .h-actions button { flex: 1; }
         }
     </style>
 </head>
 <body>
+    <!-- ===== NAVBAR ===== -->
     <nav class="navbar navbar-custom">
         <div class="container">
-            <a class="navbar-brand text-white" href="#"><i class="bi bi-person-workspace"></i> Espace Professeur</a>
+            <a class="navbar-brand text-white" href="#">
+                <i class="bi bi-person-workspace"></i> Espace Professeur
+            </a>
             <div class="navbar-right">
                 <span class="prof-name-nav d-none d-md-inline-flex" id="profNameNav">
                     <i class="bi bi-person-badge"></i> <span id="navProfName">Professeur</span>
                 </span>
                 <div class="profile-photo" id="profileAvatar" title="Mon profil">P</div>
-                <a href="professeur.html" class="back-btn"><i class="bi bi-house-door-fill"></i> Accueil</a>
+                <a href="professeur.html" class="back-btn">
+                    <i class="bi bi-house-door-fill"></i> Accueil
+                </a>
+                <button class="logout-btn" id="logoutBtn" title="Déconnexion">
+                    <i class="bi bi-box-arrow-right"></i>
+                </button>
             </div>
         </div>
     </nav>
     
+    <!-- ===== MAIN CONTENT ===== -->
     <div class="container mt-4" style="flex: 1;">
         <div id="toastContainer" class="toast-notification"></div>
         
@@ -220,7 +321,9 @@
             
             <div class="info-alert">
                 <i class="bi bi-info-circle-fill"></i>
-                <strong>Fonctionnement :</strong> Sélectionnez une promotion et un cours, puis exportez le tableau Excel modèle. Complétez les cotes (Présence/2, TD/2, TP/2, Interro/4) dans le fichier Excel, puis importez-le. Vérifiez l'aperçu et publiez. Pour modifier des cotes déjà publiées, réexportez, modifiez et réimportez.
+                <strong>Fonctionnement :</strong> Sélectionnez une promotion et un cours, puis exportez le tableau Excel vide. 
+                Complétez les cotes (Présence/2, TD/2, TP/2, Interro/4) dans le fichier Excel, puis importez-le. 
+                Vérifiez l'aperçu et publiez.
             </div>
             
             <!-- Étape 1 : Sélection -->
@@ -267,11 +370,11 @@
         <div class="content-card" id="previewCard" style="display:none;">
             <div class="section-header">
                 <h5><i class="bi bi-table"></i> Aperçu des cotes</h5>
-                <div>
-                    <button class="btn-outline-action me-2" id="cancelPreviewBtn">
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn-outline-action" id="cancelPreviewBtn">
                         <i class="bi bi-x-circle"></i> Annuler
                     </button>
-                    <button class="btn-publish" id="publishBtn">
+                    <button class="btn-publish" id="publishBtn" style="width:auto;">
                         <i class="bi bi-cloud-upload-fill"></i> Publier les cotes
                     </button>
                 </div>
@@ -280,8 +383,25 @@
             <div class="stats-mini" id="statsMini"></div>
             <div class="table-responsive" id="previewTable"></div>
         </div>
+        
+        <!-- Historique des publications -->
+        <div class="content-card">
+            <div class="section-header">
+                <h5><i class="bi bi-clock-history"></i> Historique des publications</h5>
+                <button class="btn-history-export-excel" id="exportAllHistoryBtn">
+                    <i class="bi bi-file-excel"></i> Exporter tout l'historique
+                </button>
+            </div>
+            <div id="historyContainer">
+                <div class="history-empty">
+                    <i class="bi bi-inbox"></i>
+                    <p>Aucune publication pour le moment</p>
+                </div>
+            </div>
+        </div>
     </div>
     
+    <!-- ===== FOOTER ===== -->
     <div class="container">
         <div class="footer-info">
             <i class="bi bi-shield-check"></i> HYBRILINK-TECH - Votre partenaire digital de A à Z<br>
@@ -290,7 +410,9 @@
     </div>
 
     <script>
-        // ========== INITIALISATION INSTANTANÉE FIREBASE ==========
+        // ============================================================
+        // ⭐ CONFIGURATION FIREBASE
+        // ============================================================
         const firebaseConfig = {
             apiKey: "AIzaSyBb82N2-5ns7qKjQBAj5UvDW87s2PZ27F0",
             authDomain: "fsa-unilu.firebaseapp.com",
@@ -300,44 +422,142 @@
             appId: "1:36551990738:web:e91fdcb53f8aab5d1b7c0b"
         };
         
-        // Initialisation immédiate sans délai
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
         const db = firebase.firestore();
         
-        // Activation de la persistance pour données instantanées
+        // Activer la persistance
         db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
-            if (err.code === 'failed-precondition') {
-                console.log('Persistance multi-onglets activée');
-            }
+            console.warn('⚠️ Persistance non activée:', err);
         });
         
-        // ========== VARIABLES GLOBALES ==========
+        // ============================================================
+        // ⭐ CONSTANTES
+        // ============================================================
+        const SESSION_DUREE_HEURES = 24;
+        
+        // ============================================================
+        // ⭐ VARIABLES GLOBALES
+        // ============================================================
         let currentUser = null;
         let currentUserId = null;
         let allPromotions = [];
         let allCours = [];
         let allEtudiants = [];
         let allCotations = [];
+        let allHistorique = [];
         let excelData = [];
         let currentCoursId = '';
         let currentPromoId = '';
         
-        // ========== UTILITAIRES ==========
+        // Écouteurs temps réel
+        let unsubscribePromotions = null;
+        let unsubscribeCours = null;
+        let unsubscribeEtudiants = null;
+        let unsubscribeCotations = null;
+        let unsubscribeHistorique = null;
+        
+        // ============================================================
+        // ⭐ VÉRIFICATION DE SESSION - CORRIGÉE
+        // ============================================================
+        (function() {
+            console.log('🔍 Vérification de la session...');
+            
+            const sessionData = localStorage.getItem('professeur_session');
+            if (!sessionData) { 
+                console.log('❌ Aucune session trouvée');
+                window.location.href = 'login.html'; 
+                return; 
+            }
+            
+            try {
+                const session = JSON.parse(sessionData);
+                const now = Date.now();
+                
+                console.log('📦 Session brute:', session);
+                
+                if (!session.role || session.role !== 'professeur') {
+                    console.log('❌ Rôle non professeur:', session.role);
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                if (!session.expires || now > session.expires) {
+                    console.log('⏰ Session expirée');
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                if (!session.verified2FA) {
+                    console.log('❌ 2FA non vérifiée');
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                currentUser = session;
+                currentUserId = session.id || session.uid;
+                
+                const nomComplet = session.nomComplet || 'Professeur';
+                
+                console.log('✅ Session valide - Bienvenue ' + nomComplet);
+                console.log('🆔 ID professeur:', currentUserId);
+                
+                const navName = document.getElementById('navProfName');
+                if (navName) navName.textContent = nomComplet;
+                
+                const initials = nomComplet.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                const avatar = document.getElementById('profileAvatar');
+                if (avatar) {
+                    avatar.textContent = initials;
+                    avatar.title = nomComplet;
+                }
+                
+                document.title = 'Mes Cotations - ' + nomComplet;
+                
+                initRealtime();
+                
+            } catch(e) {
+                console.error('❌ Erreur session:', e);
+                localStorage.removeItem('professeur_session');
+                window.location.href = 'login.html';
+            }
+        })();
+        
+        // ============================================================
+        // ⭐ UTILITAIRES
+        // ============================================================
         function showToast(msg, type = 'success') {
-            const c = document.getElementById('toastContainer');
-            const bg = type==='success'?'#28a745':type==='warning'?'#ffc107':'#dc3545';
-            const ic = type==='success'?'check-circle-fill':type==='warning'?'exclamation-triangle-fill':'x-circle-fill';
-            const tc = type==='warning'?'#333':'white';
-            c.insertAdjacentHTML('afterbegin', 
-                `<div class="toast" style="background:${bg};color:${tc};border-radius:10px;margin-bottom:10px;">
-                    <div class="toast-body"><i class="bi bi-${ic} me-2"></i>${msg}</div></div>`);
-            setTimeout(() => { if(c.firstElementChild) c.firstElementChild.remove(); }, 4000);
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            
+            const bgColor = type === 'success' ? '#28a745' : 
+                           type === 'warning' ? '#ffc107' : 
+                           type === 'info' ? '#17a2b8' : '#dc3545';
+            const textColor = type === 'warning' ? '#333' : 'white';
+            const icon = type === 'success' ? 'check-circle-fill' : 
+                        type === 'warning' ? 'exclamation-triangle-fill' : 
+                        type === 'info' ? 'info-circle-fill' : 'x-circle-fill';
+            
+            const toastHtml = `
+                <div class="toast notification-toast" style="background:${bgColor};color:${textColor};border-radius:10px;margin-bottom:10px;box-shadow:0 5px 15px rgba(0,0,0,0.2);">
+                    <div class="toast-body" style="padding:12px 20px;">
+                        <i class="bi bi-${icon} me-2"></i>
+                        ${msg}
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('afterbegin', toastHtml);
+            setTimeout(() => {
+                if (container.firstElementChild) container.firstElementChild.remove();
+            }, 4000);
         }
         
         function escapeHtml(t) { 
-            if(!t) return ''; 
+            if (!t) return ''; 
             const d = document.createElement('div'); 
             d.textContent = t; 
             return d.innerHTML; 
@@ -352,203 +572,178 @@
             return Math.min(10, parseFloatSafe(p) + parseFloatSafe(td) + parseFloatSafe(tp) + parseFloatSafe(interro));
         }
         
-        // ========== INITIALISATION INSTANTANÉE ==========
-        async function initApp() {
+        function formaterDate(timestamp) {
+            if (!timestamp) return 'Date inconnue';
             try {
-                // Récupération instantanée de la session
-                const sessionData = localStorage.getItem('professeur_session');
-                
-                if (!sessionData) {
-                    window.location.href = 'login.html';
-                    return;
-                }
-                
-                const session = JSON.parse(sessionData);
-                
-                // Vérification validité session
-                if (!session.user || session.user.role !== 'professeur') {
-                    localStorage.removeItem('professeur_session');
-                    window.location.href = 'login.html';
-                    return;
-                }
-                
-                // Vérification timestamp (24h max)
-                const sessionAge = Date.now() - session.timestamp;
-                if (sessionAge > 86400000) {
-                    localStorage.removeItem('professeur_session');
-                    window.location.href = 'login.html';
-                    return;
-                }
-                
-                currentUserId = session.user.id;
-                
-                // RECHERCHE INSTANTANÉE DU PROFESSEUR DANS FIREBASE
-                const profDoc = await db.collection('utilisateurs').doc(currentUserId).get();
-                
-                if (profDoc.exists) {
-                    // Données temps réel depuis Firebase
-                    currentUser = { id: profDoc.id, ...profDoc.data() };
-                    
-                    // Mise à jour du localStorage avec données fraîches
-                    session.user = currentUser;
-                    session.timestamp = Date.now();
-                    localStorage.setItem('professeur_session', JSON.stringify(session));
-                } else {
-                    // Fallback sur les données du localStorage
-                    currentUser = session.user;
-                }
-                
-                // Affichage instantané du nom du professeur
-                afficherInfosProfesseur();
-                
-                // Chargement parallèle pour performance maximale
-                await Promise.all([
-                    chargerPromotions(),
-                    chargerEtudiants(),
-                    chargerCotationsExistantes()
-                ]);
-                
-                await chargerCours();
-                
-                console.log('✅ Initialisation terminée -', currentUser.nomComplet);
-                
-            } catch (error) {
-                console.error('Erreur initialisation:', error);
-                
-                // Fallback localStorage en cas d'erreur
-                const sessionData = localStorage.getItem('professeur_session');
-                if (sessionData) {
-                    const session = JSON.parse(sessionData);
-                    currentUser = session.user;
-                    afficherInfosProfesseur();
-                    await chargerPromotions();
-                    await chargerEtudiants();
-                    await chargerCours();
-                    await chargerCotationsExistantes();
-                } else {
-                    window.location.href = 'login.html';
-                }
-            }
-        }
-        
-        function afficherInfosProfesseur() {
-            if (!currentUser) return;
-            
-            const nomComplet = currentUser.nomComplet || 'Professeur';
-            
-            // Affichage dans la navbar
-            document.getElementById('navProfName').textContent = nomComplet;
-            
-            // Initiales pour l'avatar
-            const initials = nomComplet.split(' ')
-                .map(n => n[0])
-                .join('')
-                .substring(0, 2)
-                .toUpperCase();
-            
-            document.getElementById('profileAvatar').textContent = initials;
-            document.getElementById('profileAvatar').title = nomComplet;
-            
-            // Mise à jour du titre de la page
-            document.title = `Mes Cotations - ${nomComplet}`;
-        }
-        
-        // ========== CHARGEMENT DES DONNÉES ==========
-        async function chargerCours() {
-            try {
-                const snap = await db.collection('cours')
-                    .where('professeurId', '==', currentUserId)
-                    .get();
-                
-                allCours = [];
-                snap.forEach(d => allCours.push({ id: d.id, ...d.data() }));
-                
-                console.log(`✅ ${allCours.length} cours chargés`);
+                const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+                return date.toLocaleDateString('fr-FR', { 
+                    day: '2-digit', month: 'short', year: 'numeric', 
+                    hour: '2-digit', minute: '2-digit' 
+                });
             } catch(e) { 
-                console.error('Erreur chargement cours:', e); 
+                return 'Date invalide'; 
             }
         }
         
-        async function chargerPromotions() {
-            try {
-                const snap = await db.collection('promotions').get();
-                allPromotions = [];
-                snap.forEach(d => allPromotions.push({ id: d.id, ...d.data() }));
-                allPromotions.sort((a,b) => (a.nom||'').localeCompare(b.nom||''));
-                
-                console.log(`✅ ${allPromotions.length} promotions chargées`);
-            } catch(e) {
-                console.error('Erreur chargement promotions:', e);
-            }
-        }
-        
-        async function chargerEtudiants() {
-            try {
-                const snap = await db.collection('etudiants').get();
+        // ============================================================
+        // ⭐ INITIALISATION TEMPS RÉEL
+        // ============================================================
+        function initRealtime() {
+            console.log('🔄 Initialisation des écouteurs temps réel...');
+            console.log('👤 ID professeur pour filtrage:', currentUserId);
+            
+            unsubscribeCours = db.collection('cours')
+                .where('professeurId', '==', currentUserId)
+                .onSnapshot((snapshot) => {
+                    allCours = [];
+                    const promoIds = new Set();
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        allCours.push({ id: doc.id, ...data });
+                        if (data.promotionId) {
+                            promoIds.add(data.promotionId);
+                        }
+                    });
+                    console.log(`✅ ${allCours.length} cours chargés, ${promoIds.size} promotions concernées`);
+                    chargerPromotionsDuProfesseur(promoIds);
+                    actualiserSelecteurCours();
+                }, (error) => {
+                    console.error('❌ Erreur écoute cours:', error);
+                    showToast('Erreur chargement des cours', 'danger');
+                });
+            
+            unsubscribeEtudiants = db.collection('etudiants').onSnapshot((snapshot) => {
                 allEtudiants = [];
-                snap.forEach(d => allEtudiants.push({ id: d.id, ...d.data() }));
-                
+                snapshot.forEach(doc => {
+                    allEtudiants.push({ id: doc.id, ...doc.data() });
+                });
                 console.log(`✅ ${allEtudiants.length} étudiants chargés`);
-            } catch(e) {
-                console.error('Erreur chargement étudiants:', e);
-            }
+            }, (error) => {
+                console.error('❌ Erreur écoute étudiants:', error);
+            });
+            
+            unsubscribeCotations = db.collection('cotations')
+                .where('professeurId', '==', currentUserId)
+                .onSnapshot((snapshot) => {
+                    allCotations = [];
+                    snapshot.forEach(doc => {
+                        allCotations.push({ id: doc.id, ...doc.data() });
+                    });
+                    console.log(`✅ ${allCotations.length} cotations chargées`);
+                }, (error) => {
+                    console.error('❌ Erreur écoute cotations:', error);
+                });
+            
+            unsubscribeHistorique = db.collection('historiquePublications')
+                .where('professeurId', '==', currentUserId)
+                .orderBy('datePublication', 'desc')
+                .onSnapshot((snapshot) => {
+                    allHistorique = [];
+                    snapshot.forEach(doc => {
+                        allHistorique.push({ id: doc.id, ...doc.data() });
+                    });
+                    console.log(`✅ ${allHistorique.length} historique(s) chargé(s)`);
+                    afficherHistorique();
+                }, (error) => {
+                    console.error('❌ Erreur écoute historique:', error);
+                });
         }
         
-        async function chargerCotationsExistantes() {
+        // ============================================================
+        // ⭐ CHARGER LES PROMOTIONS DU PROFESSEUR UNIQUEMENT
+        // ============================================================
+        async function chargerPromotionsDuProfesseur(promoIds) {
+            if (promoIds.size === 0) {
+                allPromotions = [];
+                actualiserSelecteurPromotions();
+                return;
+            }
+            
             try {
-                const snap = await db.collection('cotations')
-                    .where('professeurId', '==', currentUserId)
-                    .get();
+                const snapshots = await Promise.all(
+                    Array.from(promoIds).map(id => db.collection('promotions').doc(id).get())
+                );
                 
-                allCotations = [];
-                snap.forEach(d => allCotations.push({ id: d.id, ...d.data() }));
+                allPromotions = [];
+                snapshots.forEach(doc => {
+                    if (doc.exists) {
+                        allPromotions.push({ id: doc.id, ...doc.data() });
+                    }
+                });
                 
-                console.log(`✅ ${allCotations.length} cotations existantes chargées`);
-            } catch(e) {
-                console.error('Erreur chargement cotations:', e);
+                allPromotions.sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
+                console.log(`✅ ${allPromotions.length} promotions du professeur chargées`);
+                actualiserSelecteurPromotions();
+            } catch (error) {
+                console.error('❌ Erreur chargement promotions du professeur:', error);
+                allPromotions = [];
+                actualiserSelecteurPromotions();
             }
         }
         
-        // ========== ACTUALISATION DES SÉLECTEURS ==========
-        function actualiserSelecteursPromotions() {
-            const promosDuProf = [...new Set(allCours.map(c => c.promotionId))];
+        // ============================================================
+        // ⭐ ACTUALISATION DES SÉLECTEURS
+        // ============================================================
+        function actualiserSelecteurPromotions() {
             const sel = document.getElementById('promotionSelect');
+            if (!sel) return;
+            
+            const currentValue = sel.value;
+            
             sel.innerHTML = '<option value="">-- Sélectionner une promotion --</option>';
             
-            if (promosDuProf.length === 0) {
+            if (allPromotions.length === 0) {
                 sel.innerHTML += '<option value="" disabled>Aucune promotion avec vos cours</option>';
                 return;
             }
             
-            allPromotions
-                .filter(p => promosDuProf.includes(p.id))
-                .forEach(p => sel.innerHTML += `<option value="${p.id}">${escapeHtml(p.nom)}</option>`);
-        }
-        
-        // ========== ÉVÉNEMENTS ==========
-        document.getElementById('promotionSelect').addEventListener('change', function() {
-            currentPromoId = this.value;
-            const selCours = document.getElementById('coursSelect');
-            selCours.innerHTML = '<option value="">-- Sélectionner un cours --</option>';
-            
-            if (!currentPromoId) {
-                document.getElementById('exportBtn').disabled = true;
-                return;
-            }
-            
-            const mesCours = allCours.filter(c => c.promotionId === currentPromoId);
-            
-            if (mesCours.length === 0) {
-                selCours.innerHTML += '<option value="" disabled>Aucun cours pour cette promotion</option>';
-                document.getElementById('exportBtn').disabled = true;
-                return;
-            }
-            
-            mesCours.forEach(c => {
-                selCours.innerHTML += `<option value="${c.id}">${escapeHtml(c.nom)} (${c.credits||0} cr)</option>`;
+            allPromotions.forEach(p => {
+                sel.innerHTML += `<option value="${p.id}">${escapeHtml(p.nom)}</option>`;
             });
             
-            document.getElementById('exportBtn').disabled = true;
+            if (currentValue && allPromotions.some(p => p.id === currentValue)) {
+                sel.value = currentValue;
+            }
+            
+            sel.dispatchEvent(new Event('change'));
+        }
+        
+        function actualiserSelecteurCours() {
+            const sel = document.getElementById('coursSelect');
+            if (!sel) return;
+            
+            const currentValue = sel.value;
+            
+            sel.innerHTML = '<option value="">-- Sélectionner un cours --</option>';
+            
+            const promoId = document.getElementById('promotionSelect').value;
+            const coursFiltres = promoId ? allCours.filter(c => c.promotionId === promoId) : allCours;
+            
+            if (coursFiltres.length === 0) {
+                sel.innerHTML += '<option value="" disabled>' + 
+                    (promoId ? 'Aucun cours pour cette promotion' : 'Sélectionnez d\'abord une promotion') + 
+                '</option>';
+                document.getElementById('exportBtn').disabled = true;
+                return;
+            }
+            
+            coursFiltres.forEach(c => {
+                sel.innerHTML += `<option value="${c.id}">${escapeHtml(c.nom)} (${c.credits || 0} cr)</option>`;
+            });
+            
+            if (currentValue && coursFiltres.some(c => c.id === currentValue)) {
+                sel.value = currentValue;
+            }
+            
+            document.getElementById('exportBtn').disabled = !sel.value;
+        }
+        
+        // ============================================================
+        // ⭐ ÉVÉNEMENTS
+        // ============================================================
+        document.getElementById('promotionSelect').addEventListener('change', function() {
+            currentPromoId = this.value;
+            actualiserSelecteurCours();
             resetPreview();
         });
         
@@ -561,47 +756,42 @@
         function resetPreview() {
             document.getElementById('previewCard').style.display = 'none';
             excelData = [];
+            document.getElementById('excelFileInput').value = '';
+            document.getElementById('previewImportBtn').disabled = true;
         }
         
-        // ========== EXPORT EXCEL ==========
+        // ============================================================
+        // ⭐ EXPORT EXCEL - VIDE POUR REMPLISSAGE
+        // ============================================================
         document.getElementById('exportBtn').addEventListener('click', async function() {
             if (!currentPromoId || !currentCoursId) {
-                showToast('Sélectionnez une promotion et un cours','warning');
+                showToast('Sélectionnez une promotion et un cours', 'warning');
                 return;
             }
-            
-            // Rechargement instantané des cotations
-            await chargerCotationsExistantes();
             
             const etudiantsPromo = allEtudiants
                 .filter(e => e.promotion === currentPromoId)
-                .sort((a,b) => (a.nom||'').localeCompare(b.nom||''));
+                .sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
             
             if (etudiantsPromo.length === 0) {
-                showToast('Aucun étudiant dans cette promotion','warning');
+                showToast('Aucun étudiant dans cette promotion', 'warning');
                 return;
             }
-            
-            const cotationMap = {};
-            allCotations.filter(c => c.coursId === currentCoursId).forEach(c => {
-                cotationMap[c.etudiantId] = c;
-            });
             
             const cours = allCours.find(c => c.id === currentCoursId);
             
             const data = [['N°', 'Matricule', 'Nom étudiant', 'Présence /2', 'TD /2', 'TP /2', 'Interro /4', 'Moyenne /10']];
             
             etudiantsPromo.forEach((e, i) => {
-                const cot = cotationMap[e.id] || {};
                 data.push([
                     i + 1,
                     e.matricule || e.id,
                     e.nom || '',
-                    cot.presence !== undefined ? cot.presence : '',
-                    cot.td !== undefined ? cot.td : '',
-                    cot.tp !== undefined ? cot.tp : '',
-                    cot.interro !== undefined ? cot.interro : '',
-                    cot.moyenne !== undefined ? cot.moyenne : ''
+                    '', // Présence
+                    '', // TD
+                    '', // TP
+                    '', // Interro
+                    ''  // Moyenne
                 ]);
             });
             
@@ -616,11 +806,85 @@
             const coursNom = cours ? cours.nom.replace(/[^a-zA-Z0-9]/g, '_') : 'cours';
             XLSX.writeFile(wb, `cotation_${coursNom}.xlsx`);
             
-            const nbExistantes = Object.keys(cotationMap).length;
-            showToast(`✅ Fichier exporté. ${nbExistantes > 0 ? nbExistantes + ' cotes existantes pré-remplies.' : 'Complétez les cotes puis importez.'}`,'success');
+            showToast(`✅ Fichier exporté. Complétez les cotes (colonnes Présence, TD, TP, Interro) puis importez.`, 'success');
         });
         
-        // ========== IMPORT EXCEL ==========
+        // ============================================================
+        // ⭐ EXPORTER UN BULLETIN DEPUIS L'HISTORIQUE
+        // ============================================================
+        window.exporterBulletinHistorique = async function(historiqueId, coursId, promotionId) {
+            try {
+                showToast('📤 Génération du bulletin...', 'info');
+                
+                // Récupérer toutes les cotations pour ce cours et cette promotion
+                const cotationsSnap = await db.collection('cotations')
+                    .where('coursId', '==', coursId)
+                    .where('promotionId', '==', promotionId)
+                    .where('professeurId', '==', currentUserId)
+                    .get();
+                
+                const cotationsData = [];
+                cotationsSnap.forEach(doc => {
+                    cotationsData.push({ id: doc.id, ...doc.data() });
+                });
+                
+                if (cotationsData.length === 0) {
+                    showToast('Aucune cote trouvée pour ce bulletin', 'warning');
+                    return;
+                }
+                
+                // Récupérer les étudiants
+                const etudiantsPromo = allEtudiants.filter(e => e.promotion === promotionId);
+                
+                // Récupérer les informations du cours
+                const cours = allCours.find(c => c.id === coursId);
+                const promotion = allPromotions.find(p => p.id === promotionId);
+                const historique = allHistorique.find(h => h.id === historiqueId);
+                
+                // Créer le fichier Excel
+                const data = [['N°', 'Matricule', 'Nom étudiant', 'Présence /2', 'TD /2', 'TP /2', 'Interro /4', 'Moyenne /10']];
+                
+                etudiantsPromo.forEach((e, i) => {
+                    const cot = cotationsData.find(c => c.etudiantId === e.id) || {};
+                    data.push([
+                        i + 1,
+                        e.matricule || e.id,
+                        e.nom || '',
+                        cot.presence !== undefined ? cot.presence : '',
+                        cot.td !== undefined ? cot.td : '',
+                        cot.tp !== undefined ? cot.tp : '',
+                        cot.interro !== undefined ? cot.interro : '',
+                        cot.moyenne !== undefined ? cot.moyenne : ''
+                    ]);
+                });
+                
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                ws['!cols'] = [
+                    { wch: 5 }, { wch: 15 }, { wch: 30 }, { wch: 12 }, { wch: 8 }, { wch: 8 }, { wch: 12 }, { wch: 12 }
+                ];
+                
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Cotations');
+                
+                const coursNom = cours ? cours.nom.replace(/[^a-zA-Z0-9]/g, '_') : 'cours';
+                const promoNom = promotion ? promotion.nom.replace(/[^a-zA-Z0-9]/g, '_') : 'promo';
+                const datePub = historique?.datePublication?.toDate?.() ? 
+                    new Date(historique.datePublication.toDate()).toISOString().slice(0,10) : 
+                    new Date().toISOString().slice(0,10);
+                
+                XLSX.writeFile(wb, `bulletin_${coursNom}_${promoNom}_${datePub}.xlsx`);
+                
+                showToast(`✅ Bulletin exporté avec succès (${cotationsData.length} cotes)`, 'success');
+                
+            } catch(error) {
+                console.error('❌ Erreur export bulletin:', error);
+                showToast('Erreur lors de l\'export du bulletin: ' + error.message, 'danger');
+            }
+        };
+        
+        // ============================================================
+        // ⭐ IMPORT EXCEL
+        // ============================================================
         document.getElementById('excelFileInput').addEventListener('change', function(e) {
             document.getElementById('previewImportBtn').disabled = !e.target.files[0];
         });
@@ -630,7 +894,7 @@
             if (!file) return;
             
             if (!currentPromoId || !currentCoursId) {
-                showToast('Veuillez d\'abord sélectionner une promotion et un cours','warning');
+                showToast('Veuillez d\'abord sélectionner une promotion et un cours', 'warning');
                 return;
             }
             
@@ -638,13 +902,13 @@
                 const data = await lireExcel(file);
                 
                 if (!data || data.length < 2) {
-                    showToast('Fichier vide ou invalide','danger');
+                    showToast('Fichier vide ou invalide', 'danger');
                     return;
                 }
                 
                 const header = data[0];
                 if (header.length < 7) {
-                    showToast('Structure du fichier incorrecte. Utilisez le modèle exporté.','danger');
+                    showToast('Structure du fichier incorrecte. Utilisez le modèle exporté.', 'danger');
                     return;
                 }
                 
@@ -663,12 +927,17 @@
                     });
                 }
                 
-                showToast(`✅ ${excelData.length} lignes importées`,'success');
+                if (excelData.length === 0) {
+                    showToast('Aucune donnée valide dans le fichier', 'warning');
+                    return;
+                }
+                
+                showToast(`✅ ${excelData.length} lignes importées`, 'success');
                 afficherApercu();
                 
             } catch(err) {
                 console.error(err);
-                showToast('Erreur lecture du fichier: '+err.message,'danger');
+                showToast('Erreur lecture du fichier: '+err.message, 'danger');
             }
         });
         
@@ -688,12 +957,15 @@
             });
         }
         
-        // ========== APERÇU ==========
+        // ============================================================
+        // ⭐ APERÇU
+        // ============================================================
         function afficherApercu() {
             if (excelData.length === 0) return;
             
-            document.getElementById('previewCard').style.display = 'block';
-            document.getElementById('previewCard').scrollIntoView({ behavior: 'smooth' });
+            const previewCard = document.getElementById('previewCard');
+            previewCard.style.display = 'block';
+            previewCard.scrollIntoView({ behavior: 'smooth' });
             
             const etudiantsPromo = allEtudiants.filter(e => e.promotion === currentPromoId);
             
@@ -706,30 +978,41 @@
                     ...row,
                     etudiantId: etudiant ? etudiant.id : row.matricule,
                     etudiantNom: etudiant ? etudiant.nom : row.nom,
-                    moyenne: moyenne
+                    moyenne: moyenne,
+                    existe: !!etudiant
                 };
             });
             
             const total = dataComplete.length;
-            const moyennes = dataComplete.map(d => d.moyenne);
+            const valides = dataComplete.filter(d => d.existe).length;
+            const moyennes = dataComplete.filter(d => d.existe).map(d => d.moyenne);
             const moyenneClasse = moyennes.length > 0 ? 
-                (moyennes.reduce((a,b) => a+b, 0) / moyennes.length).toFixed(2) : 0;
+                (moyennes.reduce((a, b) => a + b, 0) / moyennes.length).toFixed(2) : 0;
             const reussis = moyennes.filter(m => m >= 5).length;
             
             document.getElementById('statsMini').innerHTML = `
-                <div class="stat-mini-item"><strong>${total}</strong> Étudiants</div>
+                <div class="stat-mini-item"><strong>${total}</strong> Lignes</div>
+                <div class="stat-mini-item"><strong>${valides}</strong> Étudiants trouvés</div>
                 <div class="stat-mini-item"><strong>${moyenneClasse}</strong> Moy. classe /10</div>
                 <div class="stat-mini-item"><strong>${reussis}</strong> Réussite (≥5)</div>
-                <div class="stat-mini-item"><strong>${total - reussis}</strong> Échec (<5)</div>
+                <div class="stat-mini-item"><strong>${valides - reussis}</strong> Échec (<5)</div>
+                ${total - valides > 0 ? `<div class="stat-mini-item text-danger"><strong>${total - valides}</strong> Non trouvés</div>` : ''}
             `;
             
             let html = `
                 <table class="cotes-table">
                     <thead>
                         <tr>
-                            <th>N°</th><th>Matricule</th><th>Nom étudiant</th>
-                            <th>Présence /2</th><th>TD /2</th><th>TP /2</th><th>Interro /4</th>
-                            <th>Moyenne /10</th><th>Statut</th>
+                            <th>N°</th>
+                            <th>Matricule</th>
+                            <th>Nom étudiant</th>
+                            <th>Présence /2</th>
+                            <th>TD /2</th>
+                            <th>TP /2</th>
+                            <th>Interro /4</th>
+                            <th>Moyenne /10</th>
+                            <th>Statut</th>
+                            <th>État</th>
                         </tr>
                     </thead>
                     <tbody>`;
@@ -737,42 +1020,74 @@
             dataComplete.forEach((d, i) => {
                 const statut = d.moyenne >= 5 ? 'Réussite' : 'Échec';
                 const statutClass = d.moyenne >= 5 ? 'text-success' : 'text-danger';
+                const etat = d.existe ? '✅ Trouvé' : '❌ Inconnu';
+                const etatClass = d.existe ? 'text-success' : 'text-danger';
                 
                 html += `<tr>
-                    <td>${i+1}</td>
+                    <td>${i + 1}</td>
                     <td><code>${escapeHtml(d.matricule)}</code></td>
-                    <td style="text-align:left;"><strong>${escapeHtml(d.etudiantNom)}</strong></td>
-                    <td>${d.presence}</td><td>${d.td}</td><td>${d.tp}</td><td>${d.interro}</td>
+                    <td style="text-align:left;">
+                        <strong>${escapeHtml(d.etudiantNom)}</strong>
+                        ${!d.existe ? ' <span class="text-danger"><i class="bi bi-exclamation-triangle"></i></span>' : ''}
+                    </td>
+                    <td>${d.presence}</td>
+                    <td>${d.td}</td>
+                    <td>${d.tp}</td>
+                    <td>${d.interro}</td>
                     <td class="moyenne-cell ${d.moyenne >= 5 ? 'reussi' : 'echoue'}">${d.moyenne.toFixed(1)}</td>
                     <td class="${statutClass}"><small>${statut}</small></td>
+                    <td class="${etatClass}"><small>${etat}</small></td>
                 </tr>`;
             });
             
             html += '</tbody></table>';
             document.getElementById('previewTable').innerHTML = html;
+            
+            const btnPublish = document.getElementById('publishBtn');
+            if (valides === 0) {
+                btnPublish.disabled = true;
+                btnPublish.title = 'Aucun étudiant correspondant trouvé';
+            } else {
+                btnPublish.disabled = false;
+                btnPublish.title = '';
+            }
         }
         
-        // ========== ANNULER ==========
+        // ============================================================
+        // ⭐ ANNULER
+        // ============================================================
         document.getElementById('cancelPreviewBtn').addEventListener('click', function() {
             resetPreview();
-            showToast('Aperçu annulé','warning');
+            showToast('Aperçu annulé', 'warning');
         });
         
-        // ========== PUBLICATION ==========
+        // ============================================================
+        // ⭐ PUBLICATION AVEC HISTORIQUE
+        // ============================================================
         document.getElementById('publishBtn').addEventListener('click', async function() {
             if (excelData.length === 0) { 
-                showToast('Aucune donnée à publier','warning'); 
+                showToast('Aucune donnée à publier', 'warning'); 
                 return; 
             }
             if (!currentCoursId || !currentPromoId) { 
-                showToast('Sélectionnez une promotion et un cours','warning'); 
+                showToast('Sélectionnez une promotion et un cours', 'warning'); 
                 return; 
+            }
+            
+            const etudiantsPromo = allEtudiants.filter(e => e.promotion === currentPromoId);
+            const valides = excelData.filter(row => 
+                etudiantsPromo.find(e => e.matricule === row.matricule || e.id === row.matricule)
+            );
+            
+            if (valides.length === 0) {
+                showToast('Aucun étudiant correspondant trouvé dans la promotion', 'danger');
+                return;
             }
             
             const nbExistantes = allCotations.filter(c => c.coursId === currentCoursId).length;
             const msg = nbExistantes > 0 
-                ? `Mettre à jour les cotes pour ${excelData.length} étudiants ?\n(${nbExistantes} cotes existantes seront mises à jour)`
-                : `Publier les cotes pour ${excelData.length} étudiants ?`;
+                ? `Mettre à jour les cotes pour ${valides.length} étudiants ?\n(${nbExistantes} cotes existantes seront mises à jour)`
+                : `Publier les cotes pour ${valides.length} étudiants ?`;
             
             if (!confirm(msg)) return;
             
@@ -781,9 +1096,7 @@
             btn.innerHTML = '<span class="loading-spinner me-2"></span> Publication...';
             
             try {
-                const etudiantsPromo = allEtudiants.filter(e => e.promotion === currentPromoId);
                 const cours = allCours.find(c => c.id === currentCoursId);
-                
                 const batch = db.batch();
                 let count = 0;
                 
@@ -804,7 +1117,7 @@
                         etudiantId: etudiant.id,
                         etudiantNom: etudiant.nom,
                         etudiantMatricule: etudiant.matricule || etudiant.id,
-                        professeurId: currentUser.id,
+                        professeurId: currentUser.id || currentUser.uid,
                         professeurNom: currentUser.nomComplet,
                         presence: row.presence, 
                         td: row.td, 
@@ -819,43 +1132,154 @@
                 
                 if (count > 0) {
                     await batch.commit();
-                    showToast(`✅ ${count} cotes publiées avec succès !`,'success');
+                    
+                    const historiqueData = {
+                        coursId: currentCoursId,
+                        coursNom: cours ? cours.nom : '',
+                        promotionId: currentPromoId,
+                        promotionNom: allPromotions.find(p => p.id === currentPromoId)?.nom || '',
+                        professeurId: currentUser.id || currentUser.uid,
+                        professeurNom: currentUser.nomComplet,
+                        nombreEtudiants: count,
+                        datePublication: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    
+                    await db.collection('historiquePublications').add(historiqueData);
+                    
+                    showToast(`✅ ${count} cotes publiées avec succès !`, 'success');
                     resetPreview();
-                    // Rechargement des cotations
-                    await chargerCotationsExistantes();
                 } else {
-                    showToast('Aucun étudiant correspondant trouvé','warning');
+                    showToast('Aucun étudiant correspondant trouvé', 'warning');
                 }
             } catch(err) {
                 console.error(err);
-                showToast('Erreur: '+err.message,'danger');
+                showToast('Erreur: '+err.message, 'danger');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bi bi-cloud-upload-fill"></i> Publier les cotes';
             }
         });
         
-        // ========== DÉMARRAGE INSTANTANÉ ==========
-        document.addEventListener('DOMContentLoaded', () => {
-            initApp().then(() => {
-                // Actualisation des sélecteurs après chargement
-                actualiserSelecteursPromotions();
-                console.log('✅ Application prête - Données en temps réel');
+        // ============================================================
+        // ⭐ AFFICHER L'HISTORIQUE AVEC BOUTONS D'EXPORT
+        // ============================================================
+        function afficherHistorique() {
+            const container = document.getElementById('historyContainer');
+            if (!container) return;
+            
+            if (allHistorique.length === 0) {
+                container.innerHTML = `
+                    <div class="history-empty">
+                        <i class="bi bi-inbox"></i>
+                        <p>Aucune publication pour le moment</p>
+                    </div>`;
+                return;
+            }
+            
+            let html = '';
+            allHistorique.forEach(h => {
+                html += `
+                    <div class="history-item">
+                        <div class="h-info">
+                            <div class="h-title">
+                                <i class="bi bi-book-fill"></i> ${escapeHtml(h.coursNom || 'Cours')}
+                                <span class="badge bg-primary ms-2">${h.nombreEtudiants || 0} étudiants</span>
+                            </div>
+                            <div class="h-detail">
+                                <i class="bi bi-trophy-fill"></i> ${escapeHtml(h.promotionNom || 'N/A')}
+                                <span class="ms-3"><i class="bi bi-person-fill"></i> ${escapeHtml(h.professeurNom || '')}</span>
+                            </div>
+                        </div>
+                        <div class="h-date">
+                            <i class="bi bi-clock"></i> ${formaterDate(h.datePublication)}
+                        </div>
+                        <div class="h-actions">
+                            <button class="btn-history-export-excel" onclick="exporterBulletinHistorique('${h.id}', '${h.coursId}', '${h.promotionId}')">
+                                <i class="bi bi-file-excel"></i> Export bulletin
+                            </button>
+                        </div>
+                    </div>
+                `;
             });
+            
+            container.innerHTML = html;
+        }
+        
+        // ============================================================
+        // ⭐ EXPORTER TOUT L'HISTORIQUE
+        // ============================================================
+        document.getElementById('exportAllHistoryBtn').addEventListener('click', function() {
+            if (allHistorique.length === 0) {
+                showToast('Aucun historique à exporter', 'warning');
+                return;
+            }
+            
+            const data = [['Cours', 'Promotion', 'Nombre étudiants', 'Date publication']];
+            
+            allHistorique.forEach(h => {
+                data.push([
+                    h.coursNom || 'Cours',
+                    h.promotionNom || 'N/A',
+                    h.nombreEtudiants || 0,
+                    formaterDate(h.datePublication)
+                ]);
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            ws['!cols'] = [
+                { wch: 25 }, { wch: 25 }, { wch: 15 }, { wch: 20 }
+            ];
+            
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Historique');
+            
+            XLSX.writeFile(wb, `historique_cotations_${new Date().toISOString().slice(0,10)}.xlsx`);
+            showToast('✅ Historique exporté avec succès', 'success');
         });
         
-        // Écouteur temps réel pour les modifications Firebase (optionnel)
-        db.collection('cotations')
-            .where('professeurId', '==', currentUserId)
-            .onSnapshot((snapshot) => {
-                allCotations = [];
-                snapshot.forEach(doc => {
-                    allCotations.push({ id: doc.id, ...doc.data() });
-                });
-                console.log('🔄 Mise à jour temps réel des cotations');
-            }, (error) => {
-                console.error('Erreur écouteur temps réel:', error);
-            });
+        // ============================================================
+        // ⭐ DÉCONNEXION
+        // ============================================================
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            if (confirm('Voulez-vous vous déconnecter ?')) {
+                if (unsubscribePromotions) unsubscribePromotions();
+                if (unsubscribeCours) unsubscribeCours();
+                if (unsubscribeEtudiants) unsubscribeEtudiants();
+                if (unsubscribeCotations) unsubscribeCotations();
+                if (unsubscribeHistorique) unsubscribeHistorique();
+                
+                localStorage.removeItem('professeur_session');
+                window.location.href = 'login.html';
+            }
+        });
+        
+        // ============================================================
+        // ⭐ CLIC SUR L'AVATAR
+        // ============================================================
+        document.getElementById('profileAvatar').addEventListener('click', function() {
+            window.location.href = 'profil.html';
+        });
+        
+        // ============================================================
+        // ⭐ NETTOYAGE
+        // ============================================================
+        window.addEventListener('beforeunload', () => {
+            if (unsubscribePromotions) unsubscribePromotions();
+            if (unsubscribeCours) unsubscribeCours();
+            if (unsubscribeEtudiants) unsubscribeEtudiants();
+            if (unsubscribeCotations) unsubscribeCotations();
+            if (unsubscribeHistorique) unsubscribeHistorique();
+        });
+        
+        // ============================================================
+        // ⭐ INITIALISATION
+        // ============================================================
+        console.log('✅ Page Mes Cotations - Temps réel activé');
+        console.log(`⏰ Session: ${SESSION_DUREE_HEURES} heures`);
+        console.log(`👤 ID professeur: ${currentUserId}`);
+        
+        window.showToast = showToast;
+        window.exporterBulletinHistorique = exporterBulletinHistorique;
     </script>
 </body>
 </html>
