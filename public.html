@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Publication de Sujets - Professeur</title>
+    <meta name="theme-color" content="#003366">
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-96x96.png">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --primary-blue: #003366;
+            --dark-blue: #002244;
+            --accent-yellow: #ffb347;
+            --light-gray: #f0f2f5;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--light-gray);
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+        }
+
+        .navbar-custom {
+            background: var(--primary-blue);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 12px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1rem;
+            color: white !important;
+        }
+
+        .btn-back {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 18px;
+            border-radius: 25px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .btn-back:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateX(-3px);
+            color: white;
+        }
+
+        .container-custom {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px 15px 40px;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+
+        .section-card h3 {
+            color: var(--primary-blue);
+            font-weight: 700;
+            margin-bottom: 5px;
+            font-size: 1.3rem;
+        }
+
+        .section-card .subtitle {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--primary-blue);
+            font-size: 0.9rem;
+        }
+
+        .form-control, .form-select {
+            border-radius: 12px;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 0.2rem rgba(0,51,102,0.15);
+        }
+
+        .btn-submit {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .btn-submit:hover {
+            background: var(--dark-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,51,102,0.3);
+        }
+
+        .btn-submit:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-danger-custom {
+            background: var(--danger-red);
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .btn-danger-custom:hover {
+            background: #c82333;
+        }
+
+        .sujet-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--primary-blue);
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .sujet-card:hover {
+            transform: translateX(3px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .sujet-card .sujet-info {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .sujet-card .sujet-titre {
+            font-weight: 700;
+            color: var(--primary-blue);
+            font-size: 16px;
+        }
+
+        .sujet-card .sujet-departement {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .sujet-card .sujet-date {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .sujet-card .sujet-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .badge-statut {
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-statut.publie {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-statut.en-attente {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-statut.valide {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .badge-statut.rejete {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+        }
+
+        .empty-state i {
+            font-size: 50px;
+            color: #ccc;
+            margin-bottom: 15px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .toast-custom {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            max-width: 350px;
+            font-weight: 500;
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .container-custom { padding: 15px 10px 30px; }
+            .section-card { padding: 20px 15px; border-radius: 15px; }
+            .sujet-card { flex-direction: column; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar navbar-custom">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-megaphone-fill"></i>
+                PUBLICATION DE SUJETS
+            </a>
+            <a href="professeur.html" class="btn-back">
+                <i class="bi bi-arrow-left"></i>
+                Retour
+            </a>
+        </div>
+    </nav>
+
+    <div class="container-custom" id="mainContent">
+
+        <div id="loadingIndicator" class="text-center mt-5">
+            <div style="width:50px;height:50px;border:5px solid #e0e0e0;border-top:5px solid var(--primary-blue);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 15px;"></div>
+            <p class="text-muted mt-3">Chargement...</p>
+        </div>
+
+    </div>
+
+    <script>
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBb82N2-5ns7qKjQBAj5UvDW87s2PZ27F0",
+            authDomain: "fsa-unilu.firebaseapp.com",
+            projectId: "fsa-unilu",
+            storageBucket: "fsa-unilu.firebasestorage.app",
+            messagingSenderId: "36551990738",
+            appId: "1:36551990738:web:e91fdcb53f8aab5d1b7c0b"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const db = firebase.firestore();
+
+        const DEPARTEMENTS = [
+            "Agronomie Générale",
+            "Économie Agricole",
+            "Sciences du Sol",
+            "Protection des Végétaux",
+            "Zootechnie",
+            "Génie Rural"
+        ];
+
+        let currentProfessor = null;
+
+        function checkSession() {
+            const session = localStorage.getItem('professeur_session');
+
+            if (!session) {
+                window.location.href = 'login.html';
+                return false;
+            }
+
+            try {
+                const data = JSON.parse(session);
+
+                if (!data.expires || Date.now() > data.expires) {
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return false;
+                }
+
+                if (data.role !== 'professeur') {
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return false;
+                }
+
+                currentProfessor = data;
+                return true;
+
+            } catch (e) {
+                localStorage.removeItem('professeur_session');
+                window.location.href = 'login.html';
+                return false;
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message, type = 'success') {
+            const existing = document.querySelector('.toast-custom');
+            if (existing) existing.remove();
+
+            const colors = {
+                success: { bg: '#28a745', icon: 'check-circle-fill' },
+                warning: { bg: '#ffc107', icon: 'exclamation-triangle-fill', textColor: '#333' },
+                danger: { bg: '#dc3545', icon: 'x-circle-fill' },
+                info: { bg: '#17a2b8', icon: 'info-circle-fill' }
+            };
+
+            const config = colors[type] || colors.success;
+            const textColor = config.textColor || 'white';
+
+            const toastHtml = `
+                <div class="toast-custom" style="background:${config.bg};color:${textColor};">
+                    <i class="bi bi-${config.icon} me-2"></i>
+                    ${message}
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', toastHtml);
+            setTimeout(() => {
+                const t = document.querySelector('.toast-custom');
+                if (t) t.remove();
+            }, 4000);
+        }
+
+        function formatDate(timestamp) {
+            if (!timestamp) return '-';
+            try {
+                const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+                return date.toLocaleDateString('fr-FR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                return '-';
+            }
+        }
+
+        function renderPublicationForm() {
+            let options = '<option value="">-- Sélectionnez un département --</option>';
+            DEPARTEMENTS.forEach(dept => {
+                options += `<option value="${escapeHtml(dept)}">${escapeHtml(dept)}</option>`;
+            });
+
+            return `
+                <div class="section-card">
+                    <h3><i class="bi bi-plus-circle-fill me-2"></i>Publier un nouveau sujet</h3>
+                    <p class="subtitle">Remplissez les champs ci-dessous pour publier un sujet de projet.</p>
+
+                    <form id="publicationForm">
+                        <div class="mb-3">
+                            <label for="sujetDepartement" class="form-label">
+                                <i class="bi bi-building me-1"></i> Département *
+                            </label>
+                            <select class="form-select" id="sujetDepartement" required>
+                                ${options}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="sujetTitre" class="form-label">
+                                <i class="bi bi-journal-text me-1"></i> Titre du sujet *
+                            </label>
+                            <input type="text" class="form-control" id="sujetTitre"
+                                   placeholder="Ex: Étude des sols dans la région du Katanga"
+                                   required minlength="10">
+                            <div class="form-text">Minimum 10 caractères.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="sujetDescription" class="form-label">
+                                <i class="bi bi-file-text-fill me-1"></i> Description détaillée *
+                            </label>
+                            <textarea class="form-control" id="sujetDescription" rows="5"
+                                      placeholder="Décrivez le sujet en détail..."
+                                      required minlength="20"></textarea>
+                            <div class="form-text">Minimum 20 caractères.</div>
+                        </div>
+
+                        <button type="submit" class="btn-submit" id="publishBtn">
+                            <i class="bi bi-cloud-upload-fill me-2"></i>
+                            Publier le sujet
+                        </button>
+                    </form>
+                </div>
+            `;
+        }
+
+        function renderPublishedSubjects(subjects) {
+            if (!subjects || subjects.length === 0) {
+                return `
+                    <div class="section-card">
+                        <h3><i class="bi bi-list-ul me-2"></i>Mes sujets publiés</h3>
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <h5>Aucun sujet publié</h5>
+                            <p class="text-muted">Publiez votre premier sujet ci-dessus.</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            let html = `
+                <div class="section-card">
+                    <h3><i class="bi bi-list-ul me-2"></i>Mes sujets publiés</h3>
+                    <p class="subtitle">${subjects.length} sujet(s) publié(s)</p>
+            `;
+
+            subjects.forEach(s => {
+                const statutClass = s.statut === 'publie' ? 'publie' :
+                                   s.statut === 'valide' ? 'valide' :
+                                   s.statut === 'rejete' ? 'rejete' : 'en-attente';
+
+                const statutLabel = s.statut === 'publie' ? 'Publié' :
+                                   s.statut === 'valide' ? 'Validé' :
+                                   s.statut === 'rejete' ? 'Rejeté' : 'En attente';
+
+                html += `
+                    <div class="sujet-card">
+                        <div class="sujet-info">
+                            <div class="sujet-titre">${escapeHtml(s.titre)}</div>
+                            <div class="sujet-departement">
+                                <i class="bi bi-building"></i> ${escapeHtml(s.departement)}
+                            </div>
+                            <div class="sujet-date">
+                                <i class="bi bi-calendar3"></i> Publié le ${formatDate(s.datePublication)}
+                            </div>
+                        </div>
+                        <div class="sujet-actions">
+                            <span class="badge-statut ${statutClass}">${statutLabel}</span>
+                            ${s.statut === 'publie' ? `
+                                <button class="btn btn-sm btn-danger-custom" onclick="supprimerSujet('${s.id}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            return html;
+        }
+
+        let professorSubjects = [];
+        let subjectsUnsubscribe = null;
+
+        // ✅ CORRECTION : Suppression du orderBy pour éviter l'erreur d'index
+        function listenProfessorSubjects() {
+            if (subjectsUnsubscribe) {
+                subjectsUnsubscribe();
+                subjectsUnsubscribe = null;
+            }
+
+            if (!currentProfessor || !currentProfessor.id) {
+                return;
+            }
+
+            subjectsUnsubscribe = db.collection('sujets')
+                .where('professeurId', '==', currentProfessor.id)
+                .onSnapshot((snapshot) => {
+                    professorSubjects = [];
+                    snapshot.forEach(doc => {
+                        professorSubjects.push({ id: doc.id, ...doc.data() });
+                    });
+
+                    // ✅ Tri côté client par date décroissante
+                    professorSubjects.sort((a, b) => {
+                        const dateA = a.datePublication?.toDate
+                            ? a.datePublication.toDate().getTime()
+                            : (a.datePublication ? new Date(a.datePublication).getTime() : 0);
+                        const dateB = b.datePublication?.toDate
+                            ? b.datePublication.toDate().getTime()
+                            : (b.datePublication ? new Date(b.datePublication).getTime() : 0);
+                        return dateB - dateA;
+                    });
+
+                    renderPage();
+                }, (error) => {
+                    console.error('Erreur écoute sujets:', error);
+                    // ✅ Pas de toast ici : on affiche juste la liste vide
+                    professorSubjects = [];
+                    renderPage();
+                });
+        }
+
+        async function publierSujet(e) {
+            e.preventDefault();
+
+            const departement = document.getElementById('sujetDepartement').value;
+            const titre = document.getElementById('sujetTitre').value.trim();
+            const description = document.getElementById('sujetDescription').value.trim();
+
+            if (!departement) {
+                showToast('Veuillez sélectionner un département', 'warning');
+                return;
+            }
+
+            if (!titre || titre.length < 10) {
+                showToast('Le titre doit contenir au moins 10 caractères', 'warning');
+                return;
+            }
+
+            if (!description || description.length < 20) {
+                showToast('La description doit contenir au moins 20 caractères', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('publishBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner me-2"></span> Publication...';
+
+            try {
+                await db.collection('sujets').add({
+                    professeurId: currentProfessor.id,
+                    professeurNom: currentProfessor.nomComplet || 'Professeur',
+                    professeurEmail: currentProfessor.email || '',
+                    departement: departement,
+                    titre: titre,
+                    description: description,
+                    statut: 'publie',
+                    datePublication: firebase.firestore.FieldValue.serverTimestamp(),
+                    nbEtudiants: 0
+                });
+
+                showToast('✅ Sujet publié avec succès !', 'success');
+                document.getElementById('publicationForm').reset();
+
+            } catch (error) {
+                console.error('Erreur publication:', error);
+                showToast('❌ Erreur: ' + error.message, 'danger');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-cloud-upload-fill me-2"></i> Publier le sujet';
+            }
+        }
+
+        window.supprimerSujet = async function(id) {
+            if (!confirm('Voulez-vous vraiment supprimer ce sujet ?')) return;
+
+            try {
+                await db.collection('sujets').doc(id).delete();
+                showToast('✅ Sujet supprimé', 'success');
+            } catch (error) {
+                console.error('Erreur suppression:', error);
+                showToast('❌ Erreur: ' + error.message, 'danger');
+            }
+        };
+
+        function renderPage() {
+            const container = document.getElementById('mainContent');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+
+            if (loadingIndicator) {
+                loadingIndicator.style.display = 'none';
+            }
+
+            let html = '';
+
+            html += renderPublicationForm();
+            html += renderPublishedSubjects(professorSubjects);
+
+            container.innerHTML = html;
+
+            const form = document.getElementById('publicationForm');
+            if (form) {
+                const newForm = form.cloneNode(true);
+                form.parentNode.replaceChild(newForm, form);
+                newForm.addEventListener('submit', publierSujet);
+            }
+        }
+
+        async function registerServiceWorker() {
+            if (!('serviceWorker' in navigator)) {
+                return null;
+            }
+
+            try {
+                if (typeof window.registerAppServiceWorker === 'function') {
+                    return await window.registerAppServiceWorker();
+                }
+
+                const registration = await navigator.serviceWorker.register('./sw.js', {
+                    scope: './'
+                });
+
+                console.log('✅ Service Worker enregistré');
+                return registration;
+
+            } catch (error) {
+                console.error('❌ Service Worker:', error);
+                return null;
+            }
+        }
+
+        async function init() {
+            if (!checkSession()) {
+                return;
+            }
+
+            console.log('🚀 Page Publication de Sujets - Professeur');
+            console.log('👤 Professeur:', currentProfessor.nomComplet);
+
+            await registerServiceWorker();
+            listenProfessorSubjects();
+            renderPage();
+
+            console.log('✅ Page Publication de Sujets prête');
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+
+    </script>
+
+</body>
+</html>
