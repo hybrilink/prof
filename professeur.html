@@ -380,6 +380,13 @@
                     </a>
                 </div>
                 <div class="col-md-4 col-sm-6">
+                    <a href="public.html" class="menu-card">
+                        <div class="menu-icon"><i class="bi bi-megaphone-fill"></i></div>
+                        <div class="menu-title">Publications de Sujet de Projet</div>
+                        <div class="menu-subtitle">Publier et gérer les sujets</div>
+                    </a>
+                </div>
+                <div class="col-md-4 col-sm-6">
                     <a href="a-propos.html" class="menu-card">
                         <div class="menu-icon"><i class="bi bi-info-circle-fill"></i></div>
                         <div class="menu-title">À Propos</div>
@@ -418,7 +425,7 @@
         const SESSION_DUREE_HEURES = 24; // 24 heures
         
         // ============================================================
-        // ⭐ VÉRIFICATION DE SESSION - CORRIGÉE
+        // ⭐ VÉRIFICATION DE SESSION
         // ============================================================
         (function() {
             console.log('🔍 Vérification de la session professeur...');
@@ -437,7 +444,6 @@
                 
                 console.log('📦 Session chargée:', session);
                 
-                // ✅ Vérification directe (pas session.user)
                 if(!session.expires || now > session.expires) {
                     console.log('⏰ Session expirée, redirection vers login.html');
                     localStorage.removeItem('professeur_session');
