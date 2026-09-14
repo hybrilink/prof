@@ -282,28 +282,16 @@
             font-weight: 600;
             color: var(--dark-blue);
         }
-        table.preview-table .cote-input {
-            width: 90px;
-            padding: 6px 10px;
-            border-radius: 8px;
-            border: 1.5px solid #ddd;
-            font-size: 0.85rem;
+        table.preview-table .cote-cell {
             text-align: center;
-            font-weight: 700;
-            transition: all 0.2s;
+            font-weight: 800;
+            color: var(--primary-blue);
+            font-size: 0.95rem;
         }
-        table.preview-table .cote-input:focus {
-            border-color: var(--primary-blue);
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(0,51,102,0.1);
-        }
-        table.preview-table .cote-input.invalid {
-            border-color: var(--danger-red);
-            background: #fff5f5;
-        }
-        table.preview-table .cote-input.valid {
-            border-color: var(--success-green);
-            background: #f0fff4;
+        table.preview-table .cote-cell.manquante {
+            color: var(--danger-red);
+            font-style: italic;
+            font-weight: 500;
         }
 
         /* ===== EMPTY STATE ===== */
@@ -347,6 +335,23 @@
         }
         .stat-pill.success .val { color: var(--success-green); }
         .stat-pill.danger .val { color: var(--danger-red); }
+
+        /* ===== ALERT INFO ===== */
+        .alert-info-custom {
+            background: #e7f3ff;
+            border-left: 4px solid var(--primary-blue);
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: var(--dark-blue);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .alert-info-custom i {
+            color: var(--primary-blue);
+            font-size: 1.2rem;
+        }
 
         /* ===== TOAST ===== */
         .toast-notification {
@@ -446,7 +451,7 @@
         <div class="page-header">
             <div>
                 <h1><i class="bi bi-clipboard2-check-fill me-2"></i>Délibération & Cotes d'Examen</h1>
-                <small>Prélevez les cotes, exportez et publiez les bulletins</small>
+                <small>Exportez le bulletin, remplissez-le, puis importez-le</small>
             </div>
             <button class="back-btn" onclick="window.location.href='professeur.html'">
                 <i class="bi bi-arrow-left me-1"></i> Retour
@@ -458,9 +463,9 @@
             <h5><i class="bi bi-funnel-fill"></i> Étape 1 — Sélection de la promotion, du cours et de la session</h5>
             <div class="row g-3">
                 <div class="col-md-4">
-                    <label class="form-label"><i class="bi bi-mortarboard-fill me-1"></i>Promotion</label>
+                    <label class="form-label"><i class="bi bi-mortarboard-fill me-1"></i>Promotion (les vôtres uniquement)</label>
                     <select class="form-select" id="selectPromotion">
-                        <option value="">-- Sélectionner une promotion --</option>
+                        <option value="">-- Chargement... --</option>
                     </select>
                 </div>
                 <div class="col-md-4">
@@ -484,9 +489,6 @@
                 </div>
             </div>
             <div class="mt-3 d-flex flex-wrap gap-2">
-                <button class="btn btn-primary-custom" id="btnCharger" disabled>
-                    <i class="bi bi-people-fill"></i> Charger les étudiants
-                </button>
                 <button class="btn btn-excel" id="btnExporter" disabled>
                     <i class="bi bi-file-earmark-excel-fill"></i> Exporter le bulletin Excel
                 </button>
@@ -497,10 +499,10 @@
             </div>
         </div>
 
-        <!-- ===== ÉTAPE 2 : APERÇU ===== -->
+        <!-- ===== ÉTAPE 2 : APERÇU (visible SEULEMENT après import) ===== -->
         <div class="card-panel" id="panelApercu" style="display:none;">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                <h5 class="mb-0"><i class="bi bi-eye-fill"></i> Étape 2 — Aperçu & saisie des cotes</h5>
+                <h5 class="mb-0"><i class="bi bi-eye-fill"></i> Étape 2 — Aperçu des cotes importées</h5>
                 <span class="badge-statut draft" id="badgeStatut">
                     <i class="bi bi-pencil-square"></i> BROUILLON
                 </span>
@@ -534,7 +536,7 @@
                 </div>
                 <div class="stat-pill success">
                     <div>
-                        <div class="lbl">Cotes saisies</div>
+                        <div class="lbl">Cotes importées</div>
                         <div class="val" id="statSaisies">0</div>
                     </div>
                 </div>
@@ -546,7 +548,7 @@
                 </div>
             </div>
 
-            <!-- Tableau -->
+            <!-- Tableau (lecture seule) -->
             <div class="preview-wrapper">
                 <table class="preview-table" id="previewTable">
                     <thead>
@@ -562,7 +564,7 @@
             </div>
 
             <div class="mt-3 d-flex flex-wrap gap-2 justify-content-end">
-                <button class="btn btn-primary-custom" id="btnPublier" disabled>
+                <button class="btn btn-publish" id="btnPublier" disabled>
                     <i class="bi bi-cloud-arrow-up-fill"></i> Publier les cotes
                 </button>
             </div>
@@ -572,8 +574,12 @@
         <div class="card-panel" id="panelEmpty">
             <div class="empty-state">
                 <i class="bi bi-clipboard2-data"></i>
-                <h5 style="color:#6c757d;font-weight:600;">Aucune donnée chargée</h5>
-                <p style="font-size:0.9rem;">Sélectionnez une promotion, un cours et une session, puis cliquez sur <strong>Charger les étudiants</strong>.</p>
+                <h5 style="color:#6c757d;font-weight:600;">Aucun aperçu disponible</h5>
+                <p style="font-size:0.9rem;">
+                    Sélectionnez une promotion, un cours et une session, puis cliquez sur
+                    <strong>Exporter le bulletin Excel</strong>. Remplissez le fichier, puis
+                    cliquez sur <strong>Importer le fichier Excel rempli</strong> pour voir l'aperçu.
+                </p>
             </div>
         </div>
 
@@ -610,13 +616,13 @@
         // ============================================================
         // ⭐ VARIABLES GLOBALES
         // ============================================================
-        let currentSession = null;
         let currentProfessor = null;
-        let allPromotions = [];
-        let allCours = [];
+        let allPromotions = [];      // Seulement les promos du professeur
+        let allCours = [];            // Tous les cours du professeur (avant filtrage promo)
         let students = [];
-        let cotesData = {}; // { studentId: cote }
+        let cotesData = {};           // { studentId: cote }
         let isPublished = false;
+        let importedFromExcel = false; // Flag : l'aperçu ne s'affiche qu'après import
 
         const SESSION_LABELS = {
             'MI_SESSION': 'Mi-Session',
@@ -644,14 +650,12 @@
                 }
                 currentProfessor = session;
 
-                // Affichage navbar
                 const nom = session.nomComplet || 'Professeur';
                 document.getElementById('navProfessorName').textContent = nom;
                 const initials = nom.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
                 document.getElementById('profileAvatar').textContent = initials;
                 document.getElementById('profileAvatar').title = nom;
 
-                // Temps restant
                 const restant = session.expires - Date.now();
                 const h = Math.floor(restant / 3600000);
                 const m = Math.floor((restant % 3600000) / 60000);
@@ -692,28 +696,85 @@
         }
 
         // ============================================================
-        // ⭐ INITIALISATION : CHARGEMENT DES PROMOTIONS
+        // ⭐ CHARGEMENT DES PROMOTIONS DU PROFESSEUR UNIQUEMENT
         // ============================================================
-        async function chargerPromotions() {
-            try {
-                const snap = await db.collection('promotions').get();
-                allPromotions = [];
-                snap.forEach(doc => allPromotions.push({ id: doc.id, ...doc.data() }));
+        async function chargerPromotionsProfesseur() {
+            const select = document.getElementById('selectPromotion');
+            select.innerHTML = '<option value="">Chargement...</option>';
 
-                const select = document.getElementById('selectPromotion');
+            try {
+                const email = currentProfessor.email || '';
+                const profId = currentProfessor.id || currentProfessor.userId || '';
+                const nomProf = currentProfessor.nomComplet || '';
+
+                // Récupérer d'abord tous les cours du professeur
+                let coursProf = [];
+
+                // Tentative 1 : par email
+                if (email) {
+                    const snap = await db.collection('cours').where('professeurEmail', '==', email).get();
+                    snap.forEach(doc => coursProf.push({ id: doc.id, ...doc.data() }));
+                }
+                // Tentative 2 : par ID
+                if (coursProf.length === 0 && profId) {
+                    const snap = await db.collection('cours').where('professeurId', '==', profId).get();
+                    snap.forEach(doc => coursProf.push({ id: doc.id, ...doc.data() }));
+                }
+                // Tentative 3 : par nom complet
+                if (coursProf.length === 0 && nomProf) {
+                    const snap = await db.collection('cours').where('professeur', '==', nomProf).get();
+                    snap.forEach(doc => coursProf.push({ id: doc.id, ...doc.data() }));
+                }
+
+                allCours = coursProf;
+
+                // Extraire les promotions UNIQUES depuis les cours du prof
+                const promoIdsSet = new Set();
+                coursProf.forEach(c => {
+                    if (c.promotionId) promoIdsSet.add(c.promotionId);
+                    if (c.promotion) promoIdsSet.add(c.promotion);
+                    if (Array.isArray(c.promotions)) c.promotions.forEach(p => promoIdsSet.add(p));
+                });
+
+                const promoIds = Array.from(promoIdsSet);
+
+                if (promoIds.length === 0) {
+                    select.innerHTML = '<option value="">Aucune promotion associée à vos cours</option>';
+                    console.warn('⚠️ Aucune promotion trouvée pour ce professeur');
+                    return;
+                }
+
+                // Charger les infos des promotions
+                allPromotions = [];
+                for (const pid of promoIds) {
+                    try {
+                        const doc = await db.collection('promotions').doc(pid).get();
+                        if (doc.exists) {
+                            allPromotions.push({ id: doc.id, ...doc.data() });
+                        } else {
+                            // Fallback : utiliser l'ID comme nom
+                            allPromotions.push({ id: pid, nom: pid });
+                        }
+                    } catch (e) {
+                        allPromotions.push({ id: pid, nom: pid });
+                    }
+                }
+
+                // Trier par nom et remplir le select
+                allPromotions.sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
                 select.innerHTML = '<option value="">-- Sélectionner une promotion --</option>';
-                allPromotions
-                    .sort((a, b) => (a.nom || '').localeCompare(b.nom || ''))
-                    .forEach(p => {
-                        const opt = document.createElement('option');
-                        opt.value = p.id;
-                        opt.textContent = p.nom || p.id;
-                        select.appendChild(opt);
-                    });
-                console.log('✅ Promotions chargées:', allPromotions.length);
+                allPromotions.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.nom || p.id;
+                    select.appendChild(opt);
+                });
+
+                console.log(`✅ ${allPromotions.length} promotions du professeur chargées`);
             } catch (e) {
-                console.error('❌ Erreur promotions:', e);
-                showToast('Erreur de chargement des promotions', 'danger');
+                console.error('❌ Erreur promotions prof:', e);
+                select.innerHTML = '<option value="">Erreur de chargement</option>';
+                showToast('Erreur de chargement de vos promotions', 'danger');
             }
         }
 
@@ -726,42 +787,18 @@
             select.innerHTML = '<option value="">Chargement...</option>';
 
             try {
-                const email = currentProfessor.email || '';
-                const profId = currentProfessor.id || currentProfessor.userId || '';
-                let coursProf = [];
-
-                // Tentative 1 : filtrer par email du professeur
-                if (email) {
-                    const snap = await db.collection('cours').where('professeurEmail', '==', email).get();
-                    snap.forEach(doc => coursProf.push({ id: doc.id, ...doc.data() }));
-                }
-
-                // Tentative 2 : fallback par ID professeur
-                if (coursProf.length === 0 && profId) {
-                    const snap = await db.collection('cours').where('professeurId', '==', profId).get();
-                    snap.forEach(doc => coursProf.push({ id: doc.id, ...doc.data() }));
-                }
-
-                // Tentative 3 : fallback par nom complet (au cas où)
-                if (coursProf.length === 0 && currentProfessor.nomComplet) {
-                    const snap = await db.collection('cours').where('professeur', '==', currentProfessor.nomComplet).get();
-                    snap.forEach(doc => coursProf.push({ id: doc.id, ...doc.data() }));
-                }
-
-                // Filtrage par promotion si demandé
-                if (promotionId) {
-                    coursProf = coursProf.filter(c =>
-                        c.promotionId === promotionId ||
-                        c.promotion === promotionId ||
-                        (Array.isArray(c.promotions) && c.promotions.includes(promotionId))
-                    );
-                }
+                // Filtrer les cours déjà chargés (allCours) par promotion
+                let coursProf = allCours.filter(c =>
+                    c.promotionId === promotionId ||
+                    c.promotion === promotionId ||
+                    (Array.isArray(c.promotions) && c.promotions.includes(promotionId))
+                );
 
                 coursProf.sort((a, b) => (a.nom || a.intitule || '').localeCompare(b.nom || b.intitule || ''));
 
                 select.innerHTML = '<option value="">-- Sélectionner un cours --</option>';
                 if (coursProf.length === 0) {
-                    select.innerHTML = '<option value="">Aucun cours trouvé pour cette promotion</option>';
+                    select.innerHTML = '<option value="">Aucun cours pour cette promotion</option>';
                     select.disabled = true;
                     return;
                 }
@@ -773,8 +810,7 @@
                     select.appendChild(opt);
                 });
                 select.disabled = false;
-                allCours = coursProf;
-                console.log(`✅ ${coursProf.length} cours chargés pour la promotion`);
+                console.log(`✅ ${coursProf.length} cours chargés pour cette promotion`);
             } catch (e) {
                 console.error('❌ Erreur cours:', e);
                 select.innerHTML = '<option value="">Erreur de chargement</option>';
@@ -791,13 +827,12 @@
                 const list = [];
                 snap.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
 
-                // Fallback : chercher par promotionId
                 if (list.length === 0) {
                     const snap2 = await db.collection('etudiants').where('promotionId', '==', promotionId).get();
                     snap2.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
                 }
 
-                // Tri alphabétique par nom complet
+                // Tri alphabétique
                 list.sort((a, b) => {
                     const nA = (a.nomComplet || a.nom || '').toLowerCase();
                     const nB = (b.nomComplet || b.nom || '').toLowerCase();
@@ -812,85 +847,27 @@
         }
 
         // ============================================================
-        // ⭐ CHARGEMENT DES COTES EXISTANTES (si déjà saisies)
+        // ⭐ AFFICHAGE DU TABLEAU D'APERÇU (LECTURE SEULE)
         // ============================================================
-        async function chargerCotesExistantes(coursId, session) {
-            try {
-                const docId = `${coursId}_${session}`;
-                const doc = await db.collection('deliberations').doc(docId).get();
-                if (doc.exists) {
-                    const data = doc.data();
-                    return {
-                        cotes: data.cotes || {},
-                        published: data.published || false,
-                        updatedAt: data.updatedAt || null
-                    };
-                }
-            } catch (e) {
-                console.error('❌ Erreur cotes existantes:', e);
-            }
-            return { cotes: {}, published: false, updatedAt: null };
-        }
-
-        // ============================================================
-        // ⭐ AFFICHAGE DU TABLEAU D'APERÇU
-        // ============================================================
-        function renderTable() {
+        function renderApercu() {
             const tbody = document.getElementById('previewBody');
             tbody.innerHTML = '';
 
             students.forEach((s, idx) => {
-                const cote = cotesData[s.id] !== undefined ? cotesData[s.id] : '';
+                const cote = cotesData[s.id];
+                const coteDisplay = (cote !== undefined && cote !== null)
+                    ? cote.toFixed(1)
+                    : '—';
+                const classe = (cote !== undefined && cote !== null) ? 'cote-cell' : 'cote-cell manquante';
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="num-col">${idx + 1}</td>
                     <td class="mat-col">${s.matricule || '—'}</td>
                     <td>${s.nomComplet || s.nom || '—'}</td>
-                    <td style="text-align:center;">
-                        <input type="number" class="cote-input" min="0" max="10" step="0.1"
-                            data-student="${s.id}" value="${cote}" placeholder="—">
-                    </td>
+                    <td class="${classe}">${coteDisplay}</td>
                 `;
                 tbody.appendChild(tr);
-            });
-
-            // Attacher les événements de saisie
-            document.querySelectorAll('.cote-input').forEach(input => {
-                input.addEventListener('input', function () {
-                    const val = this.value.trim();
-                    const sid = this.dataset.student;
-                    this.classList.remove('valid', 'invalid');
-
-                    if (val === '') {
-                        delete cotesData[sid];
-                    } else {
-                        const num = parseFloat(val);
-                        if (isNaN(num) || num < 0 || num > 10) {
-                            this.classList.add('invalid');
-                        } else {
-                            this.classList.add('valid');
-                            cotesData[sid] = num;
-                        }
-                    }
-                    updateStats();
-                });
-                // Validation au blur
-                input.addEventListener('blur', function () {
-                    const val = this.value.trim();
-                    if (val === '') return;
-                    const num = parseFloat(val);
-                    if (isNaN(num) || num < 0 || num > 10) {
-                        this.value = '';
-                        this.classList.remove('valid', 'invalid');
-                        delete cotesData[this.dataset.student];
-                        showToast('La cote doit être entre 0 et 10', 'warning');
-                        updateStats();
-                    } else {
-                        this.value = num.toFixed(1);
-                        cotesData[this.dataset.student] = num;
-                        updateStats();
-                    }
-                });
             });
 
             updateStats();
@@ -901,16 +878,18 @@
         // ============================================================
         function updateStats() {
             const total = students.length;
-            const saisies = Object.keys(cotesData).length;
+            const saisies = Object.keys(cotesData).filter(k => {
+                const v = cotesData[k];
+                return v !== undefined && v !== null && !isNaN(v);
+            }).length;
             const manquantes = total - saisies;
 
             document.getElementById('statTotal').textContent = total;
             document.getElementById('statSaisies').textContent = saisies;
             document.getElementById('statManquantes').textContent = manquantes;
 
-            // Activer le bouton Publier si toutes les cotes sont saisies
             const btnPublier = document.getElementById('btnPublier');
-            btnPublier.disabled = !(total > 0 && saisies === total);
+            btnPublier.disabled = !(total > 0 && saisies === total && importedFromExcel);
         }
 
         // ============================================================
@@ -921,6 +900,9 @@
             cotesData = {};
             students = [];
             isPublished = false;
+            importedFromExcel = false;
+
+            // Masquer l'aperçu à chaque changement de sélection
             document.getElementById('panelApercu').style.display = 'none';
             document.getElementById('panelEmpty').style.display = 'block';
 
@@ -942,13 +924,14 @@
             const cours = document.getElementById('selectCours').value;
             const session = document.getElementById('selectSession').value;
             const ready = promo && cours && session;
-            document.getElementById('btnCharger').disabled = !ready;
+            document.getElementById('btnExporter').disabled = !ready;
+            document.getElementById('btnImporter').disabled = !ready;
         }
 
         // ============================================================
-        // ⭐ BOUTON CHARGER
+        // ⭐ EXPORT EXCEL (prépare le bulletin vierge)
         // ============================================================
-        document.getElementById('btnCharger').addEventListener('click', async function () {
+        document.getElementById('btnExporter').addEventListener('click', async function () {
             const promoId = document.getElementById('selectPromotion').value;
             const coursId = document.getElementById('selectCours').value;
             const session = document.getElementById('selectSession').value;
@@ -959,113 +942,77 @@
             }
 
             this.disabled = true;
-            this.innerHTML = '<i class="bi bi-hourglass-split"></i> Chargement...';
+            this.innerHTML = '<i class="bi bi-hourglass-split"></i> Export...';
 
             try {
-                // Charger les étudiants
+                // Charger les étudiants de la promotion
                 students = await chargerEtudiants(promoId);
 
                 if (students.length === 0) {
                     showToast('Aucun étudiant trouvé pour cette promotion', 'warning');
-                    document.getElementById('panelEmpty').style.display = 'block';
-                    document.getElementById('panelApercu').style.display = 'none';
+                    this.disabled = false;
+                    this.innerHTML = '<i class="bi bi-file-earmark-excel-fill"></i> Exporter le bulletin Excel';
                     return;
                 }
 
-                // Charger les cotes existantes
-                const existing = await chargerCotesExistantes(coursId, session);
-                cotesData = existing.cotes || {};
-                isPublished = existing.published || false;
-
-                // Mettre à jour les stats contextuelles
-                const promoObj = allPromotions.find(p => p.id === promoId);
-                const coursSel = document.getElementById('selectCours');
-                const coursName = coursSel.options[coursSel.selectedIndex].textContent;
-
-                document.getElementById('statPromo').textContent = promoObj?.nom || promoId;
-                document.getElementById('statCours').textContent = coursName;
-                document.getElementById('statSession').textContent = SESSION_LABELS[session] || session;
-
-                // Afficher l'aperçu
-                document.getElementById('panelEmpty').style.display = 'none';
-                document.getElementById('panelApercu').style.display = 'block';
-
-                // Badge statut
-                const badge = document.getElementById('badgeStatut');
-                if (isPublished) {
-                    badge.className = 'badge-statut published';
-                    badge.innerHTML = '<i class="bi bi-check-circle-fill"></i> PUBLIÉ';
+                // Charger les cotes existantes (pour préremplir si déjà saisies)
+                const coursId2 = coursId;
+                const docId = `${coursId2}_${session}`;
+                const doc = await db.collection('deliberations').doc(docId).get();
+                let cotesExistantes = {};
+                if (doc.exists) {
+                    const data = doc.data();
+                    cotesExistantes = data.cotes || {};
+                    isPublished = data.published || false;
                 } else {
-                    badge.className = 'badge-statut draft';
-                    badge.innerHTML = '<i class="bi bi-pencil-square"></i> BROUILLON';
+                    isPublished = false;
                 }
 
-                renderTable();
+                // Préparer les données Excel
+                const data = [];
+                data.push(['N°', 'Matricule', 'Nom complet', 'Cote /10']);
 
-                // Activer les boutons
-                document.getElementById('btnExporter').disabled = false;
-                document.getElementById('btnImporter').disabled = false;
+                students.forEach((s, idx) => {
+                    const cote = cotesExistantes[s.id] !== undefined ? cotesExistantes[s.id] : '';
+                    data.push([
+                        idx + 1,
+                        s.matricule || '',
+                        s.nomComplet || s.nom || '',
+                        cote
+                    ]);
+                });
 
-                showToast(`${students.length} étudiants chargés`, 'success');
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                ws['!cols'] = [
+                    { wch: 6 },   // N°
+                    { wch: 18 },  // Matricule
+                    { wch: 40 },  // Nom complet
+                    { wch: 12 }   // Cote /10
+                ];
+
+                const wb = XLSX.utils.book_new();
+                const coursSel = document.getElementById('selectCours');
+                const coursName = coursSel.options[coursSel.selectedIndex].textContent
+                    .replace(/[^a-zA-Z0-9-_]/g, '_').substring(0, 20);
+
+                XLSX.utils.book_append_sheet(wb, ws, 'Bulletin');
+
+                const fileName = `Bulletin_${coursName}_${session}_${new Date().toISOString().slice(0,10)}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+
+                showToast('📥 Bulletin Excel exporté. Remplissez-le puis importez-le.', 'success');
             } catch (e) {
                 console.error(e);
-                showToast('Erreur lors du chargement', 'danger');
+                showToast('Erreur lors de l\'export', 'danger');
             } finally {
                 this.disabled = false;
-                this.innerHTML = '<i class="bi bi-people-fill"></i> Charger les étudiants';
+                this.innerHTML = '<i class="bi bi-file-earmark-excel-fill"></i> Exporter le bulletin Excel';
+                updateButtons();
             }
         });
 
         // ============================================================
-        // ⭐ EXPORT EXCEL
-        // Structure : N° | Matricule | Nom complet | Cote /10
-        // ============================================================
-        document.getElementById('btnExporter').addEventListener('click', function () {
-            if (students.length === 0) {
-                showToast('Aucune donnée à exporter', 'warning');
-                return;
-            }
-
-            const data = [];
-            data.push(['N°', 'Matricule', 'Nom complet', 'Cote /10']);
-
-            students.forEach((s, idx) => {
-                const cote = cotesData[s.id] !== undefined ? cotesData[s.id] : '';
-                data.push([
-                    idx + 1,
-                    s.matricule || '',
-                    s.nomComplet || s.nom || '',
-                    cote
-                ]);
-            });
-
-            const ws = XLSX.utils.aoa_to_sheet(data);
-
-            // Largeurs des colonnes
-            ws['!cols'] = [
-                { wch: 6 },   // N°
-                { wch: 18 },  // Matricule
-                { wch: 40 },  // Nom complet
-                { wch: 12 }   // Cote /10
-            ];
-
-            const wb = XLSX.utils.book_new();
-            const promoId = document.getElementById('selectPromotion').value;
-            const session = document.getElementById('selectSession').value;
-            const coursSel = document.getElementById('selectCours');
-            const coursName = coursSel.options[coursSel.selectedIndex].textContent
-                .replace(/[^a-zA-Z0-9-_]/g, '_').substring(0, 20);
-
-            XLSX.utils.book_append_sheet(wb, ws, 'Bulletin');
-
-            const fileName = `Bulletin_${coursName}_${session}_${new Date().toISOString().slice(0,10)}.xlsx`;
-            XLSX.writeFile(wb, fileName);
-
-            showToast('📥 Fichier Excel exporté avec succès', 'success');
-        });
-
-        // ============================================================
-        // ⭐ IMPORT EXCEL
+        // ⭐ IMPORT EXCEL → déclenche l'affichage de l'aperçu
         // ============================================================
         document.getElementById('btnImporter').addEventListener('click', function () {
             document.getElementById('fileExcel').click();
@@ -1075,9 +1022,29 @@
             const file = e.target.files[0];
             if (!file) return;
 
+            // Vérifier que la sélection est complète
+            const promoId = document.getElementById('selectPromotion').value;
+            const coursId = document.getElementById('selectCours').value;
+            const session = document.getElementById('selectSession').value;
+            if (!promoId || !coursId || !session) {
+                showToast('Veuillez d\'abord sélectionner promotion, cours et session', 'warning');
+                e.target.value = '';
+                return;
+            }
+
             const reader = new FileReader();
-            reader.onload = function (evt) {
+            reader.onload = async function (evt) {
                 try {
+                    // 1) S'assurer que la liste des étudiants est chargée
+                    if (students.length === 0) {
+                        students = await chargerEtudiants(promoId);
+                    }
+                    if (students.length === 0) {
+                        showToast('Aucun étudiant dans cette promotion', 'warning');
+                        return;
+                    }
+
+                    // 2) Lire le fichier Excel
                     const data = new Uint8Array(evt.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
                     const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -1088,18 +1055,18 @@
                         return;
                     }
 
-                    // On cherche les colonnes à partir de l'en-tête
                     const header = rows[0].map(h => String(h).toLowerCase().trim());
                     const idxMatricule = header.findIndex(h => h.includes('matricule'));
-                    const idxNom = header.findIndex(h => h.includes('nom'));
-                    const idxCote = header.findIndex(h => h.includes('cote') || h.includes('note') || h.includes('/10'));
+                    const idxCote = header.findIndex(h =>
+                        h.includes('cote') || h.includes('note') || h.includes('/10')
+                    );
 
                     if (idxMatricule === -1 || idxCote === -1) {
                         showToast('Colonnes "Matricule" et "Cote" introuvables dans le fichier', 'danger');
                         return;
                     }
 
-                    // Construction d'un map matricule -> cote
+                    // 3) Map matricule -> cote
                     const mapCotes = {};
                     for (let i = 1; i < rows.length; i++) {
                         const row = rows[i];
@@ -1107,13 +1074,16 @@
                         const coteRaw = row[idxCote];
                         if (!matricule) continue;
 
-                        const cote = parseFloat(String(coteRaw).replace(',', '.'));
+                        const coteStr = String(coteRaw).replace(',', '.').trim();
+                        if (coteStr === '') continue;
+                        const cote = parseFloat(coteStr);
                         if (!isNaN(cote) && cote >= 0 && cote <= 10) {
                             mapCotes[matricule] = cote;
                         }
                     }
 
-                    // Appliquer sur les étudiants chargés
+                    // 4) Appliquer sur les étudiants
+                    cotesData = {};
                     let matched = 0;
                     students.forEach(s => {
                         const m = String(s.matricule || '').trim();
@@ -1123,19 +1093,46 @@
                         }
                     });
 
-                    renderTable();
-                    showToast(`✅ ${matched} cotes importées sur ${students.length} étudiants`, 'success');
-
                     if (matched === 0) {
-                        showToast('Aucun matricule ne correspond aux étudiants chargés', 'warning');
+                        showToast('Aucun matricule ne correspond aux étudiants de cette promotion', 'warning');
+                        return;
                     }
+
+                    // 5) MAINTENANT on affiche l'aperçu
+                    importedFromExcel = true;
+
+                    const promoObj = allPromotions.find(p => p.id === promoId);
+                    const coursSel = document.getElementById('selectCours');
+                    const coursName = coursSel.options[coursSel.selectedIndex].textContent;
+
+                    document.getElementById('statPromo').textContent = promoObj?.nom || promoId;
+                    document.getElementById('statCours').textContent = coursName;
+                    document.getElementById('statSession').textContent = SESSION_LABELS[session] || session;
+
+                    // Badge statut
+                    const badge = document.getElementById('badgeStatut');
+                    if (isPublished) {
+                        badge.className = 'badge-statut published';
+                        badge.innerHTML = '<i class="bi bi-check-circle-fill"></i> DÉJÀ PUBLIÉ';
+                    } else {
+                        badge.className = 'badge-statut draft';
+                        badge.innerHTML = '<i class="bi bi-pencil-square"></i> BROUILLON';
+                    }
+
+                    // Afficher le panneau d'aperçu
+                    document.getElementById('panelEmpty').style.display = 'none';
+                    document.getElementById('panelApercu').style.display = 'block';
+
+                    renderApercu();
+
+                    showToast(`✅ ${matched} cotes importées sur ${students.length} étudiants`, 'success');
                 } catch (err) {
                     console.error(err);
                     showToast('Erreur de lecture du fichier Excel', 'danger');
                 }
             };
             reader.readAsArrayBuffer(file);
-            e.target.value = ''; // reset pour permettre re-import du même fichier
+            e.target.value = ''; // reset
         });
 
         // ============================================================
@@ -1151,7 +1148,7 @@
                 return;
             }
             if (Object.keys(cotesData).length !== students.length) {
-                showToast('Toutes les cotes doivent être saisies avant publication', 'warning');
+                showToast('Toutes les cotes doivent être présentes avant publication', 'warning');
                 return;
             }
 
@@ -1202,7 +1199,7 @@
         // ⭐ INIT
         // ============================================================
         (async function init() {
-            await chargerPromotions();
+            await chargerPromotionsProfesseur();
             console.log('✅ Page Délibération prête');
         })();
     </script>
