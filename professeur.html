@@ -85,6 +85,7 @@
             border: 1px solid rgba(0,0,0,0.05);
             position: relative;
             overflow: hidden;
+            height: 100%;
         }
         .menu-card::after {
             content: '';
@@ -118,6 +119,33 @@
             font-size: 12px; 
             color: #888; 
             margin-top: 5px; 
+        }
+        
+        /* ===== CARTE DÉLIBÉRATION (nouvelle) ===== */
+        .menu-card.deliberation-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+            border: 2px solid rgba(255,179,71,0.4);
+        }
+        .menu-card.deliberation-card .menu-icon {
+            color: var(--accent-yellow);
+        }
+        .menu-card.deliberation-card .menu-title {
+            color: var(--dark-blue);
+        }
+        .menu-card.deliberation-card .badge-new {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--accent-yellow);
+            color: var(--dark-blue);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+        .menu-card.deliberation-card::after {
+            background: linear-gradient(90deg, var(--accent-yellow), var(--primary-blue));
         }
         
         /* ===== TOAST ===== */
@@ -350,7 +378,7 @@
             </div>
             
             <!-- Menu Cards -->
-            <div class="row">
+            <div class="row g-4">
                 <div class="col-md-4 col-sm-6">
                     <a href="mes-cours.html" class="menu-card">
                         <div class="menu-icon"><i class="bi bi-book-fill"></i></div>
@@ -363,6 +391,15 @@
                         <div class="menu-icon"><i class="bi bi-pencil-square"></i></div>
                         <div class="menu-title">Mes Cotations</div>
                         <div class="menu-subtitle">Gérer les notes</div>
+                    </a>
+                </div>
+                <!-- ✅ NOUVELLE CARTE DÉLIBÉRATION -->
+                <div class="col-md-4 col-sm-6">
+                    <a href="deliberation.html" class="menu-card deliberation-card">
+                        <span class="badge-new">NOUVEAU</span>
+                        <div class="menu-icon"><i class="bi bi-clipboard2-check-fill"></i></div>
+                        <div class="menu-title">Délibération</div>
+                        <div class="menu-subtitle">Cotes d'examen & bulletin</div>
                     </a>
                 </div>
                 <div class="col-md-4 col-sm-6">
@@ -602,7 +639,6 @@
             const homePage = document.getElementById('homePage');
             if(homePage) {
                 homePage.style.display = 'block';
-                // Masquer les autres panels si présents
                 document.querySelectorAll('.content-panel').forEach(panel => {
                     panel.classList.remove('active');
                 });
