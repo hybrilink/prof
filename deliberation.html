@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Délibération - Espace Professeur</title>
+    <meta name="application-name" content="hybrilink Délibération">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#003366">
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon-96x96.png">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --primary-blue: #003366;
+            --dark-blue: #002244;
+            --accent-yellow: #ffb347;
+            --success-green: #28a745;
+            --danger-red: #dc3545;
+            --light-gray: #f0f2f5;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--light-gray);
+            font-family: 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== NAVBAR ===== */
+        .navbar-custom {
+            background: var(--primary-blue);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            padding: 10px 0;
+        }
+        .navbar-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .profile-photo {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            background: var(--accent-yellow);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s;
+            font-weight: bold; color: var(--primary-blue);
+            font-size: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .profile-photo:hover {
+            transform: scale(1.05);
+            border-color: white;
+            box-shadow: 0 0 20px rgba(255,179,71,0.4);
+        }
+        .logout-btn {
+            background: transparent; color: white;
+            border: 1px solid rgba(255,255,255,0.5);
+            padding: 8px 20px; border-radius: 25px;
+            font-weight: bold; transition: all 0.3s; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+            border-color: white;
+        }
+        .professor-name-nav {
+            color: white; font-weight: 500; font-size: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .professor-name-nav i { color: var(--accent-yellow); }
+        .session-badge {
+            font-size: 11px; padding: 3px 12px; border-radius: 20px;
+            background: rgba(255,255,255,0.15); color: white;
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+        .session-badge i { color: var(--accent-yellow); }
+
+        /* ===== PAGE HEADER ===== */
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
+            border-radius: 20px;
+            padding: 20px 25px;
+            margin-bottom: 25px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        .page-header::after {
+            content: '';
+            position: absolute;
+            top: -50%; right: -20%;
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(255,179,71,0.15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+        .page-header h1 {
+            font-size: 1.4rem;
+            margin: 0;
+            position: relative; z-index: 1;
+        }
+        .page-header small {
+            opacity: 0.85; font-size: 0.85rem;
+            position: relative; z-index: 1;
+        }
+        .page-header .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none; color: white;
+            padding: 8px 16px; border-radius: 10px;
+            cursor: pointer; transition: all 0.3s;
+            font-size: 0.9rem;
+            position: relative; z-index: 1;
+        }
+        .page-header .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateX(-3px);
+        }
+
+        /* ===== CARTES ===== */
+        .card-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        .card-panel h5 {
+            color: var(--primary-blue);
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-panel h5 i {
+            color: var(--accent-yellow);
+            font-size: 1.2rem;
+        }
+
+        /* ===== FORM ===== */
+        .form-label {
+            font-weight: 600;
+            color: var(--dark-blue);
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+        .form-select, .form-control {
+            border-radius: 12px;
+            border: 1.5px solid #e0e0e0;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        .form-select:focus, .form-control:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 0.2rem rgba(0,51,102,0.1);
+        }
+
+        /* ===== BOUTONS ===== */
+        .btn-primary-custom {
+            background: var(--primary-blue);
+            color: white; border: none;
+            padding: 10px 22px; border-radius: 12px;
+            font-weight: 600; font-size: 0.9rem;
+            display: inline-flex; align-items: center; gap: 8px;
+            transition: all 0.3s;
+        }
+        .btn-primary-custom:hover:not(:disabled) {
+            background: var(--dark-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,51,102,0.25);
+            color: white;
+        }
+        .btn-primary-custom:disabled {
+            opacity: 0.5; cursor: not-allowed;
+        }
+        .btn-excel {
+            background: var(--success-green);
+            color: white; border: none;
+            padding: 10px 22px; border-radius: 12px;
+            font-weight: 600; font-size: 0.9rem;
+            display: inline-flex; align-items: center; gap: 8px;
+            transition: all 0.3s;
+        }
+        .btn-excel:hover:not(:disabled) {
+            background: #218838; color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(40,167,69,0.3);
+        }
+        .btn-excel:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-import {
+            background: var(--accent-yellow);
+            color: var(--dark-blue); border: none;
+            padding: 10px 22px; border-radius: 12px;
+            font-weight: 700; font-size: 0.9rem;
+            display: inline-flex; align-items: center; gap: 8px;
+            transition: all 0.3s;
+        }
+        .btn-import:hover:not(:disabled) {
+            background: #ffa21a; color: var(--dark-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255,179,71,0.35);
+        }
+        .btn-import:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-publish {
+            background: var(--danger-red);
+            color: white; border: none;
+            padding: 10px 22px; border-radius: 12px;
+            font-weight: 700; font-size: 0.9rem;
+            display: inline-flex; align-items: center; gap: 8px;
+            transition: all 0.3s;
+        }
+        .btn-publish:hover:not(:disabled) {
+            background: #b02a37;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(220,53,69,0.3);
+        }
+        .btn-publish:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ===== APERÇU TABLE ===== */
+        .preview-wrapper {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            max-height: 520px;
+            overflow-y: auto;
+        }
+        table.preview-table {
+            width: 100%;
+            margin: 0;
+            font-size: 0.85rem;
+            border-collapse: collapse;
+        }
+        table.preview-table thead {
+            position: sticky; top: 0;
+            background: var(--primary-blue);
+            color: white;
+            z-index: 2;
+        }
+        table.preview-table th {
+            padding: 12px 10px;
+            font-weight: 700;
+            text-align: left;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            border-bottom: 2px solid var(--dark-blue);
+        }
+        table.preview-table td {
+            padding: 10px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+        table.preview-table tbody tr:hover {
+            background: #f8fbff;
+        }
+        table.preview-table .num-col {
+            font-weight: 700;
+            color: var(--primary-blue);
+            width: 50px;
+            text-align: center;
+        }
+        table.preview-table .mat-col {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: var(--dark-blue);
+        }
+        table.preview-table .cote-input {
+            width: 90px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1.5px solid #ddd;
+            font-size: 0.85rem;
+            text-align: center;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+        table.preview-table .cote-input:focus {
+            border-color: var(--primary-blue);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0,51,102,0.1);
+        }
+        table.preview-table .cote-input.invalid {
+            border-color: var(--danger-red);
+            background: #fff5f5;
+        }
+        table.preview-table .cote-input.valid {
+            border-color: var(--success-green);
+            background: #f0fff4;
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #adb5bd;
+        }
+        .empty-state i {
+            font-size: 60px;
+            opacity: 0.3;
+            display: block;
+            margin-bottom: 15px;
+        }
+
+        /* ===== STATS ROW ===== */
+        .stats-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+        .stat-pill {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+        }
+        .stat-pill .val {
+            font-weight: 800;
+            color: var(--primary-blue);
+            font-size: 1rem;
+        }
+        .stat-pill .lbl {
+            color: #6c757d;
+            font-size: 0.75rem;
+        }
+        .stat-pill.success .val { color: var(--success-green); }
+        .stat-pill.danger .val { color: var(--danger-red); }
+
+        /* ===== TOAST ===== */
+        .toast-notification {
+            position: fixed; top: 20px; right: 20px;
+            z-index: 9999; min-width: 300px; max-width: 420px;
+        }
+        .notification-toast { animation: slideInRight 0.3s ease-out; }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            background: var(--dark-blue);
+            color: #fff;
+            text-align: center;
+            padding: 15px 0;
+            margin-top: auto;
+            font-size: 14px;
+        }
+        .info-text {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 13px;
+            color: #888;
+        }
+        .info-text i { color: var(--primary-blue); }
+        .info-text img { border-radius: 30px; }
+
+        /* ===== BADGE STATUT ===== */
+        .badge-statut {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 20px;
+        }
+        .badge-statut.draft {
+            background: #fff3cd; color: #856404;
+        }
+        .badge-statut.published {
+            background: #d1e7dd; color: #0f5132;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-right { gap: 10px; }
+            .professor-name-nav { font-size: 12px; }
+            .profile-photo { width: 40px; height: 40px; font-size: 16px; }
+            .logout-btn { padding: 6px 12px; font-size: 0.8rem; }
+            .page-header h1 { font-size: 1.05rem; }
+            .page-header small { font-size: 0.75rem; }
+            .page-header .back-btn { padding: 6px 12px; font-size: 0.8rem; }
+            .card-panel { padding: 18px; }
+            .btn-primary-custom, .btn-excel, .btn-import, .btn-publish {
+                padding: 8px 14px; font-size: 0.8rem;
+            }
+            table.preview-table { font-size: 0.75rem; }
+            table.preview-table th, table.preview-table td { padding: 8px 6px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== NAVBAR ===== -->
+    <nav class="navbar navbar-custom">
+        <div class="container">
+            <a class="navbar-brand text-white" href="professeur.html">
+                <i class="bi bi-clipboard2-check-fill"></i> Délibération
+            </a>
+            <div class="navbar-right">
+                <span class="professor-name-nav d-none d-md-inline-flex">
+                    <i class="bi bi-person-badge"></i> <span id="navProfessorName">Professeur</span>
+                </span>
+                <span class="session-badge d-none d-md-inline-flex">
+                    <i class="bi bi-clock"></i> <span id="sessionTimeRemaining">24h</span>
+                </span>
+                <div class="profile-photo" id="profileAvatar" title="Voir le profil">P</div>
+                <button class="logout-btn" onclick="window.location.href='professeur.html'">
+                    <i class="bi bi-arrow-left"></i> Retour
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ===== TOAST CONTAINER ===== -->
+    <div id="toastContainer" class="toast-notification"></div>
+
+    <!-- ===== MAIN ===== -->
+    <div class="container mt-4" style="flex: 1;">
+
+        <!-- HEADER -->
+        <div class="page-header">
+            <div>
+                <h1><i class="bi bi-clipboard2-check-fill me-2"></i>Délibération & Cotes d'Examen</h1>
+                <small>Prélevez les cotes, exportez et publiez les bulletins</small>
+            </div>
+            <button class="back-btn" onclick="window.location.href='professeur.html'">
+                <i class="bi bi-arrow-left me-1"></i> Retour
+            </button>
+        </div>
+
+        <!-- ===== ÉTAPE 1 : SÉLECTION ===== -->
+        <div class="card-panel">
+            <h5><i class="bi bi-funnel-fill"></i> Étape 1 — Sélection de la promotion, du cours et de la session</h5>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label"><i class="bi bi-mortarboard-fill me-1"></i>Promotion</label>
+                    <select class="form-select" id="selectPromotion">
+                        <option value="">-- Sélectionner une promotion --</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label"><i class="bi bi-book-fill me-1"></i>Cours (vos cours uniquement)</label>
+                    <select class="form-select" id="selectCours" disabled>
+                        <option value="">-- Sélectionner un cours --</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label"><i class="bi bi-calendar-check-fill me-1"></i>Session concernée</label>
+                    <select class="form-select" id="selectSession">
+                        <option value="">-- Sélectionner une session --</option>
+                        <option value="MI_SESSION">Mi-Session</option>
+                        <option value="RECOURS_MS">Recours Mi-Session</option>
+                        <option value="RATTRAPAGE_1">Rattrapage 1</option>
+                        <option value="SESSION_1">Session 1</option>
+                        <option value="RECOURS_S1">Recours Session 1</option>
+                        <option value="RATTRAPAGE_2">Rattrapage 2</option>
+                        <option value="RECOURS_RATT">Recours Rattrapage</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-3 d-flex flex-wrap gap-2">
+                <button class="btn btn-primary-custom" id="btnCharger" disabled>
+                    <i class="bi bi-people-fill"></i> Charger les étudiants
+                </button>
+                <button class="btn btn-excel" id="btnExporter" disabled>
+                    <i class="bi bi-file-earmark-excel-fill"></i> Exporter le bulletin Excel
+                </button>
+                <button class="btn btn-import" id="btnImporter" disabled>
+                    <i class="bi bi-file-earmark-arrow-up-fill"></i> Importer le fichier Excel rempli
+                </button>
+                <input type="file" id="fileExcel" accept=".xlsx,.xls" hidden>
+            </div>
+        </div>
+
+        <!-- ===== ÉTAPE 2 : APERÇU ===== -->
+        <div class="card-panel" id="panelApercu" style="display:none;">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <h5 class="mb-0"><i class="bi bi-eye-fill"></i> Étape 2 — Aperçu & saisie des cotes</h5>
+                <span class="badge-statut draft" id="badgeStatut">
+                    <i class="bi bi-pencil-square"></i> BROUILLON
+                </span>
+            </div>
+
+            <!-- Info contextuelle -->
+            <div class="stats-row" id="statsRow">
+                <div class="stat-pill">
+                    <div>
+                        <div class="lbl">Promotion</div>
+                        <div class="val" id="statPromo">-</div>
+                    </div>
+                </div>
+                <div class="stat-pill">
+                    <div>
+                        <div class="lbl">Cours</div>
+                        <div class="val" id="statCours">-</div>
+                    </div>
+                </div>
+                <div class="stat-pill">
+                    <div>
+                        <div class="lbl">Session</div>
+                        <div class="val" id="statSession">-</div>
+                    </div>
+                </div>
+                <div class="stat-pill">
+                    <div>
+                        <div class="lbl">Étudiants</div>
+                        <div class="val" id="statTotal">0</div>
+                    </div>
+                </div>
+                <div class="stat-pill success">
+                    <div>
+                        <div class="lbl">Cotes saisies</div>
+                        <div class="val" id="statSaisies">0</div>
+                    </div>
+                </div>
+                <div class="stat-pill danger">
+                    <div>
+                        <div class="lbl">Manquantes</div>
+                        <div class="val" id="statManquantes">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tableau -->
+            <div class="preview-wrapper">
+                <table class="preview-table" id="previewTable">
+                    <thead>
+                        <tr>
+                            <th class="num-col">N°</th>
+                            <th>Matricule</th>
+                            <th>Nom complet</th>
+                            <th style="text-align:center;">Cote /10</th>
+                        </tr>
+                    </thead>
+                    <tbody id="previewBody"></tbody>
+                </table>
+            </div>
+
+            <div class="mt-3 d-flex flex-wrap gap-2 justify-content-end">
+                <button class="btn btn-primary-custom" id="btnPublier" disabled>
+                    <i class="bi bi-cloud-arrow-up-fill"></i> Publier les cotes
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== EMPTY STATE ===== -->
+        <div class="card-panel" id="panelEmpty">
+            <div class="empty-state">
+                <i class="bi bi-clipboard2-data"></i>
+                <h5 style="color:#6c757d;font-weight:600;">Aucune donnée chargée</h5>
+                <p style="font-size:0.9rem;">Sélectionnez une promotion, un cours et une session, puis cliquez sur <strong>Charger les étudiants</strong>.</p>
+            </div>
+        </div>
+
+        <!-- INFO TEXT -->
+        <div class="info-text">
+            <i class="bi bi-shield-check"></i> HYBRILINK-TECH votre partenaire de A à Z<br>
+            <img src="t.png" width="50px" style="border-radius:30px;" alt="HYBRILINK" onerror="this.style.display='none'">
+        </div>
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <div class="container">
+            <p class="mb-0">© 2024 HYBRILINK-TECH | Faculté des Sciences Agronomiques</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ============================================================
+        // ⭐ FIREBASE CONFIG
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBb82N2-5ns7qKjQBAj5UvDW87s2PZ27F0",
+            authDomain: "fsa-unilu.firebaseapp.com",
+            projectId: "fsa-unilu",
+            storageBucket: "fsa-unilu.firebasestorage.app",
+            messagingSenderId: "36551990738",
+            appId: "1:36551990738:web:e91fdcb53f8aab5d1b7c0b"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // ============================================================
+        // ⭐ VARIABLES GLOBALES
+        // ============================================================
+        let currentSession = null;
+        let currentProfessor = null;
+        let allPromotions = [];
+        let allCours = [];
+        let students = [];
+        let cotesData = {}; // { studentId: cote }
+        let isPublished = false;
+
+        const SESSION_LABELS = {
+            'MI_SESSION': 'Mi-Session',
+            'RECOURS_MS': 'Recours Mi-Session',
+            'RATTRAPAGE_1': 'Rattrapage 1',
+            'SESSION_1': 'Session 1',
+            'RECOURS_S1': 'Recours Session 1',
+            'RATTRAPAGE_2': 'Rattrapage 2',
+            'RECOURS_RATT': 'Recours Rattrapage'
+        };
+
+        // ============================================================
+        // ⭐ VÉRIFICATION SESSION PROFESSEUR
+        // ============================================================
+        (function checkSession() {
+            const data = localStorage.getItem('professeur_session');
+            if (!data) { window.location.href = 'login.html'; return; }
+            try {
+                const session = JSON.parse(data);
+                if (!session.expires || Date.now() > session.expires ||
+                    session.role !== 'professeur' || !session.verified2FA) {
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                currentProfessor = session;
+
+                // Affichage navbar
+                const nom = session.nomComplet || 'Professeur';
+                document.getElementById('navProfessorName').textContent = nom;
+                const initials = nom.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                document.getElementById('profileAvatar').textContent = initials;
+                document.getElementById('profileAvatar').title = nom;
+
+                // Temps restant
+                const restant = session.expires - Date.now();
+                const h = Math.floor(restant / 3600000);
+                const m = Math.floor((restant % 3600000) / 60000);
+                document.getElementById('sessionTimeRemaining').textContent = h > 0 ? `${h}h ${m}min` : `${m}min`;
+
+            } catch (e) {
+                localStorage.removeItem('professeur_session');
+                window.location.href = 'login.html';
+            }
+        })();
+
+        // ============================================================
+        // ⭐ TOAST
+        // ============================================================
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const colors = {
+                success: '#28a745', warning: '#ffc107',
+                info: '#17a2b8', danger: '#dc3545'
+            };
+            const icons = {
+                success: 'check-circle-fill', warning: 'exclamation-triangle-fill',
+                info: 'info-circle-fill', danger: 'x-circle-fill'
+            };
+            const bg = colors[type] || colors.success;
+            const textColor = type === 'warning' ? '#333' : 'white';
+            const icon = icons[type] || icons.success;
+            const html = `
+                <div class="toast notification-toast" style="background:${bg};color:${textColor};border-radius:12px;margin-bottom:10px;box-shadow:0 5px 15px rgba(0,0,0,0.2);">
+                    <div class="toast-body" style="padding:12px 20px;">
+                        <i class="bi bi-${icon} me-2"></i>${message}
+                    </div>
+                </div>`;
+            container.insertAdjacentHTML('afterbegin', html);
+            setTimeout(() => {
+                if (container.firstElementChild) container.firstElementChild.remove();
+            }, 4000);
+        }
+
+        // ============================================================
+        // ⭐ INITIALISATION : CHARGEMENT DES PROMOTIONS
+        // ============================================================
+        async function chargerPromotions() {
+            try {
+                const snap = await db.collection('promotions').get();
+                allPromotions = [];
+                snap.forEach(doc => allPromotions.push({ id: doc.id, ...doc.data() }));
+
+                const select = document.getElementById('selectPromotion');
+                select.innerHTML = '<option value="">-- Sélectionner une promotion --</option>';
+                allPromotions
+                    .sort((a, b) => (a.nom || '').localeCompare(b.nom || ''))
+                    .forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.id;
+                        opt.textContent = p.nom || p.id;
+                        select.appendChild(opt);
+                    });
+                console.log('✅ Promotions chargées:', allPromotions.length);
+            } catch (e) {
+                console.error('❌ Erreur promotions:', e);
+                showToast('Erreur de chargement des promotions', 'danger');
+            }
+        }
+
+        // ============================================================
+        // ⭐ CHARGEMENT DES COURS DU PROFESSEUR (filtrés par promotion)
+        // ============================================================
+        async function chargerCoursProfesseur(promotionId) {
+            const select = document.getElementById('selectCours');
+            select.disabled = true;
+            select.innerHTML = '<option value="">Chargement...</option>';
+
+            try {
+                const email = currentProfessor.email || '';
+                const profId = currentProfessor.id || currentProfessor.userId || '';
+                let coursProf = [];
+
+                // Tentative 1 : filtrer par email du professeur
+                if (email) {
+                    const snap = await db.collection('cours').where('professeurEmail', '==', email).get();
+                    snap.forEach(doc => coursProf.push({ id: doc.id, ...doc.data() }));
+                }
+
+                // Tentative 2 : fallback par ID professeur
+                if (coursProf.length === 0 && profId) {
+                    const snap = await db.collection('cours').where('professeurId', '==', profId).get();
+                    snap.forEach(doc => coursProf.push({ id: doc.id, ...doc.data() }));
+                }
+
+                // Tentative 3 : fallback par nom complet (au cas où)
+                if (coursProf.length === 0 && currentProfessor.nomComplet) {
+                    const snap = await db.collection('cours').where('professeur', '==', currentProfessor.nomComplet).get();
+                    snap.forEach(doc => coursProf.push({ id: doc.id, ...doc.data() }));
+                }
+
+                // Filtrage par promotion si demandé
+                if (promotionId) {
+                    coursProf = coursProf.filter(c =>
+                        c.promotionId === promotionId ||
+                        c.promotion === promotionId ||
+                        (Array.isArray(c.promotions) && c.promotions.includes(promotionId))
+                    );
+                }
+
+                coursProf.sort((a, b) => (a.nom || a.intitule || '').localeCompare(b.nom || b.intitule || ''));
+
+                select.innerHTML = '<option value="">-- Sélectionner un cours --</option>';
+                if (coursProf.length === 0) {
+                    select.innerHTML = '<option value="">Aucun cours trouvé pour cette promotion</option>';
+                    select.disabled = true;
+                    return;
+                }
+                coursProf.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.nom || c.intitule || c.code || c.id;
+                    opt.dataset.coursData = JSON.stringify(c);
+                    select.appendChild(opt);
+                });
+                select.disabled = false;
+                allCours = coursProf;
+                console.log(`✅ ${coursProf.length} cours chargés pour la promotion`);
+            } catch (e) {
+                console.error('❌ Erreur cours:', e);
+                select.innerHTML = '<option value="">Erreur de chargement</option>';
+                showToast('Erreur de chargement des cours', 'danger');
+            }
+        }
+
+        // ============================================================
+        // ⭐ CHARGEMENT DES ÉTUDIANTS DE LA PROMOTION (tri alphabétique)
+        // ============================================================
+        async function chargerEtudiants(promotionId) {
+            try {
+                const snap = await db.collection('etudiants').where('promotion', '==', promotionId).get();
+                const list = [];
+                snap.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+
+                // Fallback : chercher par promotionId
+                if (list.length === 0) {
+                    const snap2 = await db.collection('etudiants').where('promotionId', '==', promotionId).get();
+                    snap2.forEach(doc => list.push({ id: doc.id, ...doc.data() }));
+                }
+
+                // Tri alphabétique par nom complet
+                list.sort((a, b) => {
+                    const nA = (a.nomComplet || a.nom || '').toLowerCase();
+                    const nB = (b.nomComplet || b.nom || '').toLowerCase();
+                    return nA.localeCompare(nB);
+                });
+
+                return list;
+            } catch (e) {
+                console.error('❌ Erreur étudiants:', e);
+                return [];
+            }
+        }
+
+        // ============================================================
+        // ⭐ CHARGEMENT DES COTES EXISTANTES (si déjà saisies)
+        // ============================================================
+        async function chargerCotesExistantes(coursId, session) {
+            try {
+                const docId = `${coursId}_${session}`;
+                const doc = await db.collection('deliberations').doc(docId).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    return {
+                        cotes: data.cotes || {},
+                        published: data.published || false,
+                        updatedAt: data.updatedAt || null
+                    };
+                }
+            } catch (e) {
+                console.error('❌ Erreur cotes existantes:', e);
+            }
+            return { cotes: {}, published: false, updatedAt: null };
+        }
+
+        // ============================================================
+        // ⭐ AFFICHAGE DU TABLEAU D'APERÇU
+        // ============================================================
+        function renderTable() {
+            const tbody = document.getElementById('previewBody');
+            tbody.innerHTML = '';
+
+            students.forEach((s, idx) => {
+                const cote = cotesData[s.id] !== undefined ? cotesData[s.id] : '';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="num-col">${idx + 1}</td>
+                    <td class="mat-col">${s.matricule || '—'}</td>
+                    <td>${s.nomComplet || s.nom || '—'}</td>
+                    <td style="text-align:center;">
+                        <input type="number" class="cote-input" min="0" max="10" step="0.1"
+                            data-student="${s.id}" value="${cote}" placeholder="—">
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Attacher les événements de saisie
+            document.querySelectorAll('.cote-input').forEach(input => {
+                input.addEventListener('input', function () {
+                    const val = this.value.trim();
+                    const sid = this.dataset.student;
+                    this.classList.remove('valid', 'invalid');
+
+                    if (val === '') {
+                        delete cotesData[sid];
+                    } else {
+                        const num = parseFloat(val);
+                        if (isNaN(num) || num < 0 || num > 10) {
+                            this.classList.add('invalid');
+                        } else {
+                            this.classList.add('valid');
+                            cotesData[sid] = num;
+                        }
+                    }
+                    updateStats();
+                });
+                // Validation au blur
+                input.addEventListener('blur', function () {
+                    const val = this.value.trim();
+                    if (val === '') return;
+                    const num = parseFloat(val);
+                    if (isNaN(num) || num < 0 || num > 10) {
+                        this.value = '';
+                        this.classList.remove('valid', 'invalid');
+                        delete cotesData[this.dataset.student];
+                        showToast('La cote doit être entre 0 et 10', 'warning');
+                        updateStats();
+                    } else {
+                        this.value = num.toFixed(1);
+                        cotesData[this.dataset.student] = num;
+                        updateStats();
+                    }
+                });
+            });
+
+            updateStats();
+        }
+
+        // ============================================================
+        // ⭐ MISE À JOUR DES STATS
+        // ============================================================
+        function updateStats() {
+            const total = students.length;
+            const saisies = Object.keys(cotesData).length;
+            const manquantes = total - saisies;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statSaisies').textContent = saisies;
+            document.getElementById('statManquantes').textContent = manquantes;
+
+            // Activer le bouton Publier si toutes les cotes sont saisies
+            const btnPublier = document.getElementById('btnPublier');
+            btnPublier.disabled = !(total > 0 && saisies === total);
+        }
+
+        // ============================================================
+        // ⭐ ÉVÉNEMENTS DE SÉLECTION
+        // ============================================================
+        document.getElementById('selectPromotion').addEventListener('change', async function () {
+            const promoId = this.value;
+            cotesData = {};
+            students = [];
+            isPublished = false;
+            document.getElementById('panelApercu').style.display = 'none';
+            document.getElementById('panelEmpty').style.display = 'block';
+
+            if (promoId) {
+                await chargerCoursProfesseur(promoId);
+            } else {
+                const sel = document.getElementById('selectCours');
+                sel.innerHTML = '<option value="">-- Sélectionner un cours --</option>';
+                sel.disabled = true;
+            }
+            updateButtons();
+        });
+
+        document.getElementById('selectCours').addEventListener('change', updateButtons);
+        document.getElementById('selectSession').addEventListener('change', updateButtons);
+
+        function updateButtons() {
+            const promo = document.getElementById('selectPromotion').value;
+            const cours = document.getElementById('selectCours').value;
+            const session = document.getElementById('selectSession').value;
+            const ready = promo && cours && session;
+            document.getElementById('btnCharger').disabled = !ready;
+        }
+
+        // ============================================================
+        // ⭐ BOUTON CHARGER
+        // ============================================================
+        document.getElementById('btnCharger').addEventListener('click', async function () {
+            const promoId = document.getElementById('selectPromotion').value;
+            const coursId = document.getElementById('selectCours').value;
+            const session = document.getElementById('selectSession').value;
+
+            if (!promoId || !coursId || !session) {
+                showToast('Veuillez remplir tous les champs', 'warning');
+                return;
+            }
+
+            this.disabled = true;
+            this.innerHTML = '<i class="bi bi-hourglass-split"></i> Chargement...';
+
+            try {
+                // Charger les étudiants
+                students = await chargerEtudiants(promoId);
+
+                if (students.length === 0) {
+                    showToast('Aucun étudiant trouvé pour cette promotion', 'warning');
+                    document.getElementById('panelEmpty').style.display = 'block';
+                    document.getElementById('panelApercu').style.display = 'none';
+                    return;
+                }
+
+                // Charger les cotes existantes
+                const existing = await chargerCotesExistantes(coursId, session);
+                cotesData = existing.cotes || {};
+                isPublished = existing.published || false;
+
+                // Mettre à jour les stats contextuelles
+                const promoObj = allPromotions.find(p => p.id === promoId);
+                const coursSel = document.getElementById('selectCours');
+                const coursName = coursSel.options[coursSel.selectedIndex].textContent;
+
+                document.getElementById('statPromo').textContent = promoObj?.nom || promoId;
+                document.getElementById('statCours').textContent = coursName;
+                document.getElementById('statSession').textContent = SESSION_LABELS[session] || session;
+
+                // Afficher l'aperçu
+                document.getElementById('panelEmpty').style.display = 'none';
+                document.getElementById('panelApercu').style.display = 'block';
+
+                // Badge statut
+                const badge = document.getElementById('badgeStatut');
+                if (isPublished) {
+                    badge.className = 'badge-statut published';
+                    badge.innerHTML = '<i class="bi bi-check-circle-fill"></i> PUBLIÉ';
+                } else {
+                    badge.className = 'badge-statut draft';
+                    badge.innerHTML = '<i class="bi bi-pencil-square"></i> BROUILLON';
+                }
+
+                renderTable();
+
+                // Activer les boutons
+                document.getElementById('btnExporter').disabled = false;
+                document.getElementById('btnImporter').disabled = false;
+
+                showToast(`${students.length} étudiants chargés`, 'success');
+            } catch (e) {
+                console.error(e);
+                showToast('Erreur lors du chargement', 'danger');
+            } finally {
+                this.disabled = false;
+                this.innerHTML = '<i class="bi bi-people-fill"></i> Charger les étudiants';
+            }
+        });
+
+        // ============================================================
+        // ⭐ EXPORT EXCEL
+        // Structure : N° | Matricule | Nom complet | Cote /10
+        // ============================================================
+        document.getElementById('btnExporter').addEventListener('click', function () {
+            if (students.length === 0) {
+                showToast('Aucune donnée à exporter', 'warning');
+                return;
+            }
+
+            const data = [];
+            data.push(['N°', 'Matricule', 'Nom complet', 'Cote /10']);
+
+            students.forEach((s, idx) => {
+                const cote = cotesData[s.id] !== undefined ? cotesData[s.id] : '';
+                data.push([
+                    idx + 1,
+                    s.matricule || '',
+                    s.nomComplet || s.nom || '',
+                    cote
+                ]);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+
+            // Largeurs des colonnes
+            ws['!cols'] = [
+                { wch: 6 },   // N°
+                { wch: 18 },  // Matricule
+                { wch: 40 },  // Nom complet
+                { wch: 12 }   // Cote /10
+            ];
+
+            const wb = XLSX.utils.book_new();
+            const promoId = document.getElementById('selectPromotion').value;
+            const session = document.getElementById('selectSession').value;
+            const coursSel = document.getElementById('selectCours');
+            const coursName = coursSel.options[coursSel.selectedIndex].textContent
+                .replace(/[^a-zA-Z0-9-_]/g, '_').substring(0, 20);
+
+            XLSX.utils.book_append_sheet(wb, ws, 'Bulletin');
+
+            const fileName = `Bulletin_${coursName}_${session}_${new Date().toISOString().slice(0,10)}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+
+            showToast('📥 Fichier Excel exporté avec succès', 'success');
+        });
+
+        // ============================================================
+        // ⭐ IMPORT EXCEL
+        // ============================================================
+        document.getElementById('btnImporter').addEventListener('click', function () {
+            document.getElementById('fileExcel').click();
+        });
+
+        document.getElementById('fileExcel').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (evt) {
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+
+                    if (rows.length < 2) {
+                        showToast('Le fichier Excel est vide ou mal structuré', 'warning');
+                        return;
+                    }
+
+                    // On cherche les colonnes à partir de l'en-tête
+                    const header = rows[0].map(h => String(h).toLowerCase().trim());
+                    const idxMatricule = header.findIndex(h => h.includes('matricule'));
+                    const idxNom = header.findIndex(h => h.includes('nom'));
+                    const idxCote = header.findIndex(h => h.includes('cote') || h.includes('note') || h.includes('/10'));
+
+                    if (idxMatricule === -1 || idxCote === -1) {
+                        showToast('Colonnes "Matricule" et "Cote" introuvables dans le fichier', 'danger');
+                        return;
+                    }
+
+                    // Construction d'un map matricule -> cote
+                    const mapCotes = {};
+                    for (let i = 1; i < rows.length; i++) {
+                        const row = rows[i];
+                        const matricule = String(row[idxMatricule] || '').trim();
+                        const coteRaw = row[idxCote];
+                        if (!matricule) continue;
+
+                        const cote = parseFloat(String(coteRaw).replace(',', '.'));
+                        if (!isNaN(cote) && cote >= 0 && cote <= 10) {
+                            mapCotes[matricule] = cote;
+                        }
+                    }
+
+                    // Appliquer sur les étudiants chargés
+                    let matched = 0;
+                    students.forEach(s => {
+                        const m = String(s.matricule || '').trim();
+                        if (mapCotes[m] !== undefined) {
+                            cotesData[s.id] = mapCotes[m];
+                            matched++;
+                        }
+                    });
+
+                    renderTable();
+                    showToast(`✅ ${matched} cotes importées sur ${students.length} étudiants`, 'success');
+
+                    if (matched === 0) {
+                        showToast('Aucun matricule ne correspond aux étudiants chargés', 'warning');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast('Erreur de lecture du fichier Excel', 'danger');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            e.target.value = ''; // reset pour permettre re-import du même fichier
+        });
+
+        // ============================================================
+        // ⭐ PUBLICATION DES COTES
+        // ============================================================
+        document.getElementById('btnPublier').addEventListener('click', async function () {
+            const coursId = document.getElementById('selectCours').value;
+            const session = document.getElementById('selectSession').value;
+            const promoId = document.getElementById('selectPromotion').value;
+
+            if (!coursId || !session || !promoId) {
+                showToast('Sélection incomplète', 'warning');
+                return;
+            }
+            if (Object.keys(cotesData).length !== students.length) {
+                showToast('Toutes les cotes doivent être saisies avant publication', 'warning');
+                return;
+            }
+
+            if (!confirm('Voulez-vous vraiment publier les cotes ? Les étudiants pourront les consulter.')) {
+                return;
+            }
+
+            this.disabled = true;
+            this.innerHTML = '<i class="bi bi-hourglass-split"></i> Publication...';
+
+            try {
+                const docId = `${coursId}_${session}`;
+                await db.collection('deliberations').doc(docId).set({
+                    coursId: coursId,
+                    promotionId: promoId,
+                    session: session,
+                    professeurEmail: currentProfessor.email || '',
+                    professeurNom: currentProfessor.nomComplet || '',
+                    cotes: cotesData,
+                    published: true,
+                    publishedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                isPublished = true;
+                const badge = document.getElementById('badgeStatut');
+                badge.className = 'badge-statut published';
+                badge.innerHTML = '<i class="bi bi-check-circle-fill"></i> PUBLIÉ';
+
+                showToast('🎉 Cotes publiées avec succès !', 'success');
+            } catch (e) {
+                console.error(e);
+                showToast('Erreur lors de la publication', 'danger');
+            } finally {
+                this.disabled = false;
+                this.innerHTML = '<i class="bi bi-cloud-arrow-up-fill"></i> Publier les cotes';
+            }
+        });
+
+        // ============================================================
+        // ⭐ AVATAR CLIC → profil
+        // ============================================================
+        document.getElementById('profileAvatar').addEventListener('click', () => {
+            window.location.href = 'profil.html';
+        });
+
+        // ============================================================
+        // ⭐ INIT
+        // ============================================================
+        (async function init() {
+            await chargerPromotions();
+            console.log('✅ Page Délibération prête');
+        })();
+    </script>
+</body>
+</html>
