@@ -17,6 +17,9 @@
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     
     <style>
         :root { 
@@ -25,10 +28,11 @@
             --accent-yellow: #ffb347; 
             --success-green: #28a745;
             --danger-red: #dc3545;
+            --light-gray: #f0f2f5;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
-            background: #f0f2f5; 
+            background: var(--light-gray); 
             font-family: 'Segoe UI', sans-serif; 
             min-height: 100vh; 
             display: flex; 
@@ -98,9 +102,7 @@
             transform: scaleX(0);
             transition: transform 0.3s ease;
         }
-        .menu-card:hover::after {
-            transform: scaleX(1);
-        }
+        .menu-card:hover::after { transform: scaleX(1); }
         .menu-card:hover {
             transform: translateY(-10px);
             box-shadow: 0 20px 30px rgba(0,0,0,0.15);
@@ -121,17 +123,13 @@
             margin-top: 5px; 
         }
         
-        /* ===== CARTE DÉLIBÉRATION (nouvelle) ===== */
+        /* ===== CARTE DÉLIBÉRATION ===== */
         .menu-card.deliberation-card {
             background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
             border: 2px solid rgba(255,179,71,0.4);
         }
-        .menu-card.deliberation-card .menu-icon {
-            color: var(--accent-yellow);
-        }
-        .menu-card.deliberation-card .menu-title {
-            color: var(--dark-blue);
-        }
+        .menu-card.deliberation-card .menu-icon { color: var(--accent-yellow); }
+        .menu-card.deliberation-card .menu-title { color: var(--dark-blue); }
         .menu-card.deliberation-card .badge-new {
             position: absolute;
             top: 12px;
@@ -144,9 +142,6 @@
             border-radius: 20px;
             letter-spacing: 0.5px;
         }
-        .menu-card.deliberation-card::after {
-            background: linear-gradient(90deg, var(--accent-yellow), var(--primary-blue));
-        }
         
         /* ===== TOAST ===== */
         .toast-notification { 
@@ -156,9 +151,7 @@
             z-index: 9999; 
             min-width: 300px; 
         }
-        .notification-toast { 
-            animation: slideInRight 0.3s ease-out; 
-        }
+        .notification-toast { animation: slideInRight 0.3s ease-out; }
         @keyframes slideInRight { 
             from { transform: translateX(100%); opacity: 0; } 
             to { transform: translateX(0); opacity: 1; } 
@@ -214,17 +207,46 @@
             z-index: 1;
         }
         .welcome-card h4 i { color: var(--accent-yellow); }
-        .welcome-card p { 
-            position: relative;
-            z-index: 1;
-            margin-bottom: 5px;
-        }
+        .welcome-card p { position: relative; z-index: 1; margin-bottom: 5px; }
         .welcome-card .session-info {
             font-size: 13px;
             opacity: 0.8;
             margin-top: 8px;
         }
         .welcome-card .session-info i { color: var(--accent-yellow); }
+        
+        /* ===== BADGE ANNÉE ACTIVE ===== */
+        .annee-badge-nav {
+            font-size: 12px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            background: rgba(255,179,71,0.25);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            border: 1px solid rgba(255,179,71,0.5);
+        }
+        .annee-badge-nav i { color: var(--accent-yellow); font-size: 12px; }
+        .annee-badge-nav.chargement { opacity: 0.6; font-style: italic; }
+        
+        .annee-welcome-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,179,71,0.2);
+            border: 1px solid rgba(255,179,71,0.5);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 12px;
+            position: relative;
+            z-index: 1;
+        }
+        .annee-welcome-badge i { color: var(--accent-yellow); font-size: 14px; }
         
         /* ===== LOGOUT BUTTON ===== */
         .logout-btn {
@@ -258,9 +280,7 @@
             gap: 5px;
             transition: all 0.3s;
         }
-        .sync-status.offline { 
-            background: var(--danger-red); 
-        }
+        .sync-status.offline { background: var(--danger-red); }
         .sync-status i { font-size: 12px; }
         
         /* ===== PROFESSOR NAME ===== */
@@ -274,7 +294,6 @@
         }
         .professor-name-nav i { color: var(--accent-yellow); }
         
-        /* ===== SESSION BADGE ===== */
         .session-badge {
             font-size: 11px;
             padding: 3px 12px;
@@ -295,36 +314,338 @@
             font-size: 12px;
         }
         
-        /* ===== RESPONSIVE ===== */
+        /* ===== SPA VIEWS ===== */
+        .spa-view { display: none; animation: fadeInView 0.3s ease; }
+        .spa-view.active { display: block; }
+        @keyframes fadeInView {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* ===== LOADING ===== */
+        .spa-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+        .spa-loading .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e0e0e0;
+            border-top-color: var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* ===== VUES INTERNES ===== */
+        .view-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .view-header h4 {
+            color: var(--primary-blue);
+            font-weight: bold;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .view-header h4 i { color: var(--accent-yellow); }
+        
+        .btn-back-view {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        .btn-back-view:hover {
+            background: var(--dark-blue);
+            transform: translateY(-2px);
+            color: white;
+        }
+        
+        /* ===== CONTENU VUES ===== */
+        .content-card {
+            background: white; border-radius: 20px; padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1); margin-bottom: 30px;
+        }
+        .content-card .card-header-custom {
+            background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
+            color: white; border-radius: 20px 20px 0 0;
+            padding: 20px 25px; margin: -30px -30px 25px -30px;
+        }
+        .content-card .card-header-custom h4 { margin: 0; font-weight: bold; }
+        .content-card .card-header-custom h4 i { color: var(--accent-yellow); }
+        
+        .info-alert {
+            background: #e8f4fd; border-left: 4px solid var(--primary-blue);
+            border-radius: 10px; padding: 15px; margin-bottom: 20px; font-size: 14px;
+        }
+        
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; flex-wrap: wrap; gap: 15px;
+            padding-bottom: 15px; border-bottom: 2px solid #f0f0f0;
+        }
+        .section-header h5 { color: var(--primary-blue); margin: 0; font-weight: bold; }
+        
+        .form-label { font-weight: 600; color: var(--primary-blue); margin-bottom: 8px; font-size: 14px; }
+        .form-control, .form-select {
+            border-radius: 10px; padding: 12px 15px;
+            border: 2px solid #e0e0e0; transition: all 0.3s; font-size: 15px;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 0.2rem rgba(0,51,102,0.25);
+        }
+        
+        .btn-action, .btn-primary-custom {
+            background: var(--primary-blue); color: white;
+            border: none; padding: 12px 25px; border-radius: 12px;
+            font-weight: bold; transition: all 0.3s; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-action:hover, .btn-primary-custom:hover { background: var(--dark-blue); transform: translateY(-2px); color: white; }
+        .btn-action:disabled, .btn-primary-custom:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        .btn-export {
+            background: #28a745; color: white; border: none;
+            padding: 10px 20px; border-radius: 10px; font-weight: bold;
+            transition: all 0.3s; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-export:hover { background: #218838; transform: translateY(-2px); color: white; }
+        .btn-export:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .btn-import {
+            background: #17a2b8; color: white; border: none;
+            padding: 10px 20px; border-radius: 10px; font-weight: bold;
+            transition: all 0.3s; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-import:hover { background: #138496; transform: translateY(-2px); color: white; }
+        .btn-import:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .btn-publish {
+            background: var(--danger-red); color: white; border: none;
+            padding: 14px 30px; border-radius: 12px; font-weight: bold;
+            font-size: 16px; transition: all 0.3s;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-publish:hover { background: #b02a37; transform: translateY(-2px); color: white; }
+        .btn-publish:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        /* Tables */
+        .cotes-table, .cours-table, .preview-table {
+            width: 100%; border-collapse: collapse;
+            background: white; border-radius: 15px;
+            overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            font-size: 13px;
+        }
+        .cotes-table thead th, .cours-table thead th, .preview-table thead th {
+            background: var(--primary-blue); color: white;
+            padding: 10px 8px; text-align: center; font-weight: 600; font-size: 12px;
+        }
+        .cotes-table tbody td, .cours-table tbody td, .preview-table tbody td {
+            padding: 8px; border-bottom: 1px solid #e0e0e0;
+            vertical-align: middle; text-align: center;
+        }
+        .cotes-table tbody tr:hover, .cours-table tbody tr:hover, .preview-table tbody tr:hover { background: #f8f9fa; }
+        
+        .table-responsive { border-radius: 15px; overflow-x: auto; max-height: 500px; overflow-y: auto; }
+        
+        /* Historique */
+        .history-item {
+            background: #f8f9fa; border-radius: 12px;
+            padding: 15px 20px; margin-bottom: 10px;
+            border-left: 4px solid var(--primary-blue);
+            display: flex; justify-content: space-between;
+            align-items: center; flex-wrap: wrap; gap: 10px;
+            transition: all 0.3s;
+        }
+        .history-item:hover { background: #e9ecef; transform: translateX(3px); }
+        .history-item .h-info { flex: 1; min-width: 200px; }
+        .history-item .h-title { font-weight: 600; color: var(--primary-blue); }
+        .history-item .h-detail { font-size: 13px; color: #666; }
+        .history-item .h-date { font-size: 12px; color: #888; }
+        
+        .empty-state { text-align: center; padding: 40px 20px; color: #888; }
+        .empty-state i { font-size: 50px; color: #ccc; margin-bottom: 15px; display: block; }
+        
+        /* Stats */
+        .stats-row, .stats-mini {
+            display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px;
+        }
+        .stat-card, .stat-pill {
+            background: white; border-radius: 20px;
+            padding: 20px; text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            flex: 1; min-width: 120px;
+            transition: all 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.15); }
+        .stat-icon { font-size: 35px; color: var(--primary-blue); margin-bottom: 10px; }
+        .stat-number { font-size: 28px; font-weight: bold; color: var(--primary-blue); }
+        .stat-label { font-size: 12px; color: #888; margin-top: 5px; }
+        .stat-pill .val { font-weight: 800; color: var(--primary-blue); font-size: 1.2rem; display: block; }
+        .stat-pill .lbl { color: #6c757d; font-size: 0.75rem; }
+        
+        /* Import zone */
+        .import-zone {
+            background: #f8f9fa; border: 2px dashed #dee2e6;
+            border-radius: 15px; padding: 20px; margin-top: 20px;
+        }
+        .import-zone h6 { color: var(--primary-blue); margin-bottom: 15px; }
+        
+        /* Badges */
+        .badge-credit, .badge-promo, .badge-etudiants, .badge-date, .badge-annee {
+            padding: 4px 10px; border-radius: 15px; font-size: 12px;
+            font-weight: 500; white-space: nowrap; display: inline-block;
+        }
+        .badge-credit { background: var(--primary-blue); color: white; font-weight: bold; }
+        .badge-promo { background: #fff3cd; color: #856404; }
+        .badge-etudiants { background: #e8f5e9; color: #2e7d32; }
+        .badge-date { background: #e3f2fd; color: #1565c0; font-size: 11px; }
+        .badge-annee { 
+            background: linear-gradient(135deg, #ffb347, #ff9800);
+            color: var(--dark-blue); font-size: 11px; font-weight: 700;
+        }
+        
+        /* Profile */
+        .profile-container {
+            background: white; border-radius: 20px; padding: 40px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .profile-header {
+            text-align: center; margin-bottom: 30px;
+            padding-bottom: 30px; border-bottom: 2px solid #f0f0f0;
+        }
+        .profile-avatar {
+            width: 120px; height: 120px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px; color: var(--accent-yellow);
+            font-size: 50px; font-weight: bold;
+            box-shadow: 0 10px 30px rgba(0,51,102,0.3);
+        }
+        .profile-name { color: var(--primary-blue); font-weight: bold; font-size: 24px; margin-bottom: 5px; }
+        .profile-role {
+            display: inline-block; background: var(--primary-blue); color: white;
+            padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: 500;
+        }
+        .profile-status {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: #28a745; color: white;
+            padding: 5px 15px; border-radius: 20px; font-size: 13px; margin-left: 10px;
+        }
+        
+        .detail-item {
+            display: flex; align-items: center; gap: 15px;
+            padding: 15px; border-radius: 10px;
+            margin-bottom: 10px; background: #f8f9fa;
+            transition: all 0.3s;
+        }
+        .detail-item:hover { background: #e9ecef; transform: translateX(5px); }
+        .detail-icon {
+            width: 50px; height: 50px; border-radius: 12px;
+            background: var(--primary-blue);
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 22px; flex-shrink: 0;
+        }
+        .detail-content { flex: 1; }
+        .detail-label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        .detail-value { font-weight: 600; color: #333; font-size: 15px; }
+        
+        /* Horaire */
+        .semaine-nav {
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 25px; flex-wrap: wrap;
+        }
+        .semaine-nav select {
+            border-radius: 10px; padding: 10px 15px;
+            border: 2px solid var(--primary-blue);
+            font-weight: 600; color: var(--primary-blue);
+            background: #f8f9fa; cursor: pointer;
+            font-size: 15px; min-width: 250px;
+        }
+        .semaine-grid {
+            display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px;
+        }
+        .jour-colonne {
+            background: #f8f9fa; border-radius: 15px;
+            padding: 12px; min-height: 200px;
+        }
+        .jour-titre {
+            background: var(--primary-blue); color: white;
+            text-align: center; padding: 10px; border-radius: 10px;
+            font-weight: bold; font-size: 13px; margin-bottom: 12px;
+        }
+        .jour-titre.aujourdhui { background: var(--accent-yellow); color: var(--primary-blue); }
+        .horaire-item {
+            background: white; border-radius: 10px;
+            padding: 10px; margin-bottom: 8px;
+            border-left: 4px solid var(--accent-yellow);
+            font-size: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .horaire-item.en-cours { border-left-color: var(--success-green); background: #f0fff4; }
+        .horaire-heure { font-weight: bold; color: var(--primary-blue); font-size: 13px; }
+        .horaire-cours { font-weight: 600; color: #333; }
+        .horaire-salle { color: #888; font-size: 11px; }
+        .horaire-promo {
+            display: inline-block; background: #fff3cd; color: #856404;
+            padding: 2px 8px; border-radius: 10px; font-size: 10px; margin-top: 4px;
+        }
+        
+        /* Projet */
+        .student-detail-card {
+            background: #f8f9fa; border-radius: 12px;
+            padding: 20px; margin-top: 15px;
+            border-left: 4px solid var(--primary-blue);
+        }
+        .detail-row {
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 8px; font-size: 0.95rem;
+        }
+        .detail-row i { color: var(--primary-blue); width: 20px; text-align: center; }
+        .detail-row strong { color: var(--primary-blue); min-width: 130px; }
+        
+        /* Media queries */
+        @media (max-width: 992px) { 
+            .semaine-grid { grid-template-columns: repeat(3, 1fr); } 
+        }
         @media (max-width: 768px) {
-            .navbar-right {
-                gap: 10px;
-            }
-            .professor-name-nav {
-                font-size: 12px;
-            }
-            .profile-photo {
-                width: 40px;
-                height: 40px;
-                font-size: 16px;
-            }
-            .logout-btn {
-                padding: 6px 15px;
-                font-size: 13px;
-            }
-            .welcome-card h4 {
-                font-size: 20px;
-            }
-            .menu-card {
-                padding: 20px;
-            }
-            .menu-icon {
-                font-size: 40px;
-            }
-            .session-badge {
-                font-size: 10px;
-                padding: 2px 10px;
-            }
+            .navbar-right { gap: 10px; }
+            .professor-name-nav { font-size: 12px; }
+            .profile-photo { width: 40px; height: 40px; font-size: 16px; }
+            .logout-btn { padding: 6px 15px; font-size: 13px; }
+            .welcome-card h4 { font-size: 20px; }
+            .menu-card { padding: 20px; }
+            .menu-icon { font-size: 40px; }
+            .session-badge { font-size: 10px; padding: 2px 10px; }
+            .annee-badge-nav { font-size: 10px; padding: 4px 10px; }
+            .content-card { padding: 20px; }
+            .profile-container { padding: 20px; }
+        }
+        @media (max-width: 576px) { 
+            .semaine-grid { grid-template-columns: repeat(2, 1fr); }
+            .semaine-nav select { min-width: 100%; }
         }
     </style>
 </head>
@@ -332,13 +653,19 @@
     <!-- ===== NAVBAR ===== -->
     <nav class="navbar navbar-custom">
         <div class="container">
-            <a class="navbar-brand text-white" href="#" id="homeBrand">
+            <a class="navbar-brand text-white" href="#" id="homeBrand" style="text-decoration:none;">
                 <i class="bi bi-person-workspace"></i> Espace Professeur - Faculté Agronomique
             </a>
             <div class="navbar-right">
                 <div id="syncStatus" class="sync-status">
                     <i class="bi bi-cloud-check"></i> Synchro
                 </div>
+                
+                <span class="annee-badge-nav chargement" id="anneeBadgeNav" title="Année académique active">
+                    <i class="bi bi-calendar-check-fill"></i>
+                    <span id="anneeBadgeText">Chargement...</span>
+                </span>
+                
                 <span class="professor-name-nav d-none d-md-inline-flex" id="professorNameNav">
                     <i class="bi bi-person-badge"></i> <span id="navProfessorName">Professeur</span>
                 </span>
@@ -356,87 +683,12 @@
     <!-- ===== TOAST CONTAINER ===== -->
     <div id="toastContainer" class="toast-notification"></div>
     
-    <!-- ===== MAIN CONTENT ===== -->
+    <!-- ===== SPA CONTAINER ===== -->
     <div class="container mt-4" style="flex: 1;">
-        <!-- Page d'accueil -->
-        <div id="homePage">
-            <!-- Welcome Card -->
-            <div class="welcome-card">
-                <h4><i class="bi bi-hand-wave"></i> Bonjour, <span id="welcomeName">Professeur</span> !</h4>
-                <p class="mb-0 opacity-75">
-                    <i class="bi bi-person-badge"></i> Spécialité : <span id="welcomeSpecialite" class="specialite-badge">Non définie</span>
-                </p>
-                <p class="mb-0 opacity-75">
-                    <i class="bi bi-building"></i> Département : <span id="welcomeDepartement">Non défini</span>
-                </p>
-                <p class="mb-0 opacity-75">
-                    <i class="bi bi-telephone-fill"></i> Téléphone : <span id="welcomeTelephone">Non défini</span>
-                </p>
-                <p class="session-info">
-                    <i class="bi bi-clock"></i> Session active pour <span id="sessionTimeRemainingLarge">24h</span>
-                </p>
-            </div>
-            
-            <!-- Menu Cards -->
-            <div class="row g-4">
-                <div class="col-md-4 col-sm-6">
-                    <a href="mes-cours.html" class="menu-card">
-                        <div class="menu-icon"><i class="bi bi-book-fill"></i></div>
-                        <div class="menu-title">Mes Cours</div>
-                        <div class="menu-subtitle">Gérer vos cours</div>
-                    </a>
-                </div>
-                <div class="col-md-4 col-sm-6">
-                    <a href="mes-cotations.html" class="menu-card">
-                        <div class="menu-icon"><i class="bi bi-pencil-square"></i></div>
-                        <div class="menu-title">Mes Cotations</div>
-                        <div class="menu-subtitle">Gérer les notes</div>
-                    </a>
-                </div>
-                <!-- ✅ NOUVELLE CARTE DÉLIBÉRATION -->
-                <div class="col-md-4 col-sm-6">
-                    <a href="deliberation.html" class="menu-card deliberation-card">
-                        <span class="badge-new">NOUVEAU</span>
-                        <div class="menu-icon"><i class="bi bi-clipboard2-check-fill"></i></div>
-                        <div class="menu-title">Délibération</div>
-                        <div class="menu-subtitle">Cotes d'examen & bulletin</div>
-                    </a>
-                </div>
-                <div class="col-md-4 col-sm-6">
-                    <a href="mon-horaire.html" class="menu-card">
-                        <div class="menu-icon"><i class="bi bi-calendar-week"></i></div>
-                        <div class="menu-title">Mon Horaire</div>
-                        <div class="menu-subtitle">Emploi du temps</div>
-                    </a>
-                </div>
-                <div class="col-md-4 col-sm-6">
-                    <a href="projet.html" class="menu-card">
-                        <div class="menu-icon"><i class="bi bi-kanban-fill"></i></div>
-                        <div class="menu-title">Projets</div>
-                        <div class="menu-subtitle">Gérer vos projets</div>
-                    </a>
-                </div>
-                <div class="col-md-4 col-sm-6">
-                    <a href="public.html" class="menu-card">
-                        <div class="menu-icon"><i class="bi bi-megaphone-fill"></i></div>
-                        <div class="menu-title">Publications de Sujet de Projet</div>
-                        <div class="menu-subtitle">Publier et gérer les sujets</div>
-                    </a>
-                </div>
-                <div class="col-md-4 col-sm-6">
-                    <a href="a-propos.html" class="menu-card">
-                        <div class="menu-icon"><i class="bi bi-info-circle-fill"></i></div>
-                        <div class="menu-title">À Propos</div>
-                        <div class="menu-subtitle">Informations</div>
-                    </a>
-                </div>
-                <div class="col-md-4 col-sm-6">
-                    <a href="profil.html" class="menu-card">
-                        <div class="menu-icon"><i class="bi bi-person-circle"></i></div>
-                        <div class="menu-title">Mon Profil</div>
-                        <div class="menu-subtitle">Voir mon profil</div>
-                    </a>
-                </div>
+        <div id="spaContainer">
+            <div class="spa-loading">
+                <div class="spinner"></div>
+                <p>Chargement de l'application...</p>
             </div>
         </div>
     </div>
@@ -455,209 +707,67 @@
     </footer>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
         // ============================================================
         // ⭐ CONSTANTES
         // ============================================================
-        const SESSION_DUREE_HEURES = 24; // 24 heures
+        const SESSION_DUREE_HEURES = 24;
+        const CACHE_KEY_ANNEE = 'annee_active_prof';
+
+        // ⭐ NOUVELLES RÈGLES DE COTATION
+        const COTATION_RULES = {
+            TD:      { maxBase: 2.5, bonusMax: 2 },
+            TP:      { maxBase: 2.5, bonusMax: 2 },
+            INTERRO: { maxBase: 5,   bonusMax: 2 },
+            MOYENNE: { maxBase: 10 }
+        };
         
         // ============================================================
-        // ⭐ VÉRIFICATION DE SESSION
+        // ⭐ FIREBASE CONFIG
         // ============================================================
-        (function() {
-            console.log('🔍 Vérification de la session professeur...');
-            
-            const sessionData = localStorage.getItem('professeur_session');
-            
-            if(!sessionData) { 
-                console.log('❌ Aucune session trouvée, redirection vers login.html');
-                window.location.href = 'login.html'; 
-                return; 
-            }
-            
-            try {
-                const session = JSON.parse(sessionData);
-                const now = Date.now();
-                
-                console.log('📦 Session chargée:', session);
-                
-                if(!session.expires || now > session.expires) {
-                    console.log('⏰ Session expirée, redirection vers login.html');
-                    localStorage.removeItem('professeur_session');
-                    window.location.href = 'login.html';
-                    return;
-                }
-                
-                if(!session.role || session.role !== 'professeur') {
-                    console.log('❌ Rôle non professeur détecté:', session.role);
-                    localStorage.removeItem('professeur_session');
-                    window.location.href = 'login.html';
-                    return;
-                }
-                
-                if(!session.verified2FA) {
-                    console.log('❌ 2FA non vérifiée');
-                    localStorage.removeItem('professeur_session');
-                    window.location.href = 'login.html';
-                    return;
-                }
-                
-                // ✅ Utiliser session directement
-                const nomComplet = session.nomComplet || 'Professeur';
-                const email = session.email || '';
-                const specialite = session.specialite || 'Spécialité non définie';
-                const departement = session.departement || 'Département non défini';
-                const telephone = session.telephone || 'Non défini';
-                
-                console.log('✅ Session valide - Bienvenue ' + nomComplet);
-                console.log('📧 Email:', email);
-                console.log('📚 Spécialité:', specialite);
-                console.log('🏛️ Département:', departement);
-                console.log('📞 Téléphone:', telephone);
-                
-                // Affichage du nom complet dans la carte de bienvenue
-                const welcomeName = document.getElementById('welcomeName');
-                if(welcomeName) welcomeName.textContent = nomComplet;
-                
-                // Affichage de la spécialité
-                const welcomeSpecialite = document.getElementById('welcomeSpecialite');
-                if(welcomeSpecialite) welcomeSpecialite.textContent = specialite;
-                
-                // Affichage du département
-                const welcomeDepartement = document.getElementById('welcomeDepartement');
-                if(welcomeDepartement) welcomeDepartement.textContent = departement;
-                
-                // Affichage du téléphone
-                const welcomeTelephone = document.getElementById('welcomeTelephone');
-                if(welcomeTelephone) welcomeTelephone.textContent = telephone;
-                
-                // Affichage du nom complet dans la navbar
-                const navName = document.getElementById('navProfessorName');
-                if(navName) navName.textContent = nomComplet;
-                
-                // Initiales pour l'avatar
-                const avatar = document.getElementById('profileAvatar');
-                if(avatar && nomComplet && nomComplet !== 'Professeur') {
-                    const initials = nomComplet.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                    avatar.textContent = initials;
-                }
-                
-                // Tooltip pour l'avatar
-                if(avatar) {
-                    avatar.title = nomComplet + (specialite ? ' - ' + specialite : '');
-                }
-                
-                // Mettre à jour le titre de la page
-                document.title = 'Espace Professeur - ' + nomComplet;
-                
-                // Calcul du temps restant
-                const tempsRestantMs = session.expires - now;
-                if(tempsRestantMs > 0) {
-                    const heuresRestantes = Math.floor(tempsRestantMs / (60 * 60 * 1000));
-                    const minutesRestantes = Math.floor((tempsRestantMs % (60 * 60 * 1000)) / (60 * 1000));
-                    let tempsTexte = '';
-                    if(heuresRestantes > 0) {
-                        tempsTexte += heuresRestantes + 'h ';
-                    }
-                    if(minutesRestantes > 0 || heuresRestantes === 0) {
-                        tempsTexte += minutesRestantes + 'min';
-                    }
-                    if(tempsTexte === '') tempsTexte = '< 1 min';
-                    
-                    const sessionTimeLarge = document.getElementById('sessionTimeRemainingLarge');
-                    if(sessionTimeLarge) sessionTimeLarge.textContent = tempsTexte;
-                    
-                    const sessionTimeNav = document.getElementById('sessionTimeRemaining');
-                    if(sessionTimeNav) sessionTimeNav.textContent = tempsTexte;
-                }
-                
-            } catch(e) {
-                console.error('❌ Erreur lors du parsing de la session:', e);
-                localStorage.removeItem('professeur_session');
-                window.location.href = 'login.html';
-            }
-        })();
+        const firebaseConfig = {
+            apiKey: "AIzaSyBb82N2-5ns7qKjQBAj5UvDW87s2PZ27F0",
+            authDomain: "fsa-unilu.firebaseapp.com",
+            projectId: "fsa-unilu",
+            storageBucket: "fsa-unilu.firebasestorage.app",
+            messagingSenderId: "36551990738",
+            appId: "1:36551990738:web:e91fdcb53f8aab5d1b7c0b"
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+        db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
         
         // ============================================================
-        // ⭐ VÉRIFICATION PÉRIODIQUE DE LA SESSION
+        // ⭐ VARIABLES GLOBALES
         // ============================================================
-        setInterval(() => {
-            const sessionData = localStorage.getItem('professeur_session');
-            if(sessionData) {
-                try {
-                    const session = JSON.parse(sessionData);
-                    if(!session.expires || Date.now() > session.expires) {
-                        console.log('⏰ Session expirée (vérification périodique)');
-                        localStorage.removeItem('professeur_session');
-                        window.location.href = 'login.html';
-                    } else {
-                        // Mettre à jour le temps restant
-                        const tempsRestantMs = session.expires - Date.now();
-                        if(tempsRestantMs > 0) {
-                            const heuresRestantes = Math.floor(tempsRestantMs / (60 * 60 * 1000));
-                            const minutesRestantes = Math.floor((tempsRestantMs % (60 * 60 * 1000)) / (60 * 1000));
-                            let tempsTexte = '';
-                            if(heuresRestantes > 0) {
-                                tempsTexte += heuresRestantes + 'h ';
-                            }
-                            if(minutesRestantes > 0 || heuresRestantes === 0) {
-                                tempsTexte += minutesRestantes + 'min';
-                            }
-                            if(tempsTexte === '') tempsTexte = '< 1 min';
-                            
-                            const sessionTimeLarge = document.getElementById('sessionTimeRemainingLarge');
-                            if(sessionTimeLarge) sessionTimeLarge.textContent = tempsTexte;
-                            
-                            const sessionTimeNav = document.getElementById('sessionTimeRemaining');
-                            if(sessionTimeNav) sessionTimeNav.textContent = tempsTexte;
-                        }
-                    }
-                } catch(e) {
-                    localStorage.removeItem('professeur_session');
-                    window.location.href = 'login.html';
-                }
-            }
-        }, 30000); // Vérification toutes les 30 secondes
+        let currentProfessor = null;
+        let anneeActiveActuelle = null;
+        let anneeActiveUnsubscribe = null;
+        let currentView = 'home';
+        
+        // Variables partagées pour les vues
+        let allCours = [];
+        let allPromotions = [];
+        let allEtudiants = [];
+        let allCotations = [];
+        let allHistorique = [];
+        let allHoraires = [];
+        let myProjects = [];
+        let professorSubjects = [];
+        
+        // Listeners actifs
+        let activeListeners = [];
         
         // ============================================================
-        // ⭐ GESTION DE LA DÉCONNEXION
-        // ============================================================
-        document.getElementById('logoutBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            if(confirm('Voulez-vous vraiment vous déconnecter ?')) {
-                localStorage.removeItem('professeur_session');
-                console.log('🔓 Déconnexion effectuée');
-                window.location.href = 'login.html';
-            }
-        });
-        
-        // ============================================================
-        // ⭐ BOUTON DE LA MARQUE
-        // ============================================================
-        document.getElementById('homeBrand')?.addEventListener('click', function(e) {
-            e.preventDefault();
-            const homePage = document.getElementById('homePage');
-            if(homePage) {
-                homePage.style.display = 'block';
-                document.querySelectorAll('.content-panel').forEach(panel => {
-                    panel.classList.remove('active');
-                });
-            }
-        });
-        
-        // ============================================================
-        // ⭐ CLIC SUR L'AVATAR
-        // ============================================================
-        document.getElementById('profileAvatar').addEventListener('click', function() {
-            window.location.href = 'profil.html';
-        });
-        
-        // ============================================================
-        // ⭐ FONCTION TOAST
+        // ⭐ UTILITAIRES
         // ============================================================
         function showToast(message, type = 'success') {
             const container = document.getElementById('toastContainer');
-            if(!container) return;
+            if (!container) return;
             
             const bgColor = type === 'success' ? '#28a745' : 
                            type === 'warning' ? '#ffc107' : 
@@ -677,14 +787,2258 @@
             `;
             container.insertAdjacentHTML('afterbegin', toastHtml);
             setTimeout(() => {
-                if(container.firstElementChild) {
-                    container.firstElementChild.remove();
-                }
+                if (container.firstElementChild) container.firstElementChild.remove();
             }, 4000);
         }
         
+        function escapeHtml(text) {
+            if (text === null || text === undefined) return '';
+            const div = document.createElement('div');
+            div.textContent = String(text);
+            return div.innerHTML;
+        }
+        
+        function formaterTempsRestant(ms) {
+            const heuresRestantes = Math.floor(ms / (60 * 60 * 1000));
+            const minutesRestantes = Math.floor((ms % (60 * 60 * 1000)) / (60 * 1000));
+            let tempsTexte = '';
+            if (heuresRestantes > 0) tempsTexte += heuresRestantes + 'h ';
+            if (minutesRestantes > 0 || heuresRestantes === 0) tempsTexte += minutesRestantes + 'min';
+            if (tempsTexte === '') tempsTexte = '< 1 min';
+            return tempsTexte;
+        }
+        
+        function formaterDate(timestamp) {
+            if (!timestamp) return 'Date inconnue';
+            try {
+                const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+                return date.toLocaleDateString('fr-FR', { 
+                    day: '2-digit', month: 'short', year: 'numeric', 
+                    hour: '2-digit', minute: '2-digit' 
+                });
+            } catch(e) { 
+                return 'Date invalide'; 
+            }
+        }
+        
+        function parseFloatSafe(val) {
+            const n = parseFloat(val);
+            return isNaN(n) ? 0 : n;
+        }
+        
         // ============================================================
-        // ⭐ GESTION DU STATUT DE SYNCHRONISATION
+        // ⭐ NOUVELLE LOGIQUE DE COTATION
+        // ============================================================
+        /**
+         * Applique la règle : la cote peut dépasser le max de base,
+         * mais le bonus est plafonné à +2.
+         * Ex: TD max base 2.5 → max autorisé = 4.5
+         *     TP max base 2.5 → max autorisé = 4.5
+         *     Interro max base 5 → max autorisé = 7
+         */
+        function plafonnerCote(valeurSaisie, maxBase, bonusMax) {
+            const v = parseFloatSafe(valeurSaisie);
+            if (v < 0) return 0;
+            const maxAutorise = maxBase + bonusMax;
+            if (v > maxAutorise) return maxAutorise;
+            return v;
+        }
+        
+        /**
+         * Calcule la moyenne finale (plafonnée à 10) à partir
+         * des cotes déjà plafonnées.
+         */
+        function calculerMoyenne(td, tp, interro) {
+            const total = parseFloatSafe(td) + parseFloatSafe(tp) + parseFloatSafe(interro);
+            return Math.min(10, Math.round(total * 100) / 100);
+        }
+        
+        /**
+         * Convertit une ligne brute Excel en objet cotation sécurisé.
+         * Colonnes : 1=N°, 2=Matricule, 3=Nom, 4=TD/2.5, 5=TP/2.5, 6=Interro/5, 7=Moyenne/10
+         */
+        function convertirLigneExcel(row) {
+            const td = plafonnerCote(row[3], COTATION_RULES.TD.maxBase, COTATION_RULES.TD.bonusMax);
+            const tp = plafonnerCote(row[4], COTATION_RULES.TP.maxBase, COTATION_RULES.TP.bonusMax);
+            const interro = plafonnerCote(row[5], COTATION_RULES.INTERRO.maxBase, COTATION_RULES.INTERRO.bonusMax);
+            const moyenne = calculerMoyenne(td, tp, interro);
+            
+            return {
+                matricule: String(row[1] || '').trim(),
+                nom: String(row[2] || '').trim(),
+                td: td,
+                tp: tp,
+                interro: interro,
+                moyenne: moyenne
+            };
+        }
+        
+        // ============================================================
+        // ⭐ GESTION DE L'ANNÉE ACTIVE
+        // ============================================================
+        function afficherBandeauAnnee(nomAnnee) {
+            const existing = document.getElementById('bandeauAnneeAcademique');
+            if (existing) existing.remove();
+            
+            const bandeau = document.createElement('div');
+            bandeau.id = 'bandeauAnneeAcademique';
+            bandeau.style.cssText = `
+                position: fixed; top: 0; left: 0; right: 0;
+                background: linear-gradient(135deg, #17a2b8, #138496);
+                color: white; padding: 14px 20px; text-align: center;
+                font-weight: bold; z-index: 10001;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+                display: flex; align-items: center; justify-content: center;
+                gap: 10px; font-size: 14px;
+            `;
+            bandeau.innerHTML = `
+                <i class="bi bi-calendar-check-fill" style="font-size:20px;"></i>
+                <span>Nouvelle année académique active : <strong>${escapeHtml(nomAnnee)}</strong></span>
+            `;
+            document.body.appendChild(bandeau);
+            
+            setTimeout(() => {
+                bandeau.style.transition = 'opacity 0.5s';
+                bandeau.style.opacity = '0';
+                setTimeout(() => bandeau.remove(), 500);
+            }, 10000);
+        }
+        
+        function mettreAJourBadgeAnnee(anneeNom) {
+            const badgeNav = document.getElementById('anneeBadgeNav');
+            const badgeText = document.getElementById('anneeBadgeText');
+            
+            if (badgeNav && badgeText) {
+                badgeNav.classList.remove('chargement');
+                badgeText.textContent = anneeNom;
+                badgeNav.title = 'Année académique active : ' + anneeNom;
+            }
+            
+            const welcomeBadge = document.getElementById('anneeWelcomeBadge');
+            const welcomeText = document.getElementById('anneeWelcomeText');
+            if (welcomeBadge && welcomeText) {
+                welcomeText.textContent = anneeNom;
+                welcomeBadge.style.display = 'inline-flex';
+            }
+        }
+        
+        function initAnneeActive() {
+            console.log('🔄 Initialisation de l\'écoute de l\'année active...');
+            
+            if (anneeActiveUnsubscribe) {
+                try { anneeActiveUnsubscribe(); } catch(e) {}
+                anneeActiveUnsubscribe = null;
+            }
+            
+            anneeActiveUnsubscribe = db
+                .collection('configurations')
+                .doc('anneeActive')
+                .onSnapshot(
+                    (doc) => {
+                        if (!doc.exists) {
+                            console.log('[ANNÉE] ⚠️ Aucune année active configurée');
+                            const badgeText = document.getElementById('anneeBadgeText');
+                            if (badgeText) badgeText.textContent = 'Aucune';
+                            const badgeNav = document.getElementById('anneeBadgeNav');
+                            if (badgeNav) badgeNav.classList.remove('chargement');
+                            return;
+                        }
+                        
+                        const data = doc.data() || {};
+                        const nouvelAnneeId = data.anneeId;
+                        const nouvelAnneeNom = data.anneeNom;
+                        
+                        if (!nouvelAnneeId) return;
+                        
+                        if (!anneeActiveActuelle) {
+                            anneeActiveActuelle = {
+                                id: nouvelAnneeId,
+                                anneeNom: nouvelAnneeNom
+                            };
+                            console.log('[ANNÉE] ✅ Année active détectée:', anneeActiveActuelle);
+                            mettreAJourBadgeAnnee(nouvelAnneeNom);
+                            
+                            try {
+                                localStorage.setItem(CACHE_KEY_ANNEE, JSON.stringify({
+                                    id: nouvelAnneeId,
+                                    nom: nouvelAnneeNom,
+                                    timestamp: Date.now()
+                                }));
+                            } catch(e) {}
+                            
+                            loadView(currentView);
+                            return;
+                        }
+                        
+                        if (anneeActiveActuelle.id !== nouvelAnneeId) {
+                            console.log('[ANNÉE] 🔔 Changement d\'année détecté !');
+                            
+                            anneeActiveActuelle = {
+                                id: nouvelAnneeId,
+                                anneeNom: nouvelAnneeNom
+                            };
+                            
+                            mettreAJourBadgeAnnee(nouvelAnneeNom);
+                            
+                            try {
+                                localStorage.setItem(CACHE_KEY_ANNEE, JSON.stringify({
+                                    id: nouvelAnneeId,
+                                    nom: nouvelAnneeNom,
+                                    timestamp: Date.now()
+                                }));
+                            } catch(e) {}
+                            
+                            afficherBandeauAnnee(nouvelAnneeNom);
+                            showToast(`📅 Nouvelle année académique : ${nouvelAnneeNom}`, 'info');
+                            
+                            try {
+                                localStorage.removeItem('cache_cours_professeur');
+                                localStorage.removeItem('cache_promotions');
+                                localStorage.removeItem('cache_etudiants');
+                            } catch(e) {}
+                            
+                            loadView(currentView);
+                        }
+                    },
+                    (error) => {
+                        console.error('[ANNÉE] Erreur écoute année active:', error);
+                        const badgeText = document.getElementById('anneeBadgeText');
+                        if (badgeText) badgeText.textContent = 'Erreur';
+                        const badgeNav = document.getElementById('anneeBadgeNav');
+                        if (badgeNav) badgeNav.classList.remove('chargement');
+                    }
+                );
+        }
+        
+        function chargerAnneeDepuisLocalStorage() {
+            try {
+                const cached = localStorage.getItem(CACHE_KEY_ANNEE);
+                if (cached) {
+                    const data = JSON.parse(cached);
+                    if (data && data.id && data.nom) {
+                        anneeActiveActuelle = {
+                            id: data.id,
+                            anneeNom: data.nom
+                        };
+                        mettreAJourBadgeAnnee(data.nom);
+                        return true;
+                    }
+                }
+            } catch(e) {}
+            return false;
+        }
+        
+        async function chargerAnneeDirectement() {
+            try {
+                const doc = await db.collection('configurations').doc('anneeActive').get();
+                if (!doc.exists) {
+                    mettreAJourBadgeAnnee('Aucune');
+                    return null;
+                }
+                const data = doc.data() || {};
+                if (!data.anneeId || !data.anneeNom) {
+                    mettreAJourBadgeAnnee('Incomplet');
+                    return null;
+                }
+                anneeActiveActuelle = { id: data.anneeId, anneeNom: data.anneeNom };
+                mettreAJourBadgeAnnee(data.anneeNom);
+                try {
+                    localStorage.setItem(CACHE_KEY_ANNEE, JSON.stringify({
+                        id: data.anneeId,
+                        nom: data.anneeNom,
+                        timestamp: Date.now()
+                    }));
+                } catch(e) {}
+                return anneeActiveActuelle;
+            } catch (e) {
+                console.error('[ANNÉE] ❌ Erreur:', e);
+                mettreAJourBadgeAnnee('Erreur');
+                return null;
+            }
+        }
+        
+        // ============================================================
+        // ⭐ FILTRE ANNÉE
+        // ============================================================
+        function appartientAnneeActive(data) {
+            if (!anneeActiveActuelle || !anneeActiveActuelle.id) {
+                return true;
+            }
+            if (data.anneeAcademiqueId) {
+                return data.anneeAcademiqueId === anneeActiveActuelle.id;
+            }
+            return true;
+        }
+        
+        // ============================================================
+        // ⭐ GESTION DES VUES SPA
+        // ============================================================
+        function loadView(viewName, params = {}) {
+            currentView = viewName;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            nettoyerListeners();
+            
+            const container = document.getElementById('spaContainer');
+            container.innerHTML = `
+                <div class="spa-loading">
+                    <div class="spinner"></div>
+                    <p>Chargement...</p>
+                </div>
+            `;
+            
+            try {
+                switch(viewName) {
+                    case 'home':
+                        renderHomeView(container);
+                        break;
+                    case 'cours':
+                        renderCoursView(container, params);
+                        break;
+                    case 'cotations':
+                        renderCotationsView(container, params);
+                        break;
+                    case 'deliberation':
+                        renderDeliberationView(container, params);
+                        break;
+                    case 'horaire':
+                        renderHoraireView(container, params);
+                        break;
+                    case 'projets':
+                        renderProjetsView(container, params);
+                        break;
+                    case 'publications':
+                        renderPublicationsView(container, params);
+                        break;
+                    case 'profil':
+                        renderProfilView(container, params);
+                        break;
+                    case 'a-propos':
+                        window.location.href = 'a-propos.html';
+                        return;
+                    default:
+                        renderHomeView(container);
+                }
+                
+                if (location.hash !== '#' + viewName) {
+                    history.pushState({ view: viewName }, '', '#' + viewName);
+                }
+            } catch(e) {
+                console.error('Erreur chargement vue:', e);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <h5>Erreur de chargement</h5>
+                        <p>${escapeHtml(e.message)}</p>
+                        <button class="btn-primary-custom mt-3" onclick="loadView('home')">
+                            <i class="bi bi-house-door"></i> Retour à l'accueil
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        
+        function nettoyerListeners() {
+            activeListeners.forEach(unsub => {
+                try { unsub(); } catch(e) {}
+            });
+            activeListeners = [];
+        }
+        
+        function registerListener(unsub) {
+            if (typeof unsub === 'function') {
+                activeListeners.push(unsub);
+            }
+        }
+        
+        // ============================================================
+        // ⭐ VUE : ACCUEIL
+        // ============================================================
+        function renderHomeView(container) {
+            const nomComplet = currentProfessor.nomComplet || 'Professeur';
+            const specialite = currentProfessor.specialite || 'Spécialité non définie';
+            const departement = currentProfessor.departement || 'Département non défini';
+            const telephone = currentProfessor.telephone || 'Non défini';
+            
+            const session = JSON.parse(localStorage.getItem('professeur_session') || '{}');
+            const tempsRestantMs = (session.expires || 0) - Date.now();
+            const tempsTexte = tempsRestantMs > 0 ? formaterTempsRestant(tempsRestantMs) : 'Expirée';
+            
+            const anneeLabel = anneeActiveActuelle ? anneeActiveActuelle.anneeNom : 'Chargement...';
+            
+            container.innerHTML = `
+                <div class="spa-view active">
+                    <div class="welcome-card">
+                        <h4><i class="bi bi-hand-wave"></i> Bonjour, ${escapeHtml(nomComplet)} !</h4>
+                        <p class="mb-0 opacity-75">
+                            <i class="bi bi-person-badge"></i> Spécialité : <span class="specialite-badge">${escapeHtml(specialite)}</span>
+                        </p>
+                        <p class="mb-0 opacity-75">
+                            <i class="bi bi-building"></i> Département : <span>${escapeHtml(departement)}</span>
+                        </p>
+                        <p class="mb-0 opacity-75">
+                            <i class="bi bi-telephone-fill"></i> Téléphone : <span>${escapeHtml(telephone)}</span>
+                        </p>
+                        
+                        <div class="annee-welcome-badge" id="anneeWelcomeBadge">
+                            <i class="bi bi-calendar-check-fill"></i>
+                            Année académique active : <strong id="anneeWelcomeText">${escapeHtml(anneeLabel)}</strong>
+                        </div>
+                        
+                        <p class="session-info">
+                            <i class="bi bi-clock"></i> Session active pour <span>${tempsTexte}</span>
+                        </p>
+                    </div>
+                    
+                    <div class="row g-4">
+                        <div class="col-md-4 col-sm-6">
+                            <div class="menu-card" onclick="loadView('cours')">
+                                <div class="menu-icon"><i class="bi bi-book-fill"></i></div>
+                                <div class="menu-title">Mes Cours</div>
+                                <div class="menu-subtitle">Gérer vos cours</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-6">
+                            <div class="menu-card" onclick="loadView('cotations')">
+                                <div class="menu-icon"><i class="bi bi-pencil-square"></i></div>
+                                <div class="menu-title">Mes Cotations</div>
+                                <div class="menu-subtitle">Gérer les notes</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-6">
+                            <div class="menu-card deliberation-card" onclick="loadView('deliberation')">
+                                <span class="badge-new">NOUVEAU</span>
+                                <div class="menu-icon"><i class="bi bi-clipboard2-check-fill"></i></div>
+                                <div class="menu-title">Délibération</div>
+                                <div class="menu-subtitle">Cotes d'examen & bulletin</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-6">
+                            <div class="menu-card" onclick="loadView('horaire')">
+                                <div class="menu-icon"><i class="bi bi-calendar-week"></i></div>
+                                <div class="menu-title">Mon Horaire</div>
+                                <div class="menu-subtitle">Emploi du temps</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-6">
+                            <div class="menu-card" onclick="loadView('projets')">
+                                <div class="menu-icon"><i class="bi bi-kanban-fill"></i></div>
+                                <div class="menu-title">Projets</div>
+                                <div class="menu-subtitle">Gérer vos projets</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-6">
+                            <div class="menu-card" onclick="loadView('publications')">
+                                <div class="menu-icon"><i class="bi bi-megaphone-fill"></i></div>
+                                <div class="menu-title">Publications de Sujet de Projet</div>
+                                <div class="menu-subtitle">Publier et gérer les sujets</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-6">
+                            <div class="menu-card" onclick="loadView('a-propos')">
+                                <div class="menu-icon"><i class="bi bi-info-circle-fill"></i></div>
+                                <div class="menu-title">À Propos</div>
+                                <div class="menu-subtitle">Informations</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-sm-6">
+                            <div class="menu-card" onclick="loadView('profil')">
+                                <div class="menu-icon"><i class="bi bi-person-circle"></i></div>
+                                <div class="menu-title">Mon Profil</div>
+                                <div class="menu-subtitle">Voir mon profil</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // ============================================================
+        // ⭐ VUE : MES COURS
+        // ============================================================
+        function renderCoursView(container, params) {
+            const anneeLabel = anneeActiveActuelle ? anneeActiveActuelle.anneeNom : '-';
+            
+            container.innerHTML = `
+                <div class="spa-view active">
+                    <div class="view-header">
+                        <h4><i class="bi bi-book-fill"></i> Mes Cours Assignés</h4>
+                        <button class="btn-back-view" onclick="loadView('home')">
+                            <i class="bi bi-arrow-left"></i> Accueil
+                        </button>
+                    </div>
+                    
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="bi bi-book-fill"></i></div>
+                            <div class="stat-number" id="totalCours">0</div>
+                            <div class="stat-label">Total Cours</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="bi bi-star-fill"></i></div>
+                            <div class="stat-number" id="totalCredits">0</div>
+                            <div class="stat-label">Total Crédits</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="bi bi-trophy-fill"></i></div>
+                            <div class="stat-number" id="totalPromotions">0</div>
+                            <div class="stat-label">Promotions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+                            <div class="stat-number" id="totalEtudiants">0</div>
+                            <div class="stat-label">Étudiants</div>
+                        </div>
+                    </div>
+                    
+                    <div class="content-card">
+                        <div class="section-header">
+                            <h5><i class="bi bi-list-ul"></i> Liste des cours <span class="badge-annee">${escapeHtml(anneeLabel)}</span></h5>
+                        </div>
+                        
+                        <div style="position:relative;margin-bottom:15px;">
+                            <i class="bi bi-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#999;"></i>
+                            <input type="text" class="form-control" id="searchCours" placeholder="Rechercher un cours..." style="padding-left:35px;">
+                        </div>
+                        
+                        <div id="coursContainer">
+                            <div class="spa-loading">
+                                <div class="spinner"></div>
+                                <p>Chargement des cours...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            chargerCoursData();
+            
+            setTimeout(() => {
+                const searchInput = document.getElementById('searchCours');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        afficherCoursTable(this.value);
+                    });
+                }
+            }, 100);
+        }
+        
+        function chargerCoursData() {
+            const currentUserId = currentProfessor.id || currentProfessor.uid;
+            
+            const unsub1 = db.collection('cours')
+                .where('professeurId', '==', currentUserId)
+                .onSnapshot((snapshot) => {
+                    allCours = [];
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        if (!appartientAnneeActive(data)) return;
+                        allCours.push({ id: doc.id, ...data });
+                    });
+                    afficherCoursTable();
+                    mettreAJourStatsCours();
+                }, (error) => {
+                    console.error('Erreur cours:', error);
+                });
+            registerListener(unsub1);
+            
+            const unsub2 = db.collection('promotions').onSnapshot((snapshot) => {
+                allPromotions = [];
+                snapshot.forEach(doc => {
+                    allPromotions.push({ id: doc.id, ...doc.data() });
+                });
+                afficherCoursTable();
+                mettreAJourStatsCours();
+            }, () => {});
+            registerListener(unsub2);
+            
+            const unsub3 = db.collection('etudiants').onSnapshot((snapshot) => {
+                allEtudiants = [];
+                snapshot.forEach(doc => {
+                    allEtudiants.push({ id: doc.id, ...doc.data() });
+                });
+                mettreAJourStatsCours();
+            }, () => {});
+            registerListener(unsub3);
+        }
+        
+        function afficherCoursTable(search = '') {
+            const container = document.getElementById('coursContainer');
+            if (!container) return;
+            
+            const term = search.toLowerCase();
+            const promoMap = {};
+            allPromotions.forEach(p => promoMap[p.id] = p.nom);
+            
+            let coursFiltres = allCours;
+            if (term) {
+                coursFiltres = allCours.filter(c => 
+                    (c.nom || '').toLowerCase().includes(term) ||
+                    (promoMap[c.promotionId] || '').toLowerCase().includes(term) ||
+                    (c.code || '').toLowerCase().includes(term)
+                );
+            }
+            
+            if (allCours.length === 0) {
+                const anneeLabel = anneeActiveActuelle ? anneeActiveActuelle.anneeNom : 'année active';
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <h5>Aucun cours assigné</h5>
+                        <p>Les cours qui vous sont assignés pour <strong>${escapeHtml(anneeLabel)}</strong> apparaîtront ici.</p>
+                    </div>`;
+                return;
+            }
+            
+            if (coursFiltres.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="bi bi-search"></i>
+                        <h5>Aucun résultat</h5>
+                        <p>Aucun cours ne correspond à "${escapeHtml(search)}".</p>
+                    </div>`;
+                return;
+            }
+            
+            let html = `
+                <div class="table-responsive">
+                    <table class="cours-table">
+                        <thead>
+                            <tr>
+                                <th>N°</th>
+                                <th>Nom du cours</th>
+                                <th>Crédits</th>
+                                <th>Promotion</th>
+                                <th>Étudiants</th>
+                                <th>Année</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+            
+            coursFiltres.forEach((cours, i) => {
+                const promoNom = promoMap[cours.promotionId] || cours.promotionNom || 'N/A';
+                const nbEtudiants = allEtudiants.filter(e => e.promotion === cours.promotionId).length;
+                const anneeNom = cours.anneeAcademiqueNom || (anneeActiveActuelle ? anneeActiveActuelle.anneeNom : '-');
+                
+                html += `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td style="text-align:left;">
+                            <i class="bi bi-book-fill" style="color:var(--primary-blue);"></i> 
+                            <strong>${escapeHtml(cours.nom)}</strong>
+                        </td>
+                        <td><span class="badge-credit">${cours.credits || 0}</span></td>
+                        <td><span class="badge-promo">${escapeHtml(promoNom)}</span></td>
+                        <td><span class="badge-etudiants">${nbEtudiants}</span></td>
+                        <td><span class="badge-annee">${escapeHtml(anneeNom)}</span></td>
+                    </tr>`;
+            });
+            
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+        
+        function mettreAJourStatsCours() {
+            const el1 = document.getElementById('totalCours');
+            const el2 = document.getElementById('totalCredits');
+            const el3 = document.getElementById('totalPromotions');
+            const el4 = document.getElementById('totalEtudiants');
+            
+            if (el1) el1.textContent = allCours.length;
+            if (el2) el2.textContent = allCours.reduce((s, c) => s + (c.credits || 0), 0);
+            
+            const promosUniques = new Set(allCours.map(c => c.promotionId));
+            if (el3) el3.textContent = promosUniques.size;
+            
+            let totalEt = 0;
+            promosUniques.forEach(pid => { 
+                totalEt += allEtudiants.filter(e => e.promotion === pid).length; 
+            });
+            if (el4) el4.textContent = totalEt;
+        }
+        
+        // ============================================================
+        // ⭐ VUE : MES COTATIONS — REFONTE COMPLÈTE
+        // ============================================================
+        function renderCotationsView(container) {
+            container.innerHTML = `
+                <div class="spa-view active">
+                    <div class="view-header">
+                        <h4><i class="bi bi-pencil-square"></i> Gestion des Cotations</h4>
+                        <button class="btn-back-view" onclick="loadView('home')">
+                            <i class="bi bi-arrow-left"></i> Accueil
+                        </button>
+                    </div>
+                    
+                    <div class="content-card">
+                        <div class="info-alert">
+                            <i class="bi bi-info-circle-fill"></i>
+                            <strong>Nouvelle formule :</strong> TD /2.5, TP /2.5, Interro /5 — Moyenne finale /10.
+                            <br>
+                            <small>
+                                <i class="bi bi-lightbulb"></i> 
+                                Vous pouvez attribuer <strong>un bonus allant jusqu'à +2</strong> sur chaque colonne 
+                                (ex : TD max saisissable = 4.5/2.5, Interro max saisissable = 7/5). 
+                                Toute valeur au-delà sera automatiquement ramenée au plafond.
+                            </small>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-5 mb-3">
+                                <label class="form-label"><i class="bi bi-trophy-fill"></i> Promotion</label>
+                                <select class="form-select" id="promotionSelect">
+                                    <option value="">-- Chargement... --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-5 mb-3">
+                                <label class="form-label"><i class="bi bi-book-fill"></i> Cours</label>
+                                <select class="form-select" id="coursSelect" disabled>
+                                    <option value="">-- Sélectionner d'abord une promotion --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-3 d-flex align-items-end">
+                                <button class="btn-export w-100" id="exportBtn" disabled>
+                                    <i class="bi bi-download"></i> Exporter
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="import-zone">
+                            <h6><i class="bi bi-upload"></i> Importer le fichier Excel complété</h6>
+                            <div class="row">
+                                <div class="col-md-8 mb-2">
+                                    <input type="file" class="form-control" id="excelFileInput" accept=".xlsx, .xls">
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <button class="btn-import w-100" id="previewImportBtn" disabled>
+                                        <i class="bi bi-eye"></i> Aperçu
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="content-card" id="previewCard" style="display:none;">
+                        <div class="section-header">
+                            <h5><i class="bi bi-table"></i> Aperçu des cotes</h5>
+                            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                                <button class="btn-import" id="cancelPreviewBtn">
+                                    <i class="bi bi-x-circle"></i> Annuler
+                                </button>
+                                <button class="btn-publish" id="publishBtn">
+                                    <i class="bi bi-cloud-upload-fill"></i> Publier
+                                </button>
+                            </div>
+                        </div>
+                        <div class="stats-mini" id="statsMini"></div>
+                        <div class="table-responsive" id="previewTable"></div>
+                    </div>
+                    
+                    <div class="content-card">
+                        <div class="section-header">
+                            <h5><i class="bi bi-clock-history"></i> Historique des publications</h5>
+                            <button class="btn-export" id="exportAllHistoryBtn">
+                                <i class="bi bi-file-excel"></i> Exporter tout
+                            </button>
+                        </div>
+                        <div id="historyContainer">
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <p>Aucune publication</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            initCotationsView();
+            
+            function initCotationsView() {
+                let excelData = [];
+                let currentCoursId = '';
+                let currentPromoId = '';
+                
+                const promoSelect = document.getElementById('promotionSelect');
+                const coursSelect = document.getElementById('coursSelect');
+                const exportBtn = document.getElementById('exportBtn');
+                const excelInput = document.getElementById('excelFileInput');
+                const previewBtn = document.getElementById('previewImportBtn');
+                const cancelBtn = document.getElementById('cancelPreviewBtn');
+                const publishBtn = document.getElementById('publishBtn');
+                const exportAllHistoryBtn = document.getElementById('exportAllHistoryBtn');
+                const currentUserId = currentProfessor.id || currentProfessor.uid;
+                
+                // Charger cours + promotions
+                const unsub1 = db.collection('cours')
+                    .where('professeurId', '==', currentUserId)
+                    .onSnapshot(async (snap) => {
+                        allCours = [];
+                        const promoIds = new Set();
+                        snap.forEach(doc => {
+                            const data = doc.data();
+                            if (appartientAnneeActive(data)) {
+                                allCours.push({ id: doc.id, ...data });
+                                if (data.promotionId) promoIds.add(data.promotionId);
+                            }
+                        });
+                        
+                        allPromotions = [];
+                        for (const pid of promoIds) {
+                            try {
+                                const doc = await db.collection('promotions').doc(pid).get();
+                                if (doc.exists) allPromotions.push({ id: doc.id, ...doc.data() });
+                            } catch(e) {}
+                        }
+                        
+                        promoSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+                        allPromotions.forEach(p => {
+                            promoSelect.innerHTML += `<option value="${p.id}">${escapeHtml(p.nom)}</option>`;
+                        });
+                    }, (err) => console.error(err));
+                registerListener(unsub1);
+                
+                const unsub2 = db.collection('etudiants').onSnapshot(snap => {
+                    allEtudiants = [];
+                    snap.forEach(doc => allEtudiants.push({ id: doc.id, ...doc.data() }));
+                });
+                registerListener(unsub2);
+                
+                const unsub3 = db.collection('historiquePublications')
+                    .where('professeurId', '==', currentUserId)
+                    .onSnapshot(snap => {
+                        allHistorique = [];
+                        snap.forEach(doc => {
+                            const data = doc.data();
+                            if (!appartientAnneeActive(data)) return;
+                            allHistorique.push({ id: doc.id, ...data });
+                        });
+                        afficherHistorique();
+                    });
+                registerListener(unsub3);
+                
+                promoSelect.addEventListener('change', function() {
+                    currentPromoId = this.value;
+                    if (currentPromoId) {
+                        const coursProf = allCours.filter(c => c.promotionId === currentPromoId);
+                        coursSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+                        coursProf.forEach(c => {
+                            coursSelect.innerHTML += `<option value="${c.id}">${escapeHtml(c.nom)} (${c.credits || 0} cr)</option>`;
+                        });
+                        coursSelect.disabled = false;
+                    } else {
+                        coursSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+                        coursSelect.disabled = true;
+                    }
+                    exportBtn.disabled = true;
+                });
+                
+                coursSelect.addEventListener('change', function() {
+                    currentCoursId = this.value;
+                    exportBtn.disabled = !currentCoursId;
+                });
+                
+                // ⭐ EXPORT : 7 colonnes au lieu de 8
+                exportBtn.addEventListener('click', async () => {
+                    const cours = allCours.find(c => c.id === currentCoursId);
+                    const etudiantsPromo = allEtudiants.filter(e => e.promotion === currentPromoId);
+                    
+                    if (etudiantsPromo.length === 0) {
+                        showToast('Aucun étudiant', 'warning');
+                        return;
+                    }
+                    
+                    // ⭐ 7 COLONNES : N°, Matricule, Nom, TD/2.5, TP/2.5, Interro/5, Moyenne/10
+                    const data = [[
+                        'N°', 
+                        'Matricule', 
+                        'Nom étudiant', 
+                        'TD /2.5', 
+                        'TP /2.5', 
+                        'Interro /5', 
+                        'Moyenne /10'
+                    ]];
+                    
+                    etudiantsPromo.forEach((e, i) => {
+                        data.push([
+                            i + 1, 
+                            e.matricule || e.id, 
+                            e.nom || '', 
+                            '',  // TD
+                            '',  // TP
+                            '',  // Interro
+                            ''   // Moyenne (auto-calculée à l'import)
+                        ]);
+                    });
+                    
+                    const ws = XLSX.utils.aoa_to_sheet(data);
+                    
+                    // Ajuster la largeur des colonnes
+                    ws['!cols'] = [
+                        { wch: 5 },   // N°
+                        { wch: 15 },  // Matricule
+                        { wch: 30 },  // Nom
+                        { wch: 10 },  // TD
+                        { wch: 10 },  // TP
+                        { wch: 12 },  // Interro
+                        { wch: 12 }   // Moyenne
+                    ];
+                    
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, 'Cotations');
+                    
+                    const coursNom = (cours?.nom || 'cours').replace(/[^a-zA-Z0-9]/g, '_');
+                    const anneeLabel = anneeActiveActuelle ? anneeActiveActuelle.anneeNom.replace(/[^a-zA-Z0-9]/g, '_') : 'annee';
+                    XLSX.writeFile(wb, `cotation_${coursNom}_${anneeLabel}.xlsx`);
+                    showToast('✅ Fichier exporté (7 colonnes)', 'success');
+                });
+                
+                excelInput.addEventListener('change', function(e) {
+                    previewBtn.disabled = !e.target.files[0];
+                });
+                
+                // ⭐ IMPORT : lecture des 7 colonnes
+                previewBtn.addEventListener('click', () => {
+                    const file = excelInput.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        try {
+                            const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                            const sheet = wb.Sheets[wb.SheetNames[0]];
+                            const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+                            
+                            excelData = [];
+                            for (let i = 1; i < data.length; i++) {
+                                const row = data[i];
+                                if (!row[1] || !row[2]) continue;
+                                excelData.push(convertirLigneExcel(row));
+                            }
+                            
+                            afficherApercu();
+                            
+                            const nbPlafonnes = excelData.filter(d => {
+                                return d.td > COTATION_RULES.TD.maxBase ||
+                                       d.tp > COTATION_RULES.TP.maxBase ||
+                                       d.interro > COTATION_RULES.INTERRO.maxBase;
+                            }).length;
+                            
+                            if (nbPlafonnes > 0) {
+                                showToast(`⚠️ ${nbPlafonnes} ligne(s) ont des bonus appliqués`, 'warning');
+                            }
+                        } catch(err) {
+                            showToast('Erreur lecture Excel: ' + err.message, 'danger');
+                        }
+                    };
+                    reader.readAsArrayBuffer(file);
+                });
+                
+                cancelBtn.addEventListener('click', () => {
+                    document.getElementById('previewCard').style.display = 'none';
+                    excelData = [];
+                    excelInput.value = '';
+                });
+                
+                // ⭐ PUBLICATION : sauvegarde des nouvelles cotes
+                publishBtn.addEventListener('click', async () => {
+                    if (!anneeActiveActuelle || !anneeActiveActuelle.id) {
+                        showToast('Aucune année active', 'danger');
+                        return;
+                    }
+                    
+                    const batch = db.batch();
+                    const cours = allCours.find(c => c.id === currentCoursId);
+                    const etudiantsPromo = allEtudiants.filter(e => e.promotion === currentPromoId);
+                    let count = 0;
+                    
+                    excelData.forEach(row => {
+                        const etudiant = etudiantsPromo.find(e => 
+                            e.matricule === row.matricule || e.id === row.matricule
+                        );
+                        if (!etudiant) return;
+                        
+                        const docId = `${currentCoursId}_${etudiant.id}`;
+                        const ref = db.collection('cotations').doc(docId);
+                        
+                        batch.set(ref, {
+                            coursId: currentCoursId,
+                            coursNom: cours?.nom || '',
+                            promotionId: currentPromoId,
+                            etudiantId: etudiant.id,
+                            etudiantNom: etudiant.nom,
+                            etudiantMatricule: etudiant.matricule || etudiant.id,
+                            professeurId: currentUserId,
+                            professeurNom: currentProfessor.nomComplet,
+                            // ⭐ Nouvelles colonnes
+                            td: row.td,
+                            tp: row.tp,
+                            interro: row.interro,
+                            moyenne: row.moyenne,
+                            // ⭐ Plus de présence !
+                            anneeAcademiqueId: anneeActiveActuelle.id,
+                            anneeAcademiqueNom: anneeActiveActuelle.anneeNom,
+                            dateMiseAJour: firebase.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true });
+                        count++;
+                    });
+                    
+                    if (count > 0) {
+                        await batch.commit();
+                        
+                        await db.collection('historiquePublications').add({
+                            coursId: currentCoursId,
+                            coursNom: cours?.nom || '',
+                            promotionId: currentPromoId,
+                            promotionNom: allPromotions.find(p => p.id === currentPromoId)?.nom || '',
+                            professeurId: currentUserId,
+                            professeurNom: currentProfessor.nomComplet,
+                            nombreEtudiants: count,
+                            anneeAcademiqueId: anneeActiveActuelle.id,
+                            anneeAcademiqueNom: anneeActiveActuelle.anneeNom,
+                            datePublication: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        
+                        showToast(`✅ ${count} cotes publiées !`, 'success');
+                        document.getElementById('previewCard').style.display = 'none';
+                        excelData = [];
+                    } else {
+                        showToast('Aucun étudiant correspondant', 'warning');
+                    }
+                });
+                
+                exportAllHistoryBtn.addEventListener('click', () => {
+                    if (allHistorique.length === 0) {
+                        showToast('Aucun historique', 'warning');
+                        return;
+                    }
+                    const data = [['Cours', 'Promotion', 'Nombre', 'Année', 'Date']];
+                    allHistorique.forEach(h => {
+                        data.push([h.coursNom, h.promotionNom, h.nombreEtudiants, h.anneeAcademiqueNom, formaterDate(h.datePublication)]);
+                    });
+                    const ws = XLSX.utils.aoa_to_sheet(data);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, 'Historique');
+                    XLSX.writeFile(wb, `historique_${new Date().toISOString().slice(0,10)}.xlsx`);
+                });
+                
+                // ⭐ AFFICHAGE APERÇU : 6 colonnes visibles
+                function afficherApercu() {
+                    if (excelData.length === 0) return;
+                    
+                    const previewCard = document.getElementById('previewCard');
+                    previewCard.style.display = 'block';
+                    previewCard.scrollIntoView({ behavior: 'smooth' });
+                    
+                    const etudiantsPromo = allEtudiants.filter(e => e.promotion === currentPromoId);
+                    
+                    const dataComplete = excelData.map(row => {
+                        const etudiant = etudiantsPromo.find(e => 
+                            e.matricule === row.matricule || e.id === row.matricule
+                        );
+                        return {
+                            ...row,
+                            etudiantId: etudiant?.id,
+                            etudiantNom: etudiant?.nom || row.nom,
+                            existe: !!etudiant
+                        };
+                    });
+                    
+                    const total = dataComplete.length;
+                    const valides = dataComplete.filter(d => d.existe).length;
+                    const moyennes = dataComplete.filter(d => d.existe).map(d => d.moyenne);
+                    const moyenneClasse = moyennes.length > 0 
+                        ? (moyennes.reduce((a,b) => a+b, 0) / moyennes.length).toFixed(2) 
+                        : 0;
+                    const reussis = moyennes.filter(m => m >= 5).length;
+                    
+                    document.getElementById('statsMini').innerHTML = `
+                        <div class="stat-pill"><div><div class="lbl">Total</div><div class="val">${total}</div></div></div>
+                        <div class="stat-pill"><div><div class="lbl">Trouvés</div><div class="val">${valides}</div></div></div>
+                        <div class="stat-pill"><div><div class="lbl">Moy. classe</div><div class="val">${moyenneClasse}</div></div></div>
+                        <div class="stat-pill"><div><div class="lbl">Réussite</div><div class="val">${reussis}</div></div></div>
+                    `;
+                    
+                    let html = `<table class="preview-table"><thead><tr>
+                        <th>N°</th>
+                        <th>Matricule</th>
+                        <th>Nom</th>
+                        <th>TD /2.5</th>
+                        <th>TP /2.5</th>
+                        <th>Interro /5</th>
+                        <th>Moyenne /10</th>
+                        <th>État</th>
+                    </tr></thead><tbody>`;
+                    
+                    dataComplete.forEach((d, i) => {
+                        const tdBonus = d.td > COTATION_RULES.TD.maxBase;
+                        const tpBonus = d.tp > COTATION_RULES.TP.maxBase;
+                        const interroBonus = d.interro > COTATION_RULES.INTERRO.maxBase;
+                        
+                        html += `<tr>
+                            <td>${i+1}</td>
+                            <td><code>${escapeHtml(d.matricule)}</code></td>
+                            <td>${escapeHtml(d.etudiantNom)}</td>
+                            <td style="${tdBonus ? 'color:#ff9800;font-weight:bold;' : ''}">${d.td.toFixed(1)}</td>
+                            <td style="${tpBonus ? 'color:#ff9800;font-weight:bold;' : ''}">${d.tp.toFixed(1)}</td>
+                            <td style="${interroBonus ? 'color:#ff9800;font-weight:bold;' : ''}">${d.interro.toFixed(1)}</td>
+                            <td class="${d.moyenne >= 5 ? 'text-success' : 'text-danger'}" style="font-weight:bold;">${d.moyenne.toFixed(2)}</td>
+                            <td>${d.existe ? '✅' : '❌'}</td>
+                        </tr>`;
+                    });
+                    
+                    html += '</tbody></table>';
+                    document.getElementById('previewTable').innerHTML = html;
+                }
+                
+                function afficherHistorique() {
+                    const container = document.getElementById('historyContainer');
+                    if (!container) return;
+                    
+                    if (allHistorique.length === 0) {
+                        container.innerHTML = `<div class="empty-state"><i class="bi bi-inbox"></i><p>Aucune publication</p></div>`;
+                        return;
+                    }
+                    
+                    let html = '';
+                    allHistorique.forEach(h => {
+                        html += `
+                            <div class="history-item">
+                                <div class="h-info">
+                                    <div class="h-title"><i class="bi bi-book-fill"></i> ${escapeHtml(h.coursNom)} 
+                                        <span class="badge-credit">${h.nombreEtudiants || 0}</span>
+                                    </div>
+                                    <div class="h-detail"><i class="bi bi-trophy-fill"></i> ${escapeHtml(h.promotionNom)} 
+                                        <span class="badge-annee">${escapeHtml(h.anneeAcademiqueNom || '')}</span>
+                                    </div>
+                                </div>
+                                <div class="h-date"><i class="bi bi-clock"></i> ${formaterDate(h.datePublication)}</div>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                }
+            }
+        }
+        
+        // ============================================================
+        // ⭐ VUE : DÉLIBÉRATION
+        // ============================================================
+        function renderDeliberationView(container) {
+            container.innerHTML = `
+                <div class="spa-view active">
+                    <div class="view-header">
+                        <h4><i class="bi bi-clipboard2-check-fill"></i> Délibération & Cotes d'Examen</h4>
+                        <button class="btn-back-view" onclick="loadView('home')">
+                            <i class="bi bi-arrow-left"></i> Accueil
+                        </button>
+                    </div>
+                    
+                    <div class="content-card">
+                        <h5 style="color:var(--primary-blue);margin-bottom:20px;">
+                            <i class="bi bi-funnel-fill"></i> Étape 1 — Sélection
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Promotion</label>
+                                <select class="form-select" id="delibPromo">
+                                    <option value="">-- Chargement... --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Cours</label>
+                                <select class="form-select" id="delibCours" disabled>
+                                    <option value="">-- Sélectionner --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Session</label>
+                                <select class="form-select" id="delibSession">
+                                    <option value="">-- Sélectionner --</option>
+                                    <option value="MI_SESSION">Mi-Session</option>
+                                    <option value="RECOURS_MS">Recours Mi-Session</option>
+                                    <option value="RATTRAPAGE_1">Rattrapage 1</option>
+                                    <option value="SESSION_1">Session 1</option>
+                                    <option value="RECOURS_S1">Recours Session 1</option>
+                                    <option value="RATTRAPAGE_2">Rattrapage 2</option>
+                                    <option value="RECOURS_RATT">Recours Rattrapage</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="margin-top:15px;display:flex;flex-wrap:wrap;gap:10px;">
+                            <button class="btn-export" id="delibExportBtn" disabled>
+                                <i class="bi bi-file-earmark-excel-fill"></i> Exporter bulletin
+                            </button>
+                            <button class="btn-import" id="delibImportBtn" disabled>
+                                <i class="bi bi-file-earmark-arrow-up-fill"></i> Importer fichier
+                            </button>
+                            <input type="file" id="delibFile" accept=".xlsx,.xls" hidden>
+                        </div>
+                    </div>
+                    
+                    <div class="content-card" id="delibPreview" style="display:none;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:15px;">
+                            <h5 style="color:var(--primary-blue);margin:0;">
+                                <i class="bi bi-eye-fill"></i> Étape 2 — Aperçu
+                            </h5>
+                            <span style="background:#fff3cd;color:#856404;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;">
+                                <i class="bi bi-pencil-square"></i> BROUILLON
+                            </span>
+                        </div>
+                        <div class="stats-mini" id="delibStats"></div>
+                        <div class="table-responsive">
+                            <table class="preview-table">
+                                <thead>
+                                    <tr>
+                                        <th>N°</th><th>Matricule</th><th>Nom complet</th><th>Cote /10</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="delibPreviewBody"></tbody>
+                            </table>
+                        </div>
+                        <div style="margin-top:15px;text-align:right;">
+                            <button class="btn-publish" id="delibPublishBtn" disabled>
+                                <i class="bi bi-cloud-arrow-up-fill"></i> Publier les cotes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            initDeliberationView();
+            
+            function initDeliberationView() {
+                let delibStudents = [];
+                let delibCotes = {};
+                let currentDelibCoursId = '';
+                let currentDelibPromoId = '';
+                let currentDelibSession = '';
+                
+                const promoSelect = document.getElementById('delibPromo');
+                const coursSelect = document.getElementById('delibCours');
+                const sessionSelect = document.getElementById('delibSession');
+                const exportBtn = document.getElementById('delibExportBtn');
+                const importBtn = document.getElementById('delibImportBtn');
+                const fileInput = document.getElementById('delibFile');
+                const publishBtn = document.getElementById('delibPublishBtn');
+                const currentUserId = currentProfessor.id || currentProfessor.uid;
+                
+                db.collection('cours')
+                    .where('professeurId', '==', currentUserId)
+                    .get().then(async snap => {
+                        const promoIds = new Set();
+                        allCours = [];
+                        snap.forEach(doc => {
+                            const data = doc.data();
+                            if (appartientAnneeActive(data)) {
+                                allCours.push({ id: doc.id, ...data });
+                                if (data.promotionId) promoIds.add(data.promotionId);
+                            }
+                        });
+                        
+                        allPromotions = [];
+                        for (const pid of promoIds) {
+                            try {
+                                const doc = await db.collection('promotions').doc(pid).get();
+                                if (doc.exists) allPromotions.push({ id: doc.id, ...doc.data() });
+                            } catch(e) {}
+                        }
+                        
+                        promoSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+                        allPromotions.forEach(p => {
+                            promoSelect.innerHTML += `<option value="${p.id}">${escapeHtml(p.nom)}</option>`;
+                        });
+                    });
+                
+                promoSelect.addEventListener('change', function() {
+                    currentDelibPromoId = this.value;
+                    delibCotes = {};
+                    delibStudents = [];
+                    document.getElementById('delibPreview').style.display = 'none';
+                    
+                    if (this.value) {
+                        const coursFiltres = allCours.filter(c => c.promotionId === this.value);
+                        coursSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+                        coursFiltres.forEach(c => {
+                            coursSelect.innerHTML += `<option value="${c.id}">${escapeHtml(c.nom)}</option>`;
+                        });
+                        coursSelect.disabled = false;
+                    } else {
+                        coursSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+                        coursSelect.disabled = true;
+                    }
+                    updateDelibButtons();
+                });
+                
+                coursSelect.addEventListener('change', function() {
+                    currentDelibCoursId = this.value;
+                    updateDelibButtons();
+                });
+                
+                sessionSelect.addEventListener('change', function() {
+                    currentDelibSession = this.value;
+                    updateDelibButtons();
+                });
+                
+                function updateDelibButtons() {
+                    const ready = currentDelibPromoId && currentDelibCoursId && currentDelibSession;
+                    exportBtn.disabled = !ready;
+                    importBtn.disabled = !ready;
+                }
+                
+                exportBtn.addEventListener('click', async () => {
+                    if (!anneeActiveActuelle) {
+                        showToast('Aucune année active', 'danger');
+                        return;
+                    }
+                    
+                    const snap = await db.collection('etudiants').where('promotion', '==', currentDelibPromoId).get();
+                    delibStudents = [];
+                    snap.forEach(doc => delibStudents.push({ id: doc.id, ...doc.data() }));
+                    delibStudents.sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
+                    
+                    const data = [['N°', 'Matricule', 'Nom complet', 'Cote /10']];
+                    delibStudents.forEach((s, i) => {
+                        data.push([i + 1, s.matricule || '', s.nomComplet || s.nom || '', '']);
+                    });
+                    
+                    const ws = XLSX.utils.aoa_to_sheet(data);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, 'Bulletin');
+                    XLSX.writeFile(wb, `bulletin_${new Date().toISOString().slice(0,10)}.xlsx`);
+                    showToast('📥 Bulletin exporté', 'success');
+                });
+                
+                importBtn.addEventListener('click', () => fileInput.click());
+                
+                fileInput.addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    if (delibStudents.length === 0) {
+                        const snap = await db.collection('etudiants').where('promotion', '==', currentDelibPromoId).get();
+                        delibStudents = [];
+                        snap.forEach(doc => delibStudents.push({ id: doc.id, ...doc.data() }));
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = evt => {
+                        try {
+                            const wb = XLSX.read(new Uint8Array(evt.target.result), { type: 'array' });
+                            const sheet = wb.Sheets[wb.SheetNames[0]];
+                            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+                            
+                            const mapCotes = {};
+                            for (let i = 1; i < rows.length; i++) {
+                                const row = rows[i];
+                                const mat = String(row[1] || '').trim();
+                                const coteStr = String(row[3] || '').replace(',', '.').trim();
+                                if (!mat || !coteStr) continue;
+                                const cote = parseFloat(coteStr);
+                                if (!isNaN(cote) && cote >= 0 && cote <= 10) {
+                                    mapCotes[mat] = cote;
+                                }
+                            }
+                            
+                            delibCotes = {};
+                            let matched = 0;
+                            delibStudents.forEach(s => {
+                                const m = String(s.matricule || '').trim();
+                                if (mapCotes[m] !== undefined) {
+                                    delibCotes[s.id] = mapCotes[m];
+                                    matched++;
+                                }
+                            });
+                            
+                            afficherDelibApercu();
+                            showToast(`✅ ${matched} cotes importées`, 'success');
+                        } catch(err) {
+                            showToast('Erreur lecture: ' + err.message, 'danger');
+                        }
+                    };
+                    reader.readAsArrayBuffer(file);
+                    e.target.value = '';
+                });
+                
+                function afficherDelibApercu() {
+                    const preview = document.getElementById('delibPreview');
+                    preview.style.display = 'block';
+                    preview.scrollIntoView({ behavior: 'smooth' });
+                    
+                    const total = delibStudents.length;
+                    const saisies = Object.keys(delibCotes).length;
+                    
+                    document.getElementById('delibStats').innerHTML = `
+                        <div class="stat-pill"><div><div class="lbl">Étudiants</div><div class="val">${total}</div></div></div>
+                        <div class="stat-pill"><div><div class="lbl">Cotes importées</div><div class="val">${saisies}</div></div></div>
+                        <div class="stat-pill"><div><div class="lbl">Manquantes</div><div class="val">${total - saisies}</div></div></div>
+                    `;
+                    
+                    let html = '';
+                    delibStudents.forEach((s, i) => {
+                        const cote = delibCotes[s.id];
+                        const coteDisplay = cote !== undefined ? cote.toFixed(1) : '—';
+                        html += `<tr>
+                            <td>${i + 1}</td>
+                            <td><code>${escapeHtml(s.matricule || '')}</code></td>
+                            <td>${escapeHtml(s.nomComplet || s.nom || '')}</td>
+                            <td style="font-weight:bold;color:${cote !== undefined ? 'var(--primary-blue)' : '#dc3545'};">${coteDisplay}</td>
+                        </tr>`;
+                    });
+                    document.getElementById('delibPreviewBody').innerHTML = html;
+                    
+                    publishBtn.disabled = !(total > 0 && saisies === total);
+                }
+                
+                publishBtn.addEventListener('click', async () => {
+                    if (!anneeActiveActuelle) {
+                        showToast('Aucune année active', 'danger');
+                        return;
+                    }
+                    
+                    const docId = `${currentDelibCoursId}_${currentDelibSession}_${anneeActiveActuelle.id}`;
+                    
+                    await db.collection('deliberations').doc(docId).set({
+                        coursId: currentDelibCoursId,
+                        promotionId: currentDelibPromoId,
+                        session: currentDelibSession,
+                        professeurEmail: currentProfessor.email || '',
+                        professeurNom: currentProfessor.nomComplet || '',
+                        professeurId: currentUserId,
+                        cotes: delibCotes,
+                        published: true,
+                        anneeAcademiqueId: anneeActiveActuelle.id,
+                        anneeAcademiqueNom: anneeActiveActuelle.anneeNom,
+                        publishedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                    
+                    showToast('🎉 Cotes publiées !', 'success');
+                    document.getElementById('delibPreview').style.display = 'none';
+                });
+            }
+        }
+        
+        // ============================================================
+        // ⭐ VUE : MON HORAIRE
+        // ============================================================
+        function renderHoraireView(container) {
+            container.innerHTML = `
+                <div class="spa-view active">
+                    <div class="view-header">
+                        <h4><i class="bi bi-calendar-week"></i> Mon Emploi du Temps</h4>
+                        <button class="btn-back-view" onclick="loadView('home')">
+                            <i class="bi bi-arrow-left"></i> Accueil
+                        </button>
+                    </div>
+                    
+                    <div class="content-card">
+                        <div class="semaine-nav">
+                            <label><i class="bi bi-calendar-range"></i> <strong>Semaine :</strong></label>
+                            <select id="semaineSelect">
+                                <option value="">Chargement...</option>
+                            </select>
+                            <span id="nbCoursBadge" class="badge-credit">0 cours</span>
+                        </div>
+                        <div id="semaineGridContainer">
+                            <div class="spa-loading">
+                                <div class="spinner"></div>
+                                <p>Chargement...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            initHoraireView();
+            
+            function initHoraireView() {
+                const semainesDisponibles = genererSemaines();
+                const semaineSelect = document.getElementById('semaineSelect');
+                
+                semainesDisponibles.forEach(s => {
+                    const prefix = s.estActuelle ? '📍 ' : '';
+                    semaineSelect.innerHTML += `<option value="${s.id}">${prefix}${s.label}</option>`;
+                });
+                
+                const semaineActuelle = semainesDisponibles.find(s => s.estActuelle);
+                semaineSelect.value = semaineActuelle ? semaineActuelle.id : semainesDisponibles[0]?.id || '';
+                let selectedSemaineId = semaineSelect.value;
+                const currentUserId = currentProfessor.id || currentProfessor.uid;
+                
+                const unsub = db.collection('horaires')
+                    .where('professeurId', '==', currentUserId)
+                    .onSnapshot(snap => {
+                        allHoraires = [];
+                        snap.forEach(doc => {
+                            const data = doc.data();
+                            if (appartientAnneeActive(data)) {
+                                allHoraires.push({ id: doc.id, ...data });
+                            }
+                        });
+                        afficherGrilleHoraire(selectedSemaineId);
+                    });
+                registerListener(unsub);
+                
+                semaineSelect.addEventListener('change', function() {
+                    selectedSemaineId = this.value;
+                    afficherGrilleHoraire(selectedSemaineId);
+                });
+                
+                function genererSemaines() {
+                    const semaines = [];
+                    const maintenant = new Date();
+                    for (let i = -1; i <= 3; i++) {
+                        const debut = getLundiDate(maintenant, i);
+                        const fin = new Date(debut);
+                        fin.setDate(fin.getDate() + 6);
+                        const debutStr = debut.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+                        const finStr = fin.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                        semaines.push({
+                            id: `S${debut.getFullYear()}-${String(debut.getMonth()+1).padStart(2,'0')}-${String(debut.getDate()).padStart(2,'0')}`,
+                            debut, fin,
+                            label: `Semaine du ${debutStr} au ${finStr}`,
+                            estActuelle: i === 1
+                        });
+                    }
+                    return semaines;
+                }
+                
+                function getLundiDate(date, decalage = 0) {
+                    const d = new Date(date);
+                    d.setDate(d.getDate() + (decalage * 7));
+                    const jour = d.getDay();
+                    const diff = d.getDate() - jour + (jour === 0 ? -6 : 1);
+                    const lundi = new Date(d.setDate(diff));
+                    lundi.setHours(0, 0, 0, 0);
+                    return lundi;
+                }
+                
+                function afficherGrilleHoraire(semaineId) {
+                    const container = document.getElementById('semaineGridContainer');
+                    if (!container) return;
+                    
+                    const jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+                    const horairesSemaine = allHoraires.filter(h => h.semaineId === semaineId);
+                    
+                    const maintenant = new Date();
+                    const aujourdhui = maintenant.getDay();
+                    const jourActuelIndex = aujourdhui === 0 ? 5 : aujourdhui - 1;
+                    
+                    let html = '<div class="semaine-grid">';
+                    let totalCours = 0;
+                    
+                    jours.forEach((jour, index) => {
+                        const estAujourdhui = index === jourActuelIndex;
+                        const horairesDuJour = horairesSemaine
+                            .filter(h => h.jour === jour)
+                            .sort((a, b) => (a.debut || '').localeCompare(b.debut || ''));
+                        
+                        totalCours += horairesDuJour.length;
+                        
+                        html += `<div class="jour-colonne">
+                            <div class="jour-titre ${estAujourdhui ? 'aujourdhui' : ''}">
+                                ${estAujourdhui ? '<i class="bi bi-star-fill"></i> ' : ''}${jour}
+                                <span style="font-size:10px;opacity:0.7;display:block;">${horairesDuJour.length} cours</span>
+                            </div>`;
+                        
+                        if (horairesDuJour.length === 0) {
+                            html += `<div style="text-align:center;padding:20px;color:#ccc;">
+                                <i class="bi bi-dash-circle" style="font-size:24px;"></i>
+                                <p style="font-size:11px;margin-top:5px;">Aucun cours</p>
+                            </div>`;
+                        } else {
+                            horairesDuJour.forEach(h => {
+                                html += `
+                                <div class="horaire-item">
+                                    <div class="horaire-heure"><i class="bi bi-clock"></i> ${h.debut || '--:--'} - ${h.fin || '--:--'}</div>
+                                    <div class="horaire-cours">${escapeHtml(h.coursNom || 'Cours')}</div>
+                                    <div class="horaire-salle"><i class="bi bi-geo-alt"></i> ${escapeHtml(h.salle || 'N/A')}</div>
+                                    <span class="horaire-promo">${escapeHtml(h.promotionNom || '')}</span>
+                                </div>`;
+                            });
+                        }
+                        html += `</div>`;
+                    });
+                    
+                    html += '</div>';
+                    container.innerHTML = html;
+                    
+                    const badge = document.getElementById('nbCoursBadge');
+                    if (badge) badge.textContent = `${totalCours} cours`;
+                }
+            }
+        }
+        
+        // ============================================================
+        // ⭐ VUE : PROJETS
+        // ============================================================
+        function renderProjetsView(container) {
+            const DEPARTEMENTS = [
+                "Agronomie Générale", "Économie Agricole", "Sciences du Sol",
+                "Protection des Végétaux", "Zootechnie", "Génie Rural"
+            ];
+            
+            container.innerHTML = `
+                <div class="spa-view active">
+                    <div class="view-header">
+                        <h4><i class="bi bi-kanban-fill"></i> Suivi de Projets</h4>
+                        <button class="btn-back-view" onclick="loadView('home')">
+                            <i class="bi bi-arrow-left"></i> Accueil
+                        </button>
+                    </div>
+                    
+                    <div class="content-card">
+                        <h5 style="color:var(--primary-blue);">
+                            <i class="bi bi-search"></i> Rechercher un étudiant
+                        </h5>
+                        <p style="color:#888;font-size:13px;">
+                            Entrez le matricule pour afficher ses informations.
+                            <span id="projetsCount"></span>
+                        </p>
+                        <input type="text" class="form-control" id="searchMatricule" placeholder="Matricule...">
+                        <div id="searchResult" style="margin-top:15px;"></div>
+                    </div>
+                    
+                    <div id="projectDetailSection"></div>
+                </div>
+            `;
+            
+            initProjetsView();
+            
+            function initProjetsView() {
+                const currentUserId = currentProfessor.id || currentProfessor.uid;
+                
+                const unsub = db.collection('projets')
+                    .where('directeurId', '==', currentUserId)
+                    .onSnapshot(snap => {
+                        myProjects = [];
+                        snap.forEach(doc => {
+                            const data = doc.data();
+                            if (appartientAnneeActive(data)) {
+                                myProjects.push({ id: doc.id, ...data });
+                            }
+                        });
+                        
+                        const count = document.getElementById('projetsCount');
+                        if (count) count.textContent = `(${myProjects.length} étudiant(s))`;
+                    });
+                registerListener(unsub);
+                
+                db.collection('promotions').get().then(snap => {
+                    allPromotions = [];
+                    snap.forEach(doc => allPromotions.push({ id: doc.id, ...doc.data() }));
+                });
+                
+                const searchInput = document.getElementById('searchMatricule');
+                searchInput.addEventListener('input', function() {
+                    const mat = this.value.trim().toLowerCase();
+                    const resultDiv = document.getElementById('searchResult');
+                    
+                    if (mat.length < 2) {
+                        resultDiv.innerHTML = '';
+                        document.getElementById('projectDetailSection').innerHTML = '';
+                        return;
+                    }
+                    
+                    const project = myProjects.find(p => 
+                        p.etudiantMatricule && p.etudiantMatricule.toLowerCase().includes(mat)
+                    );
+                    
+                    if (project) {
+                        resultDiv.innerHTML = `
+                            <div class="student-detail-card" style="cursor:pointer;" onclick="window.displayProjectDetail('${project.id}', ${JSON.stringify(DEPARTEMENTS).replace(/"/g, '&quot;')})">
+                                <strong><i class="bi bi-person-check"></i> ${escapeHtml(project.etudiantNom || 'N/A')}</strong>
+                                <br><small>Matricule: ${escapeHtml(project.etudiantMatricule)} | Progression: ${(project.etape || 0) * 25}%</small>
+                            </div>
+                        `;
+                        window.displayProjectDetail(project.id, DEPARTEMENTS);
+                    } else {
+                        resultDiv.innerHTML = '<p class="text-muted mt-2"><i class="bi bi-exclamation-circle"></i> Aucun étudiant ne correspond.</p>';
+                        document.getElementById('projectDetailSection').innerHTML = '';
+                    }
+                });
+            }
+            
+            window.displayProjectDetail = function(projectId, depts) {
+                const project = myProjects.find(p => p.id === projectId);
+                if (!project) return;
+                
+                const detailSection = document.getElementById('projectDetailSection');
+                const currentEtape = project.etape || 0;
+                const pourcentage = currentEtape * 25;
+                const promotionName = allPromotions.find(p => p.id === project.promotion)?.nom || project.promotion || 'N/A';
+                const anneeLabel = anneeActiveActuelle ? anneeActiveActuelle.anneeNom : '-';
+                
+                detailSection.innerHTML = `
+                    <div class="content-card">
+                        <h5 style="color:var(--primary-blue);">
+                            <i class="bi bi-file-earmark-text-fill"></i> Détails du Projet
+                        </h5>
+                        <p style="color:#888;font-size:13px;">
+                            Étudiant : <strong>${escapeHtml(project.etudiantNom || 'N/A')}</strong>
+                            <span class="badge-annee">${escapeHtml(anneeLabel)}</span>
+                        </p>
+                        
+                        <div class="student-detail-card">
+                            <div class="detail-row"><i class="bi bi-person-fill"></i><strong>Nom :</strong><span>${escapeHtml(project.etudiantNom || '')}</span></div>
+                            <div class="detail-row"><i class="bi bi-upc-scan"></i><strong>Matricule :</strong><span>${escapeHtml(project.etudiantMatricule || '')}</span></div>
+                            <div class="detail-row"><i class="bi bi-mortarboard-fill"></i><strong>Promotion :</strong><span>${escapeHtml(promotionName)}</span></div>
+                            <div class="detail-row"><i class="bi bi-building"></i><strong>Département :</strong><span>${escapeHtml(project.departementId || 'Non défini')}</span></div>
+                            <div class="detail-row"><i class="bi bi-journal-text"></i><strong>Sujet :</strong><span>${escapeHtml(project.sujet || 'Non renseigné')}</span></div>
+                        </div>
+                        
+                        <div style="margin-top:20px;">
+                            <label class="form-label">Sélectionner l'étape</label>
+                            <select class="form-select" id="etapeSelect" style="margin-bottom:10px;">
+                                <option value="0" ${currentEtape === 0 ? 'selected' : ''}>0 - Aucune étape (0%)</option>
+                                <option value="1" ${currentEtape === 1 ? 'selected' : ''}>Étape 1 - 25%</option>
+                                <option value="2" ${currentEtape === 2 ? 'selected' : ''}>Étape 2 - 50%</option>
+                                <option value="3" ${currentEtape === 3 ? 'selected' : ''}>Étape 3 - 75%</option>
+                                <option value="4" ${currentEtape === 4 ? 'selected' : ''}>Étape 4 - Feu Vert (100%)</option>
+                            </select>
+                            <button class="btn-action" onclick="window.validerEtape('${project.id}')">
+                                <i class="bi bi-check-lg"></i> Valider l'étape
+                            </button>
+                        </div>
+                        
+                        <div style="margin-top:15px;">
+                            <label class="form-label">Progression : ${pourcentage}%</label>
+                            <div style="height:25px;background:#e9ecef;border-radius:12px;overflow:hidden;">
+                                <div style="height:100%;width:${pourcentage}%;background:${pourcentage >= 100 ? '#28a745' : '#ffb347'};transition:width 0.5s;"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            };
+            
+            window.validerEtape = async function(projectId) {
+                const select = document.getElementById('etapeSelect');
+                if (!select) return;
+                const nouvelleEtape = parseInt(select.value);
+                
+                if (!anneeActiveActuelle) {
+                    showToast('Aucune année active', 'danger');
+                    return;
+                }
+                
+                try {
+                    await db.collection('projets').doc(projectId).update({
+                        etape: nouvelleEtape,
+                        anneeAcademiqueId: anneeActiveActuelle.id,
+                        anneeAcademiqueNom: anneeActiveActuelle.anneeNom,
+                        derniereMiseAJour: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    showToast(`✅ Étape ${nouvelleEtape * 25}% validée !`, 'success');
+                    window.displayProjectDetail(projectId);
+                } catch(e) {
+                    showToast('❌ Erreur: ' + e.message, 'danger');
+                }
+            };
+        }
+        
+        // ============================================================
+        // ⭐ VUE : PUBLICATIONS DE SUJETS
+        // ============================================================
+        function renderPublicationsView(container) {
+            const DEPARTEMENTS = [
+                "Agronomie Générale", "Économie Agricole", "Sciences du Sol",
+                "Protection des Végétaux", "Zootechnie", "Génie Rural"
+            ];
+            
+            const anneeLabel = anneeActiveActuelle ? anneeActiveActuelle.anneeNom : '-';
+            
+            container.innerHTML = `
+                <div class="spa-view active">
+                    <div class="view-header">
+                        <h4><i class="bi bi-megaphone-fill"></i> Publication de Sujets</h4>
+                        <button class="btn-back-view" onclick="loadView('home')">
+                            <i class="bi bi-arrow-left"></i> Accueil
+                        </button>
+                    </div>
+                    
+                    <div class="content-card">
+                        <h5 style="color:var(--primary-blue);">Publier un nouveau sujet</h5>
+                        <p style="color:#888;font-size:13px;">
+                            Année active : <strong>${escapeHtml(anneeLabel)}</strong>
+                        </p>
+                        
+                        <form id="publicationForm">
+                            <div class="mb-3">
+                                <label class="form-label">Département *</label>
+                                <select class="form-select" id="sujetDepartement" required>
+                                    <option value="">-- Sélectionner --</option>
+                                    ${DEPARTEMENTS.map(d => `<option value="${d}">${d}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Titre du sujet *</label>
+                                <input type="text" class="form-control" id="sujetTitre" required minlength="10" placeholder="Ex: Étude des sols...">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description *</label>
+                                <textarea class="form-control" id="sujetDescription" rows="5" required minlength="20"></textarea>
+                            </div>
+                            <button type="submit" class="btn-primary-custom" style="width:100%;" id="publishSujetBtn">
+                                <i class="bi bi-cloud-upload-fill"></i> Publier le sujet
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="content-card">
+                        <h5 style="color:var(--primary-blue);">Mes sujets publiés</h5>
+                        <div id="sujetsList">
+                            <div class="spa-loading"><div class="spinner"></div><p>Chargement...</p></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            initPublicationsView(DEPARTEMENTS);
+            
+            function initPublicationsView(depts) {
+                const form = document.getElementById('publicationForm');
+                const currentUserId = currentProfessor.id || currentProfessor.uid;
+                
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const dept = document.getElementById('sujetDepartement').value;
+                    const titre = document.getElementById('sujetTitre').value.trim();
+                    const desc = document.getElementById('sujetDescription').value.trim();
+                    
+                    if (!dept || titre.length < 10 || desc.length < 20) {
+                        showToast('Vérifiez les champs', 'warning');
+                        return;
+                    }
+                    
+                    if (!anneeActiveActuelle) {
+                        showToast('Aucune année active', 'danger');
+                        return;
+                    }
+                    
+                    const btn = document.getElementById('publishSujetBtn');
+                    btn.disabled = true;
+                    btn.innerHTML = '⏳ Publication...';
+                    
+                    try {
+                        await db.collection('sujets').add({
+                            professeurId: currentUserId,
+                            professeurNom: currentProfessor.nomComplet || 'Professeur',
+                            professeurEmail: currentProfessor.email || '',
+                            departement: dept,
+                            titre: titre,
+                            description: desc,
+                            statut: 'publie',
+                            anneeAcademiqueId: anneeActiveActuelle.id,
+                            anneeAcademiqueNom: anneeActiveActuelle.anneeNom,
+                            datePublication: firebase.firestore.FieldValue.serverTimestamp(),
+                            nbEtudiants: 0
+                        });
+                        
+                        showToast('✅ Sujet publié !', 'success');
+                        form.reset();
+                    } catch(err) {
+                        showToast('❌ Erreur: ' + err.message, 'danger');
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-cloud-upload-fill"></i> Publier le sujet';
+                    }
+                });
+                
+                const unsub = db.collection('sujets')
+                    .where('professeurId', '==', currentUserId)
+                    .onSnapshot(snap => {
+                        professorSubjects = [];
+                        snap.forEach(doc => {
+                            const data = doc.data();
+                            if (appartientAnneeActive(data)) {
+                                professorSubjects.push({ id: doc.id, ...data });
+                            }
+                        });
+                        
+                        professorSubjects.sort((a, b) => {
+                            const da = a.datePublication?.toDate?.() || new Date(0);
+                            const db2 = b.datePublication?.toDate?.() || new Date(0);
+                            return db2 - da;
+                        });
+                        
+                        afficherSujetsPubliés();
+                    });
+                registerListener(unsub);
+                
+                function afficherSujetsPubliés() {
+                    const list = document.getElementById('sujetsList');
+                    if (!list) return;
+                    
+                    if (professorSubjects.length === 0) {
+                        list.innerHTML = `<div class="empty-state"><i class="bi bi-inbox"></i><p>Aucun sujet publié</p></div>`;
+                        return;
+                    }
+                    
+                    let html = '';
+                    professorSubjects.forEach(s => {
+                        const anneeNom = s.anneeAcademiqueNom || anneeLabel;
+                        html += `
+                            <div class="student-detail-card" style="margin-bottom:10px;">
+                                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+                                    <div style="flex:1;min-width:200px;">
+                                        <strong style="color:var(--primary-blue);">${escapeHtml(s.titre)}</strong>
+                                        <div style="font-size:13px;color:#666;"><i class="bi bi-building"></i> ${escapeHtml(s.departement)}</div>
+                                        <div style="font-size:12px;color:#888;"><i class="bi bi-calendar3"></i> ${formaterDate(s.datePublication)}</div>
+                                        <span class="badge-annee" style="margin-top:5px;display:inline-block;">${escapeHtml(anneeNom)}</span>
+                                    </div>
+                                    <div>
+                                        <span style="background:#d4edda;color:#155724;padding:4px 14px;border-radius:20px;font-size:12px;">Publié</span>
+                                        <button class="btn-publish" style="padding:4px 10px;font-size:12px;margin-left:5px;" onclick="window.supprimerSujet('${s.id}')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    list.innerHTML = html;
+                }
+            }
+            
+            window.supprimerSujet = async function(id) {
+                if (!confirm('Supprimer ce sujet ?')) return;
+                try {
+                    await db.collection('sujets').doc(id).delete();
+                    showToast('✅ Sujet supprimé', 'success');
+                } catch(e) {
+                    showToast('❌ Erreur: ' + e.message, 'danger');
+                }
+            };
+        }
+        
+        // ============================================================
+        // ⭐ VUE : PROFIL
+        // ============================================================
+        function renderProfilView(container) {
+            const nomComplet = currentProfessor.nomComplet || 'Professeur';
+            const initials = nomComplet.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            
+            container.innerHTML = `
+                <div class="spa-view active">
+                    <div class="view-header">
+                        <h4><i class="bi bi-person-circle"></i> Mon Profil</h4>
+                        <button class="btn-back-view" onclick="loadView('home')">
+                            <i class="bi bi-arrow-left"></i> Accueil
+                        </button>
+                    </div>
+                    
+                    <div class="profile-container">
+                        <div class="profile-header">
+                            <div class="profile-avatar">${initials}</div>
+                            <h3 class="profile-name">${escapeHtml(nomComplet)}</h3>
+                            <div>
+                                <span class="profile-role"><i class="bi bi-person-workspace"></i> Professeur</span>
+                                <span class="profile-status"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Compte Actif</span>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-details">
+                            <h5 style="color:var(--primary-blue);margin-bottom:15px;">
+                                <i class="bi bi-info-circle-fill"></i> Informations personnelles
+                            </h5>
+                            
+                            <div class="detail-item">
+                                <div class="detail-icon"><i class="bi bi-person-fill"></i></div>
+                                <div class="detail-content">
+                                    <div class="detail-label">Nom complet</div>
+                                    <div class="detail-value">${escapeHtml(nomComplet)}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-icon"><i class="bi bi-envelope-fill"></i></div>
+                                <div class="detail-content">
+                                    <div class="detail-label">Email</div>
+                                    <div class="detail-value">${escapeHtml(currentProfessor.email || '-')}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-icon"><i class="bi bi-fingerprint"></i></div>
+                                <div class="detail-content">
+                                    <div class="detail-label">ID Professeur</div>
+                                    <div class="detail-value" style="font-family:monospace;font-size:13px;">${escapeHtml(currentProfessor.id || currentProfessor.uid || '-')}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-icon"><i class="bi bi-telephone-fill"></i></div>
+                                <div class="detail-content">
+                                    <div class="detail-label">Téléphone</div>
+                                    <div class="detail-value" id="detailTelephone">${escapeHtml(currentProfessor.telephone || 'Non renseigné')}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-icon"><i class="bi bi-bookmark-fill"></i></div>
+                                <div class="detail-content">
+                                    <div class="detail-label">Spécialité</div>
+                                    <div class="detail-value" id="detailSpecialite">${escapeHtml(currentProfessor.specialite || 'Non renseignée')}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="detail-item">
+                                <div class="detail-icon"><i class="bi bi-building"></i></div>
+                                <div class="detail-content">
+                                    <div class="detail-label">Département</div>
+                                    <div class="detail-value" id="detailDepartement">${escapeHtml(currentProfessor.departement || 'Non renseigné')}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="background:linear-gradient(135deg,#f8f9fa,#e9ecef);border-radius:15px;padding:25px;margin-top:30px;border:1px solid #dee2e6;">
+                            <h5 style="color:var(--primary-blue);margin-bottom:20px;">
+                                <i class="bi bi-lock-fill"></i> Changer le mot de passe
+                            </h5>
+                            <form id="changePasswordForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Nouveau mot de passe</label>
+                                    <input type="password" class="form-control" id="newPassword" required minlength="6">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Confirmer</label>
+                                    <input type="password" class="form-control" id="confirmNewPassword" required minlength="6">
+                                </div>
+                                <button type="submit" class="btn-action" style="width:100%;" id="changePasswordBtn">
+                                    <i class="bi bi-shield-check"></i> Modifier
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const uid = currentProfessor.id || currentProfessor.uid;
+            db.collection('utilisateurs').doc(uid).get().then(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    Object.keys(data).forEach(key => {
+                        if (key !== 'uid' && key !== 'id') {
+                            currentProfessor[key] = data[key];
+                        }
+                    });
+                    
+                    const elTel = document.getElementById('detailTelephone');
+                    const elSpec = document.getElementById('detailSpecialite');
+                    const elDept = document.getElementById('detailDepartement');
+                    if (elTel) elTel.textContent = currentProfessor.telephone || 'Non renseigné';
+                    if (elSpec) elSpec.textContent = currentProfessor.specialite || 'Non renseignée';
+                    if (elDept) elDept.textContent = currentProfessor.departement || 'Non renseigné';
+                }
+            }).catch(() => {});
+            
+            document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newPass = document.getElementById('newPassword').value;
+                const confirmPass = document.getElementById('confirmNewPassword').value;
+                
+                if (newPass.length < 6) {
+                    showToast('Minimum 6 caractères', 'warning');
+                    return;
+                }
+                if (newPass !== confirmPass) {
+                    showToast('Les mots de passe ne correspondent pas', 'danger');
+                    return;
+                }
+                
+                const btn = document.getElementById('changePasswordBtn');
+                btn.disabled = true;
+                btn.innerHTML = '⏳...';
+                
+                try {
+                    await db.collection('utilisateurs').doc(uid).update({
+                        motDePasse: newPass
+                    });
+                    
+                    currentProfessor.motDePasse = newPass;
+                    localStorage.setItem('professeur_session', JSON.stringify(currentProfessor));
+                    showToast('✅ Mot de passe modifié !', 'success');
+                    document.getElementById('changePasswordForm').reset();
+                } catch(err) {
+                    showToast('❌ Erreur: ' + err.message, 'danger');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-shield-check"></i> Modifier';
+                }
+            });
+        }
+        
+        // ============================================================
+        // ⭐ VÉRIFICATION SESSION
+        // ============================================================
+        (function() {
+            console.log('🔍 Vérification de la session professeur...');
+            
+            const sessionData = localStorage.getItem('professeur_session');
+            
+            if(!sessionData) { 
+                console.log('❌ Aucune session trouvée');
+                window.location.href = 'login.html'; 
+                return; 
+            }
+            
+            try {
+                const session = JSON.parse(sessionData);
+                const now = Date.now();
+                
+                if(!session.expires || now > session.expires) {
+                    console.log('⏰ Session expirée');
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                if(!session.role || session.role !== 'professeur') {
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                if(!session.verified2FA) {
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                currentProfessor = session;
+                const nomComplet = session.nomComplet || 'Professeur';
+                
+                console.log('✅ Session valide - Bienvenue ' + nomComplet);
+                
+                const navName = document.getElementById('navProfessorName');
+                if(navName) navName.textContent = nomComplet;
+                
+                const avatar = document.getElementById('profileAvatar');
+                if(avatar && nomComplet !== 'Professeur') {
+                    const initials = nomComplet.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                    avatar.textContent = initials;
+                }
+                
+                if(avatar) avatar.title = nomComplet;
+                
+                document.title = 'Espace Professeur - ' + nomComplet;
+                
+                const tempsRestantMs = session.expires - now;
+                if(tempsRestantMs > 0) {
+                    const tempsTexte = formaterTempsRestant(tempsRestantMs);
+                    const sessionTimeNav = document.getElementById('sessionTimeRemaining');
+                    if(sessionTimeNav) sessionTimeNav.textContent = tempsTexte;
+                }
+                
+                chargerAnneeDepuisLocalStorage();
+                
+                chargerAnneeDirectement().then(() => {
+                    const initialView = (location.hash || '#home').substring(1);
+                    const validViews = ['home', 'cours', 'cotations', 'deliberation', 'horaire', 'projets', 'publications', 'profil'];
+                    if (validViews.includes(initialView)) {
+                        loadView(initialView);
+                    } else {
+                        loadView('home');
+                    }
+                    
+                    initAnneeActive();
+                });
+                
+                setTimeout(() => {
+                    showToast('👋 Bienvenue ' + nomComplet + ' !', 'success');
+                }, 800);
+                
+            } catch(e) {
+                console.error('❌ Erreur session:', e);
+                localStorage.removeItem('professeur_session');
+                window.location.href = 'login.html';
+            }
+        })();
+        
+        // ============================================================
+        // ⭐ NAVIGATION HISTORY
+        // ============================================================
+        window.addEventListener('popstate', (e) => {
+            const view = (location.hash || '#home').substring(1);
+            const validViews = ['home', 'cours', 'cotations', 'deliberation', 'horaire', 'projets', 'publications', 'profil'];
+            if (validViews.includes(view)) {
+                loadView(view);
+            } else {
+                loadView('home');
+            }
+        });
+        
+        // ============================================================
+        // ⭐ DÉCONNEXION
+        // ============================================================
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            if(confirm('Voulez-vous vraiment vous déconnecter ?')) {
+                nettoyerListeners();
+                
+                if (anneeActiveUnsubscribe) {
+                    try { anneeActiveUnsubscribe(); } catch(e) {}
+                    anneeActiveUnsubscribe = null;
+                }
+                
+                try {
+                    localStorage.removeItem(CACHE_KEY_ANNEE);
+                } catch(e) {}
+                
+                localStorage.removeItem('professeur_session');
+                console.log('🔓 Déconnexion effectuée');
+                window.location.href = 'login.html';
+            }
+        });
+        
+        // ============================================================
+        // ⭐ BOUTON HOME (navbar)
+        // ============================================================
+        document.getElementById('homeBrand').addEventListener('click', function(e) {
+            e.preventDefault();
+            loadView('home');
+        });
+        
+        // ============================================================
+        // ⭐ CLIC SUR L'AVATAR
+        // ============================================================
+        document.getElementById('profileAvatar').addEventListener('click', function() {
+            loadView('profil');
+        });
+        
+        // ============================================================
+        // ⭐ VÉRIFICATION PÉRIODIQUE SESSION
+        // ============================================================
+        setInterval(() => {
+            const sessionData = localStorage.getItem('professeur_session');
+            if(sessionData) {
+                try {
+                    const session = JSON.parse(sessionData);
+                    if(!session.expires || Date.now() > session.expires) {
+                        console.log('⏰ Session expirée');
+                        nettoyerListeners();
+                        if (anneeActiveUnsubscribe) {
+                            try { anneeActiveUnsubscribe(); } catch(e) {}
+                        }
+                        localStorage.removeItem('professeur_session');
+                        window.location.href = 'login.html';
+                    } else {
+                        const tempsRestantMs = session.expires - Date.now();
+                        if(tempsRestantMs > 0) {
+                            const tempsTexte = formaterTempsRestant(tempsRestantMs);
+                            const sessionTimeNav = document.getElementById('sessionTimeRemaining');
+                            if(sessionTimeNav) sessionTimeNav.textContent = tempsTexte;
+                        }
+                    }
+                } catch(e) {
+                    localStorage.removeItem('professeur_session');
+                    window.location.href = 'login.html';
+                }
+            }
+        }, 30000);
+        
+        // ============================================================
+        // ⭐ STATUT SYNCHRONISATION
         // ============================================================
         function updateSyncStatus(online = true) {
             const status = document.getElementById('syncStatus');
@@ -699,7 +3053,6 @@
             }
         }
         
-        // Détection de la connexion internet
         window.addEventListener('online', () => {
             updateSyncStatus(true);
             showToast('📶 Connexion rétablie', 'success');
@@ -711,25 +3064,27 @@
         });
         
         // ============================================================
+        // ⭐ NETTOYAGE AVANT FERMETURE
+        // ============================================================
+        window.addEventListener('beforeunload', () => {
+            nettoyerListeners();
+            if (anneeActiveUnsubscribe) {
+                try { anneeActiveUnsubscribe(); } catch(e) {}
+            }
+        });
+        
+        // ============================================================
         // ⭐ INITIALISATION
         // ============================================================
-        console.log('✅ Espace Professeur - Faculté Agronomique');
-        console.log('📱 Application chargée avec succès');
-        console.log(`⏰ Durée de session: ${SESSION_DUREE_HEURES} heures`);
-        
-        // Exposer la fonction showToast globalement
-        window.showToast = showToast;
-        
-        // Message de bienvenue
-        setTimeout(() => {
-            const nom = document.getElementById('welcomeName')?.textContent || 'Professeur';
-            showToast('👋 Bienvenue ' + nom + ' !', 'success');
-        }, 500);
-        
-        // Vérification du statut initial
         updateSyncStatus(navigator.onLine);
         
-        console.log('🎯 Espace Professeur prêt !');
+        window.loadView = loadView;
+        window.showToast = showToast;
+        
+        console.log('✅ Espace Professeur SPA - Faculté Agronomique');
+        console.log('📱 Application chargée avec succès');
+        console.log(`⏰ Durée de session: ${SESSION_DUREE_HEURES} heures`);
+        console.log(`📐 Nouvelle formule : TD/2.5 + TP/2.5 + Interro/5 (bonus +2 max) → Moyenne/10`);
     </script>
 </body>
 </html>
