@@ -73,7 +73,7 @@
             box-shadow: 0 0 20px rgba(255,179,71,0.4);
         }
         
-        /* ===== MENU CARDS ===== */
+        /* ===== MENU CARDS UNIFORMES ===== */
         .menu-card {
             background: white; 
             border-radius: 20px; 
@@ -121,26 +121,6 @@
             font-size: 12px; 
             color: #888; 
             margin-top: 5px; 
-        }
-        
-        /* ===== CARTE DÉLIBÉRATION ===== */
-        .menu-card.deliberation-card {
-            background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
-            border: 2px solid rgba(255,179,71,0.4);
-        }
-        .menu-card.deliberation-card .menu-icon { color: var(--accent-yellow); }
-        .menu-card.deliberation-card .menu-title { color: var(--dark-blue); }
-        .menu-card.deliberation-card .badge-new {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            background: var(--accent-yellow);
-            color: var(--dark-blue);
-            font-size: 10px;
-            font-weight: 700;
-            padding: 3px 10px;
-            border-radius: 20px;
-            letter-spacing: 0.5px;
         }
         
         /* ===== TOAST ===== */
@@ -449,7 +429,7 @@
             font-size: 16px; transition: all 0.3s;
             display: inline-flex; align-items: center; gap: 8px;
         }
-        .btn-publish:hover { background: #b02a37; transform: translateY(-2px); color: white; }
+        .btn-publish:hover:not(:disabled) { background: #b02a37; transform: translateY(-2px); color: white; }
         .btn-publish:disabled { opacity: 0.6; cursor: not-allowed; }
         
         /* Tables */
@@ -515,7 +495,7 @@
         .import-zone h6 { color: var(--primary-blue); margin-bottom: 15px; }
         
         /* Badges */
-        .badge-credit, .badge-promo, .badge-etudiants, .badge-date, .badge-annee {
+        .badge-credit, .badge-promo, .badge-etudiants, .badge-date, .badge-annee, .badge-session, .badge-cumul {
             padding: 4px 10px; border-radius: 15px; font-size: 12px;
             font-weight: 500; white-space: nowrap; display: inline-block;
         }
@@ -526,6 +506,18 @@
         .badge-annee { 
             background: linear-gradient(135deg, #ffb347, #ff9800);
             color: var(--dark-blue); font-size: 11px; font-weight: 700;
+        }
+        .badge-session {
+            background: #e0f7fa;
+            color: #00695c;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .badge-cumul {
+            background: #fff3e0;
+            color: #e65100;
+            font-size: 11px;
+            font-weight: 700;
         }
         
         /* Profile */
@@ -553,6 +545,11 @@
         .profile-status {
             display: inline-flex; align-items: center; gap: 5px;
             background: #28a745; color: white;
+            padding: 5px 15px; border-radius: 20px; font-size: 13px; margin-left: 10px;
+        }
+        .profile-jury-status {
+            display: inline-flex; align-items: center; gap: 5px;
+            background: var(--primary-blue); color: white;
             padding: 5px 15px; border-radius: 20px; font-size: 13px; margin-left: 10px;
         }
         
@@ -626,6 +623,144 @@
         .detail-row i { color: var(--primary-blue); width: 20px; text-align: center; }
         .detail-row strong { color: var(--primary-blue); min-width: 130px; }
         
+        /* ===== JURY SPÉCIFIQUE ===== */
+        .jury-promo-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--primary-blue);
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .jury-promo-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,51,102,0.15);
+        }
+        .jury-promo-card .p-info { flex: 1; min-width: 200px; }
+        .jury-promo-card .p-name {
+            font-weight: 700;
+            color: var(--primary-blue);
+            font-size: 16px;
+        }
+        .jury-promo-card .p-detail {
+            font-size: 12px;
+            color: #888;
+            margin-top: 3px;
+        }
+        
+        .jury-session-block {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary-blue);
+        }
+        .jury-session-block .s-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .jury-session-block .s-header h5 {
+            color: var(--primary-blue);
+            margin: 0;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .jury-session-block .s-header h5 i { color: var(--primary-blue); }
+        
+        .jury-cours-row {
+            background: white;
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            border-left: 3px solid var(--primary-blue);
+            transition: all 0.3s;
+        }
+        .jury-cours-row:hover {
+            transform: translateX(3px);
+            box-shadow: 0 2px 8px rgba(0,51,102,0.1);
+        }
+        .jury-cours-info { flex: 1; min-width: 180px; }
+        .jury-cours-name { font-weight: 600; color: var(--primary-blue); font-size: 14px; }
+        .jury-cours-meta { font-size: 12px; color: #666; margin-top: 3px; }
+        
+        .btn-jury-action {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-jury-action:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,51,102,0.3);
+            color: white;
+            background: var(--dark-blue);
+        }
+        .btn-jury-action:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-jury-import {
+            background: #17a2b8;
+        }
+        .btn-jury-import:hover:not(:disabled) {
+            background: #138496;
+        }
+        
+        .btn-jury-publish {
+            background: #28a745;
+        }
+        .btn-jury-publish:hover:not(:disabled) {
+            background: #218838;
+        }
+        
+        /* Progress bar */
+        .progress-bar-custom {
+            width: 100%;
+            height: 22px;
+            background: #e9ecef;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            border-radius: 12px;
+            transition: width 0.6s ease;
+        }
+        
         /* Media queries */
         @media (max-width: 992px) { 
             .semaine-grid { grid-template-columns: repeat(3, 1fr); } 
@@ -642,6 +777,7 @@
             .annee-badge-nav { font-size: 10px; padding: 4px 10px; }
             .content-card { padding: 20px; }
             .profile-container { padding: 20px; }
+            .jury-promo-card { flex-direction: column; align-items: flex-start; }
         }
         @media (max-width: 576px) { 
             .semaine-grid { grid-template-columns: repeat(2, 1fr); }
@@ -715,12 +851,46 @@
         const SESSION_DUREE_HEURES = 24;
         const CACHE_KEY_ANNEE = 'annee_active_prof';
 
-        // ⭐ NOUVELLES RÈGLES DE COTATION
         const COTATION_RULES = {
             TD:      { maxBase: 2.5, bonusMax: 2 },
             TP:      { maxBase: 2.5, bonusMax: 2 },
             INTERRO: { maxBase: 5,   bonusMax: 2 },
             MOYENNE: { maxBase: 10 }
+        };
+        
+        // ✅ Sessions que le prof peut publier
+        const SESSIONS_DISPONIBLES = {
+            'MI_SESSION':   'Mi-Session',
+            'RATTRAPAGE_1': 'Rattrapage 1',
+            'SESSION_1':    'Session 1',
+            'RATTRAPAGE_2': 'Rattrapage 2'
+        };
+        
+        // ✅ Sessions de RECOURS (gérées par le prof jury)
+        const SESSIONS_RECOURS = {
+            'RECOURS_MS':   'Recours Mi-Session',
+            'RECOURS_S1':   'Recours Session 1',
+            'RECOURS_RATT': 'Recours Rattrapage'
+        };
+        
+        // ✅ Mapping recours → session d'origine
+        const RECOURS_TO_ORIGINE = {
+            'RECOURS_MS':   'MI_SESSION',
+            'RECOURS_S1':   'SESSION_1',
+            'RECOURS_RATT': 'RATTRAPAGE_2'
+        };
+        
+        // ✅ Cumul des sessions
+        // Rattrapage 1 révise Mi-Session
+        // Rattrapage 2 révise Session 1
+        // Session 1 = MS + S1 (cumul)
+        // Rattrapage 2 = MS + S1 (cumul)
+        // Recours Ratt = MS + S1 (cumul)
+        const SESSIONS_CUMUL = {
+            'MI_SESSION':   ['MI_SESSION'],
+            'RATTRAPAGE_1': ['MI_SESSION'],              // ✅ R1 révise MS
+            'SESSION_1':    ['MI_SESSION', 'SESSION_1'],  // ✅ S1 = MS + S1
+            'RATTRAPAGE_2': ['MI_SESSION', 'SESSION_1']   // ✅ R2 = MS + S1
         };
         
         // ============================================================
@@ -739,7 +909,12 @@
             firebase.initializeApp(firebaseConfig);
         }
         const db = firebase.firestore();
-        db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+        
+        // ✅ Persistance simple (compatible iOS)
+        db.enablePersistence().catch((err) => {
+            if (err.code === 'failed-precondition') console.warn('Multi-onglets non supporté');
+            else if (err.code === 'unimplemented') console.warn('Persistance non supportée');
+        });
         
         // ============================================================
         // ⭐ VARIABLES GLOBALES
@@ -749,7 +924,6 @@
         let anneeActiveUnsubscribe = null;
         let currentView = 'home';
         
-        // Variables partagées pour les vues
         let allCours = [];
         let allPromotions = [];
         let allEtudiants = [];
@@ -759,7 +933,10 @@
         let myProjects = [];
         let professorSubjects = [];
         
-        // Listeners actifs
+        // ✅ JURY
+        let myJuryAssignments = [];
+        let juryPromotions = [];
+        
         let activeListeners = [];
         
         // ============================================================
@@ -826,16 +1003,13 @@
             return isNaN(n) ? 0 : n;
         }
         
+        function normaliserMatricule(str) {
+            return String(str || '').trim().toUpperCase().replace(/[\s\-_\.]/g, '');
+        }
+        
         // ============================================================
-        // ⭐ NOUVELLE LOGIQUE DE COTATION
+        // ⭐ LOGIQUE DE COTATION
         // ============================================================
-        /**
-         * Applique la règle : la cote peut dépasser le max de base,
-         * mais le bonus est plafonné à +2.
-         * Ex: TD max base 2.5 → max autorisé = 4.5
-         *     TP max base 2.5 → max autorisé = 4.5
-         *     Interro max base 5 → max autorisé = 7
-         */
         function plafonnerCote(valeurSaisie, maxBase, bonusMax) {
             const v = parseFloatSafe(valeurSaisie);
             if (v < 0) return 0;
@@ -844,19 +1018,11 @@
             return v;
         }
         
-        /**
-         * Calcule la moyenne finale (plafonnée à 10) à partir
-         * des cotes déjà plafonnées.
-         */
         function calculerMoyenne(td, tp, interro) {
             const total = parseFloatSafe(td) + parseFloatSafe(tp) + parseFloatSafe(interro);
             return Math.min(10, Math.round(total * 100) / 100);
         }
         
-        /**
-         * Convertit une ligne brute Excel en objet cotation sécurisé.
-         * Colonnes : 1=N°, 2=Matricule, 3=Nom, 4=TD/2.5, 5=TP/2.5, 6=Interro/5, 7=Moyenne/10
-         */
         function convertirLigneExcel(row) {
             const td = plafonnerCote(row[3], COTATION_RULES.TD.maxBase, COTATION_RULES.TD.bonusMax);
             const tp = plafonnerCote(row[4], COTATION_RULES.TP.maxBase, COTATION_RULES.TP.bonusMax);
@@ -923,7 +1089,7 @@
         }
         
         function initAnneeActive() {
-            console.log('🔄 Initialisation de l\'écoute de l\'année active...');
+            console.log('🔄 Initialisation écoute année active...');
             
             if (anneeActiveUnsubscribe) {
                 try { anneeActiveUnsubscribe(); } catch(e) {}
@@ -936,7 +1102,6 @@
                 .onSnapshot(
                     (doc) => {
                         if (!doc.exists) {
-                            console.log('[ANNÉE] ⚠️ Aucune année active configurée');
                             const badgeText = document.getElementById('anneeBadgeText');
                             if (badgeText) badgeText.textContent = 'Aucune';
                             const badgeNav = document.getElementById('anneeBadgeNav');
@@ -955,7 +1120,6 @@
                                 id: nouvelAnneeId,
                                 anneeNom: nouvelAnneeNom
                             };
-                            console.log('[ANNÉE] ✅ Année active détectée:', anneeActiveActuelle);
                             mettreAJourBadgeAnnee(nouvelAnneeNom);
                             
                             try {
@@ -971,8 +1135,6 @@
                         }
                         
                         if (anneeActiveActuelle.id !== nouvelAnneeId) {
-                            console.log('[ANNÉE] 🔔 Changement d\'année détecté !');
-                            
                             anneeActiveActuelle = {
                                 id: nouvelAnneeId,
                                 anneeNom: nouvelAnneeNom
@@ -989,7 +1151,7 @@
                             } catch(e) {}
                             
                             afficherBandeauAnnee(nouvelAnneeNom);
-                            showToast(`📅 Nouvelle année académique : ${nouvelAnneeNom}`, 'info');
+                            showToast(`📅 Nouvelle année : ${nouvelAnneeNom}`, 'info');
                             
                             try {
                                 localStorage.removeItem('cache_cours_professeur');
@@ -1001,7 +1163,7 @@
                         }
                     },
                     (error) => {
-                        console.error('[ANNÉE] Erreur écoute année active:', error);
+                        console.error('[ANNÉE] Erreur:', error);
                         const badgeText = document.getElementById('anneeBadgeText');
                         if (badgeText) badgeText.textContent = 'Erreur';
                         const badgeNav = document.getElementById('anneeBadgeNav');
@@ -1051,22 +1213,15 @@
                 } catch(e) {}
                 return anneeActiveActuelle;
             } catch (e) {
-                console.error('[ANNÉE] ❌ Erreur:', e);
+                console.error('[ANNÉE] ❌', e);
                 mettreAJourBadgeAnnee('Erreur');
                 return null;
             }
         }
         
-        // ============================================================
-        // ⭐ FILTRE ANNÉE
-        // ============================================================
         function appartientAnneeActive(data) {
-            if (!anneeActiveActuelle || !anneeActiveActuelle.id) {
-                return true;
-            }
-            if (data.anneeAcademiqueId) {
-                return data.anneeAcademiqueId === anneeActiveActuelle.id;
-            }
+            if (!anneeActiveActuelle || !anneeActiveActuelle.id) return true;
+            if (data.anneeAcademiqueId) return data.anneeAcademiqueId === anneeActiveActuelle.id;
             return true;
         }
         
@@ -1101,6 +1256,9 @@
                     case 'deliberation':
                         renderDeliberationView(container, params);
                         break;
+                    case 'jury':
+                        renderJuryView(container, params);
+                        break;
                     case 'horaire':
                         renderHoraireView(container, params);
                         break;
@@ -1124,14 +1282,14 @@
                     history.pushState({ view: viewName }, '', '#' + viewName);
                 }
             } catch(e) {
-                console.error('Erreur chargement vue:', e);
+                console.error('Erreur vue:', e);
                 container.innerHTML = `
                     <div class="empty-state">
                         <i class="bi bi-exclamation-triangle"></i>
                         <h5>Erreur de chargement</h5>
                         <p>${escapeHtml(e.message)}</p>
                         <button class="btn-primary-custom mt-3" onclick="loadView('home')">
-                            <i class="bi bi-house-door"></i> Retour à l'accueil
+                            <i class="bi bi-house-door"></i> Retour
                         </button>
                     </div>
                 `;
@@ -1166,6 +1324,8 @@
             
             const anneeLabel = anneeActiveActuelle ? anneeActiveActuelle.anneeNom : 'Chargement...';
             
+            const estJury = myJuryAssignments.length > 0;
+            
             container.innerHTML = `
                 <div class="spa-view active">
                     <div class="welcome-card">
@@ -1182,7 +1342,7 @@
                         
                         <div class="annee-welcome-badge" id="anneeWelcomeBadge">
                             <i class="bi bi-calendar-check-fill"></i>
-                            Année académique active : <strong id="anneeWelcomeText">${escapeHtml(anneeLabel)}</strong>
+                            Année académique : <strong id="anneeWelcomeText">${escapeHtml(anneeLabel)}</strong>
                         </div>
                         
                         <p class="session-info">
@@ -1206,13 +1366,23 @@
                             </div>
                         </div>
                         <div class="col-md-4 col-sm-6">
-                            <div class="menu-card deliberation-card" onclick="loadView('deliberation')">
-                                <span class="badge-new">NOUVEAU</span>
+                            <div class="menu-card" onclick="loadView('deliberation')">
                                 <div class="menu-icon"><i class="bi bi-clipboard2-check-fill"></i></div>
                                 <div class="menu-title">Délibération</div>
                                 <div class="menu-subtitle">Cotes d'examen & bulletin</div>
                             </div>
                         </div>
+                        
+                        ${estJury ? `
+                            <div class="col-md-4 col-sm-6">
+                                <div class="menu-card" onclick="loadView('jury')">
+                                    <div class="menu-icon"><i class="bi bi-shield-fill-check"></i></div>
+                                    <div class="menu-title">Jury</div>
+                                    <div class="menu-subtitle">Gérer les recours</div>
+                                </div>
+                            </div>
+                        ` : ''}
+                        
                         <div class="col-md-4 col-sm-6">
                             <div class="menu-card" onclick="loadView('horaire')">
                                 <div class="menu-icon"><i class="bi bi-calendar-week"></i></div>
@@ -1328,12 +1498,11 @@
             
             const unsub1 = db.collection('cours')
                 .where('professeurId', '==', currentUserId)
+                .where('anneeAcademiqueId', '==', anneeActiveActuelle?.id || '')
                 .onSnapshot((snapshot) => {
                     allCours = [];
                     snapshot.forEach(doc => {
-                        const data = doc.data();
-                        if (!appartientAnneeActive(data)) return;
-                        allCours.push({ id: doc.id, ...data });
+                        allCours.push({ id: doc.id, ...doc.data() });
                     });
                     afficherCoursTable();
                     mettreAJourStatsCours();
@@ -1374,28 +1543,16 @@
             if (term) {
                 coursFiltres = allCours.filter(c => 
                     (c.nom || '').toLowerCase().includes(term) ||
-                    (promoMap[c.promotionId] || '').toLowerCase().includes(term) ||
-                    (c.code || '').toLowerCase().includes(term)
+                    (promoMap[c.promotionId] || '').toLowerCase().includes(term)
                 );
             }
             
             if (allCours.length === 0) {
-                const anneeLabel = anneeActiveActuelle ? anneeActiveActuelle.anneeNom : 'année active';
                 container.innerHTML = `
                     <div class="empty-state">
                         <i class="bi bi-inbox"></i>
                         <h5>Aucun cours assigné</h5>
-                        <p>Les cours qui vous sont assignés pour <strong>${escapeHtml(anneeLabel)}</strong> apparaîtront ici.</p>
-                    </div>`;
-                return;
-            }
-            
-            if (coursFiltres.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="bi bi-search"></i>
-                        <h5>Aucun résultat</h5>
-                        <p>Aucun cours ne correspond à "${escapeHtml(search)}".</p>
+                        <p>Les cours qui vous sont assignés apparaîtront ici.</p>
                     </div>`;
                 return;
             }
@@ -1409,6 +1566,7 @@
                                 <th>Nom du cours</th>
                                 <th>Crédits</th>
                                 <th>Promotion</th>
+                                <th>Session</th>
                                 <th>Étudiants</th>
                                 <th>Année</th>
                             </tr>
@@ -1419,6 +1577,7 @@
                 const promoNom = promoMap[cours.promotionId] || cours.promotionNom || 'N/A';
                 const nbEtudiants = allEtudiants.filter(e => e.promotion === cours.promotionId).length;
                 const anneeNom = cours.anneeAcademiqueNom || (anneeActiveActuelle ? anneeActiveActuelle.anneeNom : '-');
+                const sessionLabel = cours.sessionLabel || SESSIONS_DISPONIBLES[cours.session] || 'Non définie';
                 
                 html += `
                     <tr>
@@ -1429,6 +1588,7 @@
                         </td>
                         <td><span class="badge-credit">${cours.credits || 0}</span></td>
                         <td><span class="badge-promo">${escapeHtml(promoNom)}</span></td>
+                        <td><span class="badge-session">${escapeHtml(sessionLabel)}</span></td>
                         <td><span class="badge-etudiants">${nbEtudiants}</span></td>
                         <td><span class="badge-annee">${escapeHtml(anneeNom)}</span></td>
                     </tr>`;
@@ -1458,7 +1618,7 @@
         }
         
         // ============================================================
-        // ⭐ VUE : MES COTATIONS — REFONTE COMPLÈTE
+        // ⭐ VUE : MES COTATIONS
         // ============================================================
         function renderCotationsView(container) {
             container.innerHTML = `
@@ -1473,13 +1633,11 @@
                     <div class="content-card">
                         <div class="info-alert">
                             <i class="bi bi-info-circle-fill"></i>
-                            <strong>Nouvelle formule :</strong> TD /2.5, TP /2.5, Interro /5 — Moyenne finale /10.
+                            <strong>Formule :</strong> TD /2.5, TP /2.5, Interro /5 — Moyenne /10.
                             <br>
                             <small>
                                 <i class="bi bi-lightbulb"></i> 
-                                Vous pouvez attribuer <strong>un bonus allant jusqu'à +2</strong> sur chaque colonne 
-                                (ex : TD max saisissable = 4.5/2.5, Interro max saisissable = 7/5). 
-                                Toute valeur au-delà sera automatiquement ramenée au plafond.
+                                Bonus possible jusqu'à <strong>+2</strong> par colonne.
                             </small>
                         </div>
                         
@@ -1568,18 +1726,16 @@
                 const exportAllHistoryBtn = document.getElementById('exportAllHistoryBtn');
                 const currentUserId = currentProfessor.id || currentProfessor.uid;
                 
-                // Charger cours + promotions
                 const unsub1 = db.collection('cours')
                     .where('professeurId', '==', currentUserId)
+                    .where('anneeAcademiqueId', '==', anneeActiveActuelle?.id || '')
                     .onSnapshot(async (snap) => {
                         allCours = [];
                         const promoIds = new Set();
                         snap.forEach(doc => {
                             const data = doc.data();
-                            if (appartientAnneeActive(data)) {
-                                allCours.push({ id: doc.id, ...data });
-                                if (data.promotionId) promoIds.add(data.promotionId);
-                            }
+                            allCours.push({ id: doc.id, ...data });
+                            if (data.promotionId) promoIds.add(data.promotionId);
                         });
                         
                         allPromotions = [];
@@ -1605,13 +1761,13 @@
                 
                 const unsub3 = db.collection('historiquePublications')
                     .where('professeurId', '==', currentUserId)
+                    .where('anneeAcademiqueId', '==', anneeActiveActuelle?.id || '')
                     .onSnapshot(snap => {
                         allHistorique = [];
                         snap.forEach(doc => {
-                            const data = doc.data();
-                            if (!appartientAnneeActive(data)) return;
-                            allHistorique.push({ id: doc.id, ...data });
+                            allHistorique.push({ id: doc.id, ...doc.data() });
                         });
+                        allHistorique.sort((a,b) => (b.datePublication?.seconds||0) - (a.datePublication?.seconds||0));
                         afficherHistorique();
                     });
                 registerListener(unsub3);
@@ -1622,7 +1778,9 @@
                         const coursProf = allCours.filter(c => c.promotionId === currentPromoId);
                         coursSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
                         coursProf.forEach(c => {
-                            coursSelect.innerHTML += `<option value="${c.id}">${escapeHtml(c.nom)} (${c.credits || 0} cr)</option>`;
+                            const sessionLabel = c.sessionLabel || SESSIONS_DISPONIBLES[c.session] || '';
+                            const sessionSuffix = sessionLabel ? ` [${sessionLabel}]` : '';
+                            coursSelect.innerHTML += `<option value="${c.id}">${escapeHtml(c.nom)}${sessionSuffix} (${c.credits || 0} cr)</option>`;
                         });
                         coursSelect.disabled = false;
                     } else {
@@ -1637,7 +1795,6 @@
                     exportBtn.disabled = !currentCoursId;
                 });
                 
-                // ⭐ EXPORT : 7 colonnes au lieu de 8
                 exportBtn.addEventListener('click', async () => {
                     const cours = allCours.find(c => c.id === currentCoursId);
                     const etudiantsPromo = allEtudiants.filter(e => e.promotion === currentPromoId);
@@ -1647,40 +1804,18 @@
                         return;
                     }
                     
-                    // ⭐ 7 COLONNES : N°, Matricule, Nom, TD/2.5, TP/2.5, Interro/5, Moyenne/10
                     const data = [[
-                        'N°', 
-                        'Matricule', 
-                        'Nom étudiant', 
-                        'TD /2.5', 
-                        'TP /2.5', 
-                        'Interro /5', 
-                        'Moyenne /10'
+                        'N°', 'Matricule', 'Nom étudiant', 'TD /2.5', 'TP /2.5', 'Interro /5', 'Moyenne /10'
                     ]];
                     
                     etudiantsPromo.forEach((e, i) => {
-                        data.push([
-                            i + 1, 
-                            e.matricule || e.id, 
-                            e.nom || '', 
-                            '',  // TD
-                            '',  // TP
-                            '',  // Interro
-                            ''   // Moyenne (auto-calculée à l'import)
-                        ]);
+                        data.push([i + 1, e.matricule || e.id, e.nom || '', '', '', '', '']);
                     });
                     
                     const ws = XLSX.utils.aoa_to_sheet(data);
-                    
-                    // Ajuster la largeur des colonnes
                     ws['!cols'] = [
-                        { wch: 5 },   // N°
-                        { wch: 15 },  // Matricule
-                        { wch: 30 },  // Nom
-                        { wch: 10 },  // TD
-                        { wch: 10 },  // TP
-                        { wch: 12 },  // Interro
-                        { wch: 12 }   // Moyenne
+                        { wch: 5 }, { wch: 15 }, { wch: 30 },
+                        { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }
                     ];
                     
                     const wb = XLSX.utils.book_new();
@@ -1689,14 +1824,13 @@
                     const coursNom = (cours?.nom || 'cours').replace(/[^a-zA-Z0-9]/g, '_');
                     const anneeLabel = anneeActiveActuelle ? anneeActiveActuelle.anneeNom.replace(/[^a-zA-Z0-9]/g, '_') : 'annee';
                     XLSX.writeFile(wb, `cotation_${coursNom}_${anneeLabel}.xlsx`);
-                    showToast('✅ Fichier exporté (7 colonnes)', 'success');
+                    showToast('✅ Fichier exporté', 'success');
                 });
                 
                 excelInput.addEventListener('change', function(e) {
                     previewBtn.disabled = !e.target.files[0];
                 });
                 
-                // ⭐ IMPORT : lecture des 7 colonnes
                 previewBtn.addEventListener('click', () => {
                     const file = excelInput.files[0];
                     if (!file) return;
@@ -1716,18 +1850,8 @@
                             }
                             
                             afficherApercu();
-                            
-                            const nbPlafonnes = excelData.filter(d => {
-                                return d.td > COTATION_RULES.TD.maxBase ||
-                                       d.tp > COTATION_RULES.TP.maxBase ||
-                                       d.interro > COTATION_RULES.INTERRO.maxBase;
-                            }).length;
-                            
-                            if (nbPlafonnes > 0) {
-                                showToast(`⚠️ ${nbPlafonnes} ligne(s) ont des bonus appliqués`, 'warning');
-                            }
                         } catch(err) {
-                            showToast('Erreur lecture Excel: ' + err.message, 'danger');
+                            showToast('Erreur Excel: ' + err.message, 'danger');
                         }
                     };
                     reader.readAsArrayBuffer(file);
@@ -1739,7 +1863,6 @@
                     excelInput.value = '';
                 });
                 
-                // ⭐ PUBLICATION : sauvegarde des nouvelles cotes
                 publishBtn.addEventListener('click', async () => {
                     if (!anneeActiveActuelle || !anneeActiveActuelle.id) {
                         showToast('Aucune année active', 'danger');
@@ -1753,7 +1876,8 @@
                     
                     excelData.forEach(row => {
                         const etudiant = etudiantsPromo.find(e => 
-                            e.matricule === row.matricule || e.id === row.matricule
+                            normaliserMatricule(e.matricule) === normaliserMatricule(row.matricule) ||
+                            normaliserMatricule(e.id) === normaliserMatricule(row.matricule)
                         );
                         if (!etudiant) return;
                         
@@ -1769,12 +1893,12 @@
                             etudiantMatricule: etudiant.matricule || etudiant.id,
                             professeurId: currentUserId,
                             professeurNom: currentProfessor.nomComplet,
-                            // ⭐ Nouvelles colonnes
                             td: row.td,
                             tp: row.tp,
                             interro: row.interro,
                             moyenne: row.moyenne,
-                            // ⭐ Plus de présence !
+                            session: cours?.session || '',
+                            sessionLabel: cours?.sessionLabel || '',
                             anneeAcademiqueId: anneeActiveActuelle.id,
                             anneeAcademiqueNom: anneeActiveActuelle.anneeNom,
                             dateMiseAJour: firebase.firestore.FieldValue.serverTimestamp()
@@ -1793,6 +1917,8 @@
                             professeurId: currentUserId,
                             professeurNom: currentProfessor.nomComplet,
                             nombreEtudiants: count,
+                            session: cours?.session || '',
+                            sessionLabel: cours?.sessionLabel || '',
                             anneeAcademiqueId: anneeActiveActuelle.id,
                             anneeAcademiqueNom: anneeActiveActuelle.anneeNom,
                             datePublication: firebase.firestore.FieldValue.serverTimestamp()
@@ -1811,9 +1937,12 @@
                         showToast('Aucun historique', 'warning');
                         return;
                     }
-                    const data = [['Cours', 'Promotion', 'Nombre', 'Année', 'Date']];
+                    const data = [['Cours', 'Promotion', 'Session', 'Nombre', 'Année', 'Date']];
                     allHistorique.forEach(h => {
-                        data.push([h.coursNom, h.promotionNom, h.nombreEtudiants, h.anneeAcademiqueNom, formaterDate(h.datePublication)]);
+                        data.push([
+                            h.coursNom, h.promotionNom, h.sessionLabel || 'N/A',
+                            h.nombreEtudiants, h.anneeAcademiqueNom, formaterDate(h.datePublication)
+                        ]);
                     });
                     const ws = XLSX.utils.aoa_to_sheet(data);
                     const wb = XLSX.utils.book_new();
@@ -1821,7 +1950,6 @@
                     XLSX.writeFile(wb, `historique_${new Date().toISOString().slice(0,10)}.xlsx`);
                 });
                 
-                // ⭐ AFFICHAGE APERÇU : 6 colonnes visibles
                 function afficherApercu() {
                     if (excelData.length === 0) return;
                     
@@ -1833,7 +1961,8 @@
                     
                     const dataComplete = excelData.map(row => {
                         const etudiant = etudiantsPromo.find(e => 
-                            e.matricule === row.matricule || e.id === row.matricule
+                            normaliserMatricule(e.matricule) === normaliserMatricule(row.matricule) ||
+                            normaliserMatricule(e.id) === normaliserMatricule(row.matricule)
                         );
                         return {
                             ...row,
@@ -1849,38 +1978,27 @@
                     const moyenneClasse = moyennes.length > 0 
                         ? (moyennes.reduce((a,b) => a+b, 0) / moyennes.length).toFixed(2) 
                         : 0;
-                    const reussis = moyennes.filter(m => m >= 5).length;
                     
                     document.getElementById('statsMini').innerHTML = `
                         <div class="stat-pill"><div><div class="lbl">Total</div><div class="val">${total}</div></div></div>
                         <div class="stat-pill"><div><div class="lbl">Trouvés</div><div class="val">${valides}</div></div></div>
                         <div class="stat-pill"><div><div class="lbl">Moy. classe</div><div class="val">${moyenneClasse}</div></div></div>
-                        <div class="stat-pill"><div><div class="lbl">Réussite</div><div class="val">${reussis}</div></div></div>
                     `;
                     
                     let html = `<table class="preview-table"><thead><tr>
-                        <th>N°</th>
-                        <th>Matricule</th>
-                        <th>Nom</th>
-                        <th>TD /2.5</th>
-                        <th>TP /2.5</th>
-                        <th>Interro /5</th>
-                        <th>Moyenne /10</th>
-                        <th>État</th>
+                        <th>N°</th><th>Matricule</th><th>Nom</th>
+                        <th>TD /2.5</th><th>TP /2.5</th><th>Interro /5</th>
+                        <th>Moyenne /10</th><th>État</th>
                     </tr></thead><tbody>`;
                     
                     dataComplete.forEach((d, i) => {
-                        const tdBonus = d.td > COTATION_RULES.TD.maxBase;
-                        const tpBonus = d.tp > COTATION_RULES.TP.maxBase;
-                        const interroBonus = d.interro > COTATION_RULES.INTERRO.maxBase;
-                        
                         html += `<tr>
                             <td>${i+1}</td>
                             <td><code>${escapeHtml(d.matricule)}</code></td>
                             <td>${escapeHtml(d.etudiantNom)}</td>
-                            <td style="${tdBonus ? 'color:#ff9800;font-weight:bold;' : ''}">${d.td.toFixed(1)}</td>
-                            <td style="${tpBonus ? 'color:#ff9800;font-weight:bold;' : ''}">${d.tp.toFixed(1)}</td>
-                            <td style="${interroBonus ? 'color:#ff9800;font-weight:bold;' : ''}">${d.interro.toFixed(1)}</td>
+                            <td>${d.td.toFixed(1)}</td>
+                            <td>${d.tp.toFixed(1)}</td>
+                            <td>${d.interro.toFixed(1)}</td>
                             <td class="${d.moyenne >= 5 ? 'text-success' : 'text-danger'}" style="font-weight:bold;">${d.moyenne.toFixed(2)}</td>
                             <td>${d.existe ? '✅' : '❌'}</td>
                         </tr>`;
@@ -1901,11 +2019,13 @@
                     
                     let html = '';
                     allHistorique.forEach(h => {
+                        const sessionLabel = h.sessionLabel || SESSIONS_DISPONIBLES[h.session] || '';
                         html += `
                             <div class="history-item">
                                 <div class="h-info">
                                     <div class="h-title"><i class="bi bi-book-fill"></i> ${escapeHtml(h.coursNom)} 
                                         <span class="badge-credit">${h.nombreEtudiants || 0}</span>
+                                        ${sessionLabel ? `<span class="badge-session">${escapeHtml(sessionLabel)}</span>` : ''}
                                     </div>
                                     <div class="h-detail"><i class="bi bi-trophy-fill"></i> ${escapeHtml(h.promotionNom)} 
                                         <span class="badge-annee">${escapeHtml(h.anneeAcademiqueNom || '')}</span>
@@ -1921,7 +2041,7 @@
         }
         
         // ============================================================
-        // ⭐ VUE : DÉLIBÉRATION
+        // ⭐ VUE : DÉLIBÉRATION (avec filtrage par session)
         // ============================================================
         function renderDeliberationView(container) {
             container.innerHTML = `
@@ -1937,31 +2057,42 @@
                         <h5 style="color:var(--primary-blue);margin-bottom:20px;">
                             <i class="bi bi-funnel-fill"></i> Étape 1 — Sélection
                         </h5>
+                        <div class="info-alert">
+                            <i class="bi bi-info-circle-fill"></i>
+                            <strong>Important :</strong> Sélectionnez la <strong>session</strong> correspondant à l'examen. 
+                            <br>
+                            <small>
+                                <i class="bi bi-lightbulb"></i>
+                                <strong>Note :</strong> Le <strong>Rattrapage 1</strong> affiche les cours de la <strong>Mi-Session</strong> 
+                                et le <strong>Rattrapage 2</strong> affiche les cours de la <strong>Session 1</strong>.
+                            </small>
+                        </div>
                         <div class="row g-3">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Promotion</label>
                                 <select class="form-select" id="delibPromo">
                                     <option value="">-- Chargement... --</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label">Cours</label>
                                 <select class="form-select" id="delibCours" disabled>
                                     <option value="">-- Sélectionner --</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Session</label>
-                                <select class="form-select" id="delibSession">
-                                    <option value="">-- Sélectionner --</option>
+                            <div class="col-md-3">
+                                <label class="form-label">Session <span style="color:red;">*</span></label>
+                                <select class="form-select" id="delibSession" required>
+                                    <option value="">-- Sélectionner la session --</option>
                                     <option value="MI_SESSION">Mi-Session</option>
-                                    <option value="RECOURS_MS">Recours Mi-Session</option>
-                                    <option value="RATTRAPAGE_1">Rattrapage 1</option>
+                                    <option value="RATTRAPAGE_1">Rattrapage 1 (cours MS)</option>
                                     <option value="SESSION_1">Session 1</option>
-                                    <option value="RECOURS_S1">Recours Session 1</option>
-                                    <option value="RATTRAPAGE_2">Rattrapage 2</option>
-                                    <option value="RECOURS_RATT">Recours Rattrapage</option>
+                                    <option value="RATTRAPAGE_2">Rattrapage 2 (cours S1)</option>
                                 </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Année active</label>
+                                <input type="text" class="form-control" id="delibAnnee" readonly>
                             </div>
                         </div>
                         <div style="margin-top:15px;display:flex;flex-wrap:wrap;gap:10px;">
@@ -1980,9 +2111,14 @@
                             <h5 style="color:var(--primary-blue);margin:0;">
                                 <i class="bi bi-eye-fill"></i> Étape 2 — Aperçu
                             </h5>
-                            <span style="background:#fff3cd;color:#856404;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;">
-                                <i class="bi bi-pencil-square"></i> BROUILLON
-                            </span>
+                            <div>
+                                <span style="background:#e0f7fa;color:#00695c;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;margin-right:8px;" id="delibSessionBadge">
+                                    <i class="bi bi-calendar-event-fill"></i> -
+                                </span>
+                                <span style="background:#fff3cd;color:#856404;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;">
+                                    <i class="bi bi-pencil-square"></i> BROUILLON
+                                </span>
+                            </div>
                         </div>
                         <div class="stats-mini" id="delibStats"></div>
                         <div class="table-responsive">
@@ -2016,23 +2152,29 @@
                 const promoSelect = document.getElementById('delibPromo');
                 const coursSelect = document.getElementById('delibCours');
                 const sessionSelect = document.getElementById('delibSession');
+                const anneeInput = document.getElementById('delibAnnee');
                 const exportBtn = document.getElementById('delibExportBtn');
                 const importBtn = document.getElementById('delibImportBtn');
                 const fileInput = document.getElementById('delibFile');
                 const publishBtn = document.getElementById('delibPublishBtn');
+                const sessionBadge = document.getElementById('delibSessionBadge');
                 const currentUserId = currentProfessor.id || currentProfessor.uid;
+                
+                if (anneeInput) {
+                    anneeInput.value = anneeActiveActuelle ? (anneeActiveActuelle.anneeNom || '-') : 'Non définie';
+                }
                 
                 db.collection('cours')
                     .where('professeurId', '==', currentUserId)
+                    .where('anneeAcademiqueId', '==', anneeActiveActuelle?.id || '')
                     .get().then(async snap => {
                         const promoIds = new Set();
                         allCours = [];
+                        
                         snap.forEach(doc => {
                             const data = doc.data();
-                            if (appartientAnneeActive(data)) {
-                                allCours.push({ id: doc.id, ...data });
-                                if (data.promotionId) promoIds.add(data.promotionId);
-                            }
+                            allCours.push({ id: doc.id, ...data });
+                            if (data.promotionId) promoIds.add(data.promotionId);
                         });
                         
                         allPromotions = [];
@@ -2056,10 +2198,35 @@
                     document.getElementById('delibPreview').style.display = 'none';
                     
                     if (this.value) {
-                        const coursFiltres = allCours.filter(c => c.promotionId === this.value);
+                        // ✅ Filtrer les cours selon la session sélectionnée
+                        const session = currentDelibSession;
+                        let coursFiltres = [];
+                        
+                        if (session === 'RATTRAPAGE_1') {
+                            // Rattrapage 1 → cours de Mi-Session
+                            coursFiltres = allCours.filter(c => 
+                                c.promotionId === this.value && c.session === 'MI_SESSION'
+                            );
+                        } else if (session === 'RATTRAPAGE_2') {
+                            // Rattrapage 2 → cours de Session 1
+                            coursFiltres = allCours.filter(c => 
+                                c.promotionId === this.value && c.session === 'SESSION_1'
+                            );
+                        } else if (session) {
+                            // Session normale
+                            coursFiltres = allCours.filter(c => 
+                                c.promotionId === this.value && c.session === session
+                            );
+                        } else {
+                            // Aucune session sélectionnée → tous les cours
+                            coursFiltres = allCours.filter(c => c.promotionId === this.value);
+                        }
+                        
                         coursSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
                         coursFiltres.forEach(c => {
-                            coursSelect.innerHTML += `<option value="${c.id}">${escapeHtml(c.nom)}</option>`;
+                            const sessionLabel = c.sessionLabel || SESSIONS_DISPONIBLES[c.session] || '';
+                            const sessionSuffix = sessionLabel ? ` [${sessionLabel}]` : '';
+                            coursSelect.innerHTML += `<option value="${c.id}">${escapeHtml(c.nom)}${sessionSuffix}</option>`;
                         });
                         coursSelect.disabled = false;
                     } else {
@@ -2076,6 +2243,41 @@
                 
                 sessionSelect.addEventListener('change', function() {
                     currentDelibSession = this.value;
+                    if (sessionBadge) {
+                        sessionBadge.innerHTML = currentDelibSession 
+                            ? `<i class="bi bi-calendar-event-fill"></i> ${SESSIONS_DISPONIBLES[currentDelibSession] || currentDelibSession}`
+                            : '<i class="bi bi-calendar-event-fill"></i> -';
+                    }
+                    
+                    // ✅ Recharger les cours si une promo est déjà sélectionnée
+                    if (currentDelibPromoId) {
+                        const session = this.value;
+                        let coursFiltres = [];
+                        
+                        if (session === 'RATTRAPAGE_1') {
+                            coursFiltres = allCours.filter(c => 
+                                c.promotionId === currentDelibPromoId && c.session === 'MI_SESSION'
+                            );
+                        } else if (session === 'RATTRAPAGE_2') {
+                            coursFiltres = allCours.filter(c => 
+                                c.promotionId === currentDelibPromoId && c.session === 'SESSION_1'
+                            );
+                        } else if (session) {
+                            coursFiltres = allCours.filter(c => 
+                                c.promotionId === currentDelibPromoId && c.session === session
+                            );
+                        } else {
+                            coursFiltres = allCours.filter(c => c.promotionId === currentDelibPromoId);
+                        }
+                        
+                        coursSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+                        coursFiltres.forEach(c => {
+                            const sessionLabel = c.sessionLabel || SESSIONS_DISPONIBLES[c.session] || '';
+                            const sessionSuffix = sessionLabel ? ` [${sessionLabel}]` : '';
+                            coursSelect.innerHTML += `<option value="${c.id}">${escapeHtml(c.nom)}${sessionSuffix}</option>`;
+                        });
+                    }
+                    
                     updateDelibButtons();
                 });
                 
@@ -2086,26 +2288,43 @@
                 }
                 
                 exportBtn.addEventListener('click', async () => {
-                    if (!anneeActiveActuelle) {
-                        showToast('Aucune année active', 'danger');
-                        return;
+                    try {
+                        if (delibStudents.length === 0) {
+                            const snap = await db.collection('etudiants')
+                                .where('promotion', '==', currentDelibPromoId)
+                                .get();
+                            delibStudents = [];
+                            snap.forEach(doc => delibStudents.push({ id: doc.id, ...doc.data() }));
+                            delibStudents.sort((a, b) => 
+                                ((a.nomComplet || a.nom || '')).localeCompare((b.nomComplet || b.nom || ''))
+                            );
+                        }
+                        
+                        if (delibStudents.length === 0) {
+                            showToast('Aucun étudiant', 'warning');
+                            return;
+                        }
+                        
+                        const data = [['N°', 'Matricule', 'Nom complet', 'Cote /10']];
+                        delibStudents.forEach((s, i) => {
+                            data.push([i + 1, s.matricule || s.id || '', s.nomComplet || s.nom || '', '']);
+                        });
+                        
+                        const ws = XLSX.utils.aoa_to_sheet(data);
+                        ws['!cols'] = [{ wch: 5 }, { wch: 18 }, { wch: 35 }, { wch: 12 }];
+                        
+                        const wb = XLSX.utils.book_new();
+                        XLSX.utils.book_append_sheet(wb, ws, 'Bulletin');
+                        
+                        const cours = allCours.find(c => c.id === currentDelibCoursId);
+                        const coursNom = (cours?.nom || 'cours').replace(/[^a-zA-Z0-9]/g, '_');
+                        const sessionLabel = SESSIONS_DISPONIBLES[currentDelibSession]?.replace(/[^a-zA-Z0-9]/g, '_') || 'session';
+                        
+                        XLSX.writeFile(wb, `bulletin_${coursNom}_${sessionLabel}.xlsx`);
+                        showToast(`📥 Exporté (${delibStudents.length} étudiants)`, 'success');
+                    } catch(e) {
+                        showToast('Erreur: ' + e.message, 'danger');
                     }
-                    
-                    const snap = await db.collection('etudiants').where('promotion', '==', currentDelibPromoId).get();
-                    delibStudents = [];
-                    snap.forEach(doc => delibStudents.push({ id: doc.id, ...doc.data() }));
-                    delibStudents.sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
-                    
-                    const data = [['N°', 'Matricule', 'Nom complet', 'Cote /10']];
-                    delibStudents.forEach((s, i) => {
-                        data.push([i + 1, s.matricule || '', s.nomComplet || s.nom || '', '']);
-                    });
-                    
-                    const ws = XLSX.utils.aoa_to_sheet(data);
-                    const wb = XLSX.utils.book_new();
-                    XLSX.utils.book_append_sheet(wb, ws, 'Bulletin');
-                    XLSX.writeFile(wb, `bulletin_${new Date().toISOString().slice(0,10)}.xlsx`);
-                    showToast('📥 Bulletin exporté', 'success');
                 });
                 
                 importBtn.addEventListener('click', () => fileInput.click());
@@ -2115,9 +2334,14 @@
                     if (!file) return;
                     
                     if (delibStudents.length === 0) {
-                        const snap = await db.collection('etudiants').where('promotion', '==', currentDelibPromoId).get();
+                        const snap = await db.collection('etudiants')
+                            .where('promotion', '==', currentDelibPromoId)
+                            .get();
                         delibStudents = [];
                         snap.forEach(doc => delibStudents.push({ id: doc.id, ...doc.data() }));
+                        delibStudents.sort((a, b) => 
+                            ((a.nomComplet || a.nom || '')).localeCompare((b.nomComplet || b.nom || ''))
+                        );
                     }
                     
                     const reader = new FileReader();
@@ -2130,9 +2354,11 @@
                             const mapCotes = {};
                             for (let i = 1; i < rows.length; i++) {
                                 const row = rows[i];
-                                const mat = String(row[1] || '').trim();
+                                const mat = normaliserMatricule(row[1]);
                                 const coteStr = String(row[3] || '').replace(',', '.').trim();
+                                
                                 if (!mat || !coteStr) continue;
+                                
                                 const cote = parseFloat(coteStr);
                                 if (!isNaN(cote) && cote >= 0 && cote <= 10) {
                                     mapCotes[mat] = cote;
@@ -2141,18 +2367,29 @@
                             
                             delibCotes = {};
                             let matched = 0;
+                            let nonMatched = 0;
+                            
                             delibStudents.forEach(s => {
-                                const m = String(s.matricule || '').trim();
-                                if (mapCotes[m] !== undefined) {
-                                    delibCotes[s.id] = mapCotes[m];
+                                const matNorm = normaliserMatricule(s.matricule || s.id);
+                                if (mapCotes[matNorm] !== undefined) {
+                                    delibCotes[s.id] = mapCotes[matNorm];
                                     matched++;
+                                } else {
+                                    nonMatched++;
                                 }
                             });
                             
+                            if (matched === 0) {
+                                showToast('⚠️ Aucune cote associée', 'warning');
+                            } else if (nonMatched > 0) {
+                                showToast(`✅ ${matched} cotes, ${nonMatched} non trouvées`, 'warning');
+                            } else {
+                                showToast(`✅ ${matched} cotes importées`, 'success');
+                            }
+                            
                             afficherDelibApercu();
-                            showToast(`✅ ${matched} cotes importées`, 'success');
                         } catch(err) {
-                            showToast('Erreur lecture: ' + err.message, 'danger');
+                            showToast('Erreur: ' + err.message, 'danger');
                         }
                     };
                     reader.readAsArrayBuffer(file);
@@ -2166,11 +2403,12 @@
                     
                     const total = delibStudents.length;
                     const saisies = Object.keys(delibCotes).length;
+                    const manquantes = total - saisies;
                     
                     document.getElementById('delibStats').innerHTML = `
                         <div class="stat-pill"><div><div class="lbl">Étudiants</div><div class="val">${total}</div></div></div>
-                        <div class="stat-pill"><div><div class="lbl">Cotes importées</div><div class="val">${saisies}</div></div></div>
-                        <div class="stat-pill"><div><div class="lbl">Manquantes</div><div class="val">${total - saisies}</div></div></div>
+                        <div class="stat-pill"><div><div class="lbl">Cotes importées</div><div class="val" style="color:#28a745;">${saisies}</div></div></div>
+                        <div class="stat-pill"><div><div class="lbl">Manquantes</div><div class="val" style="color:${manquantes > 0 ? '#dc3545' : '#28a745'};">${manquantes}</div></div></div>
                     `;
                     
                     let html = '';
@@ -2186,34 +2424,826 @@
                     });
                     document.getElementById('delibPreviewBody').innerHTML = html;
                     
-                    publishBtn.disabled = !(total > 0 && saisies === total);
+                    if (saisies > 0 && total > 0) {
+                        publishBtn.disabled = false;
+                        publishBtn.innerHTML = `<i class="bi bi-cloud-arrow-up-fill"></i> Publier les cotes (${saisies})`;
+                    } else {
+                        publishBtn.disabled = true;
+                    }
                 }
                 
                 publishBtn.addEventListener('click', async () => {
-                    if (!anneeActiveActuelle) {
+                    if (!anneeActiveActuelle || !anneeActiveActuelle.id) {
                         showToast('Aucune année active', 'danger');
                         return;
                     }
                     
-                    const docId = `${currentDelibCoursId}_${currentDelibSession}_${anneeActiveActuelle.id}`;
+                    if (!currentDelibSession) {
+                        showToast('Sélectionnez une session', 'warning');
+                        return;
+                    }
                     
-                    await db.collection('deliberations').doc(docId).set({
-                        coursId: currentDelibCoursId,
-                        promotionId: currentDelibPromoId,
-                        session: currentDelibSession,
-                        professeurEmail: currentProfessor.email || '',
-                        professeurNom: currentProfessor.nomComplet || '',
-                        professeurId: currentUserId,
-                        cotes: delibCotes,
-                        published: true,
-                        anneeAcademiqueId: anneeActiveActuelle.id,
-                        anneeAcademiqueNom: anneeActiveActuelle.anneeNom,
-                        publishedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }, { merge: true });
+                    const nbCotes = Object.keys(delibCotes).length;
+                    if (nbCotes === 0) {
+                        showToast('Aucune cote à publier', 'warning');
+                        return;
+                    }
                     
-                    showToast('🎉 Cotes publiées !', 'success');
-                    document.getElementById('delibPreview').style.display = 'none';
+                    const btn = publishBtn;
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Publication...';
+                    
+                    try {
+                        const cours = allCours.find(c => c.id === currentDelibCoursId);
+                        if (!cours) throw new Error('Cours introuvable');
+                        
+                        // ✅ Pour un rattrapage, on publie la cote dans la SESSION D'ORIGINE du cours
+                        // Ex : Rattrapage 1 → le cours est en MI_SESSION, on publie avec la clé RATTRAPAGE_1
+                        const docId = `${currentDelibCoursId}_${currentDelibSession}_${anneeActiveActuelle.id}`;
+                        const sessionLabel = SESSIONS_DISPONIBLES[currentDelibSession] || currentDelibSession;
+                        const promoNom = allPromotions.find(p => p.id === currentDelibPromoId)?.nom || '';
+                        
+                        await db.collection('deliberations').doc(docId).set({
+                            coursId: currentDelibCoursId,
+                            coursNom: cours.nom || '',
+                            coursCredits: cours.credits || 0,
+                            coursSession: cours.session,                    // ✅ Session d'origine du cours
+                            coursSessionLabel: SESSIONS_DISPONIBLES[cours.session] || cours.session,
+                            promotionId: currentDelibPromoId,
+                            promotionNom: promoNom,
+                            session: currentDelibSession,                   // ✅ Session publiée (MS, R1, S1, R2)
+                            sessionLabel: sessionLabel,
+                            professeurEmail: currentProfessor.email || '',
+                            professeurNom: currentProfessor.nomComplet || '',
+                            professeurId: currentUserId,
+                            cotes: delibCotes,
+                            nombreCotes: nbCotes,
+                            published: true,
+                            anneeAcademiqueId: anneeActiveActuelle.id,
+                            anneeAcademiqueNom: anneeActiveActuelle.anneeNom,
+                            publishedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        
+                        showToast(`🎉 ${nbCotes} cotes publiées pour ${sessionLabel} !`, 'success');
+                        
+                        document.getElementById('delibPreview').style.display = 'none';
+                        delibCotes = {};
+                        delibStudents = [];
+                        
+                    } catch(e) {
+                        console.error(e);
+                        showToast('❌ Erreur : ' + e.message, 'danger');
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill"></i> Publier les cotes';
+                    }
                 });
+            }
+        }
+        
+        // ============================================================
+        // ⭐ VUE : JURY
+        // ============================================================
+        function renderJuryView(container) {
+            container.innerHTML = `
+                <div class="spa-view active">
+                    <div class="view-header">
+                        <h4><i class="bi bi-shield-fill-check"></i> Espace Jury</h4>
+                        <button class="btn-back-view" onclick="loadView('home')">
+                            <i class="bi bi-arrow-left"></i> Accueil
+                        </button>
+                    </div>
+                    
+                    <div class="info-alert">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <strong>Rôle du jury :</strong> En tant que membre du jury, vous gérez les <strong>recours</strong> 
+                        (contestations de cotes) pour les promotions qui vous ont été assignées.
+                        <br>
+                        <small>
+                            <i class="bi bi-lightbulb"></i> 
+                            <strong>Important :</strong> Le recours <strong>remplace la cote finale</strong> du cours. 
+                            Téléchargez le fichier Excel contenant <strong>tous les cours en sous-feuilles</strong>, 
+                            modifiez les <strong>cotes finales</strong>, puis importez.
+                        </small>
+                    </div>
+                    
+                    <div class="content-card" id="juryPromosCard">
+                        <div class="card-header-custom">
+                            <h4><i class="bi bi-trophy-fill"></i> Mes promotions (jury)</h4>
+                        </div>
+                        <div id="juryPromosContainer">
+                            <div class="spa-loading">
+                                <div class="spinner"></div>
+                                <p>Chargement...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="content-card" id="jurySessionsCard" style="display:none;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:20px;">
+                            <h5 style="color:var(--primary-blue);margin:0;">
+                                <i class="bi bi-folder-fill"></i> Sessions de recours — <span id="juryDetailPromoNom">-</span>
+                            </h5>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="fermerJurySessions()">
+                                <i class="bi bi-x-circle"></i> Fermer
+                            </button>
+                        </div>
+                        <div id="jurySessionsContainer"></div>
+                    </div>
+                    
+                    <div class="content-card" id="juryDetailCard" style="display:none;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:20px;">
+                            <h5 style="color:var(--primary-blue);margin:0;">
+                                <i class="bi bi-list-ul"></i> Cours de la session — <span id="juryDetailSessionNom">-</span>
+                            </h5>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="fermerJuryDetail()">
+                                <i class="bi bi-x-circle"></i> Fermer
+                            </button>
+                        </div>
+                        
+                        <div id="juryActionsBar" style="margin-bottom:20px;padding:15px;background:#f8f9fa;border-radius:12px;border-left:4px solid var(--primary-blue);">
+                            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+                                <button class="btn-jury-action" id="juryExportBtn">
+                                    <i class="bi bi-file-earmark-excel-fill"></i> Télécharger le tableau Excel
+                                </button>
+                                <button class="btn-jury-action btn-jury-import" id="juryImportBtn">
+                                    <i class="bi bi-file-earmark-arrow-up-fill"></i> Importer et publier
+                                </button>
+                                <input type="file" id="juryFile" accept=".xlsx,.xls" hidden>
+                                <span style="margin-left:auto;font-size:13px;color:var(--primary-blue);font-weight:600;">
+                                    <i class="bi bi-info-circle"></i> Fichier Excel multi-feuilles (1 feuille = 1 cours)
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div id="juryCoursContainer">
+                            <div class="spa-loading">
+                                <div class="spinner"></div>
+                                <p>Chargement...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            initJuryView();
+            
+            function initJuryView() {
+                let currentJuryPromoId = '';
+                let currentJurySessionKey = '';
+                let currentJuryCoursList = [];
+                let importedData = {};
+                
+                const currentUserId = currentProfessor.id || currentProfessor.uid;
+                
+                Promise.all([
+                    chargerMesJuryAssignments(),
+                    chargerMesPromotions(),
+                    chargerMesEtudiants()
+                ]).then(() => {
+                    afficherMesPromotionsJury();
+                });
+                
+                async function chargerMesJuryAssignments() {
+                    try {
+                        const snap = await db.collection('juryAssignations')
+                            .where('professeurId', '==', currentUserId)
+                            .where('anneeAcademiqueId', '==', anneeActiveActuelle?.id || '')
+                            .get();
+                        
+                        myJuryAssignments = [];
+                        snap.forEach(doc => {
+                            myJuryAssignments.push({ id: doc.id, ...doc.data() });
+                        });
+                        
+                        juryPromotions = [];
+                        const seen = new Set();
+                        myJuryAssignments.forEach(j => {
+                            (j.promotions || []).forEach(p => {
+                                if (!seen.has(p.id)) {
+                                    seen.add(p.id);
+                                    juryPromotions.push({ id: p.id, nom: p.nom });
+                                }
+                            });
+                        });
+                    } catch(e) {
+                        console.error('Erreur chargement jury:', e);
+                    }
+                }
+                
+                async function chargerMesPromotions() {
+                    try {
+                        const snap = await db.collection('promotions').get();
+                        allPromotions = [];
+                        snap.forEach(doc => allPromotions.push({ id: doc.id, ...doc.data() }));
+                    } catch(e) {}
+                }
+                
+                async function chargerMesEtudiants() {
+                    try {
+                        const snap = await db.collection('etudiants').get();
+                        allEtudiants = [];
+                        snap.forEach(doc => allEtudiants.push({ id: doc.id, ...doc.data() }));
+                    } catch(e) {}
+                }
+                
+                function afficherMesPromotionsJury() {
+                    const container = document.getElementById('juryPromosContainer');
+                    if (!container) return;
+                    
+                    if (juryPromotions.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <i class="bi bi-shield-slash"></i>
+                                <h5>Aucune promotion assignée</h5>
+                                <p>L'académique ne vous a pas encore désigné comme jury pour une promotion.</p>
+                            </div>`;
+                        return;
+                    }
+                    
+                    let html = '';
+                    juryPromotions.forEach(promo => {
+                        const nbCours = allCours.filter(c => c.promotionId === promo.id).length;
+                        html += `
+                            <div class="jury-promo-card" onclick="ouvrirJurySessions('${promo.id}')">
+                                <div class="p-info">
+                                    <div class="p-name"><i class="bi bi-trophy-fill"></i> ${escapeHtml(promo.nom)}</div>
+                                    <div class="p-detail">
+                                        <i class="bi bi-book-fill"></i> ${nbCours} cours
+                                    </div>
+                                </div>
+                                <div>
+                                    <i class="bi bi-chevron-right" style="font-size:20px;color:var(--primary-blue);"></i>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                }
+                
+                window.ouvrirJurySessions = async function(promoId) {
+                    currentJuryPromoId = promoId;
+                    const promo = juryPromotions.find(p => p.id === promoId);
+                    
+                    const sessionsCard = document.getElementById('jurySessionsCard');
+                    document.getElementById('juryDetailPromoNom').textContent = promo?.nom || 'Promotion';
+                    sessionsCard.style.display = 'block';
+                    sessionsCard.scrollIntoView({ behavior: 'smooth' });
+                    
+                    const container = document.getElementById('jurySessionsContainer');
+                    container.innerHTML = `<div class="text-center py-4"><div class="loading-spinner" style="border-color:#e0e0e0;border-top-color:var(--primary-blue);width:30px;height:30px;"></div><p class="mt-2 text-muted">Chargement...</p></div>`;
+                    
+                    await chargerCoursPourJury(promoId);
+                    
+                    const recoursDisponibles = ['RECOURS_MS', 'RECOURS_S1', 'RECOURS_RATT'];
+                    
+                    let html = '';
+                    for (const sessionKey of recoursDisponibles) {
+                        const sessionLabel = SESSIONS_RECOURS[sessionKey];
+                        const sessionOrigine = RECOURS_TO_ORIGINE[sessionKey];
+                        const sessionsCumulees = SESSIONS_CUMUL[sessionOrigine] || [sessionOrigine];
+                        
+                        // ✅ Récupérer les cours des sessions cumulées
+                        const coursSession = allCours.filter(c => 
+                            c.promotionId === promoId && sessionsCumulees.includes(c.session)
+                        );
+                        
+                        let dejaTraite = 0;
+                        for (const cours of coursSession) {
+                            const recoursDocId = `${cours.id}_${sessionKey}_${anneeActiveActuelle?.id || ''}`;
+                            try {
+                                const recoursDoc = await db.collection('recoursJury').doc(recoursDocId).get();
+                                if (recoursDoc.exists) dejaTraite++;
+                            } catch(e) {}
+                        }
+                        
+                        const complet = dejaTraite === coursSession.length && coursSession.length > 0;
+                        const pourcentage = coursSession.length > 0 ? Math.round((dejaTraite / coursSession.length) * 100) : 0;
+                        
+                        html += `
+                            <div class="jury-session-block">
+                                <div class="s-header">
+                                    <h5>
+                                        <i class="bi bi-shield-fill-check"></i> ${escapeHtml(sessionLabel)}
+                                        <span class="badge-session">${coursSession.length} cours</span>
+                                        ${sessionsCumulees.length > 1 ? `<span class="badge-cumul"><i class="bi bi-layers-fill"></i> Cumul ${sessionsCumulees.length}</span>` : ''}
+                                    </h5>
+                                    ${coursSession.length === 0 ? `
+                                        <span style="background:#f8d7da;color:#721c24;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;">Aucun cours</span>
+                                    ` : complet ? `
+                                        <span style="background:#d4edda;color:#155724;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;"><i class="bi bi-check-circle-fill"></i> Traité</span>
+                                    ` : `
+                                        <span style="background:#fff3cd;color:#856404;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;"><i class="bi bi-hourglass-split"></i> En attente</span>
+                                    `}
+                                </div>
+                                
+                                ${coursSession.length > 0 ? `
+                                    <div style="margin-bottom:12px;">
+                                        <div class="progress-bar-custom">
+                                            <div class="progress-bar-fill" style="width:${pourcentage}%;background:${complet ? 'linear-gradient(90deg,#28a745,#218838)' : 'linear-gradient(90deg,#ffb347,#ff9800)'};">
+                                                ${pourcentage > 10 ? pourcentage + '%' : ''}
+                                            </div>
+                                        </div>
+                                        <div style="font-size:12px;color:#666;margin-top:6px;">
+                                            <i class="bi bi-bar-chart-fill"></i> ${dejaTraite} / ${coursSession.length} cours traité(s)
+                                        </div>
+                                    </div>
+                                    
+                                    <button class="btn-jury-action" onclick="ouvrirJuryDetail('${sessionKey}')">
+                                        <i class="bi bi-pencil-square"></i> Gérer les recours
+                                    </button>
+                                ` : `
+                                    <p style="color:#888;font-size:13px;margin:0;">
+                                        <i class="bi bi-info-circle"></i> Aucun cours dans la session "${escapeHtml(SESSIONS_DISPONIBLES[sessionOrigine] || sessionOrigine)}"
+                                    </p>
+                                `}
+                            </div>
+                        `;
+                    }
+                    
+                    container.innerHTML = html;
+                };
+                
+                window.fermerJurySessions = function() {
+                    document.getElementById('jurySessionsCard').style.display = 'none';
+                    document.getElementById('juryDetailCard').style.display = 'none';
+                    currentJuryPromoId = '';
+                    currentJurySessionKey = '';
+                };
+                
+                async function chargerCoursPourJury(promoId) {
+                    const snap = await db.collection('cours')
+                        .where('promotionId', '==', promoId)
+                        .where('anneeAcademiqueId', '==', anneeActiveActuelle?.id || '')
+                        .get();
+                    allCours = [];
+                    snap.forEach(doc => {
+                        allCours.push({ id: doc.id, ...doc.data() });
+                    });
+                }
+                
+                window.ouvrirJuryDetail = async function(sessionKey) {
+                    currentJurySessionKey = sessionKey;
+                    const sessionLabel = SESSIONS_RECOURS[sessionKey];
+                    const sessionOrigine = RECOURS_TO_ORIGINE[sessionKey];
+                    const sessionsCumulees = SESSIONS_CUMUL[sessionOrigine] || [sessionOrigine];
+                    
+                    document.getElementById('juryDetailSessionNom').textContent = sessionLabel;
+                    const detailCard = document.getElementById('juryDetailCard');
+                    detailCard.style.display = 'block';
+                    detailCard.scrollIntoView({ behavior: 'smooth' });
+                    
+                    await chargerCoursPourJury(currentJuryPromoId);
+                    
+                    currentJuryCoursList = allCours.filter(c => 
+                        c.promotionId === currentJuryPromoId && sessionsCumulees.includes(c.session)
+                    );
+                    
+                    afficherJuryCoursList();
+                    
+                    // ✅ RÉINITIALISER LE BOUTON IMPORT
+                    importedData = {};
+                    const importBtn = document.getElementById('juryImportBtn');
+                    if (importBtn) {
+                        importBtn.disabled = false;
+                        importBtn.classList.remove('btn-jury-publish');
+                        importBtn.classList.add('btn-jury-import');
+                        importBtn.innerHTML = '<i class="bi bi-file-earmark-arrow-up-fill"></i> Importer et publier';
+                        importBtn.onclick = () => document.getElementById('juryFile').click();
+                    }
+                };
+                
+                window.fermerJuryDetail = function() {
+                    document.getElementById('juryDetailCard').style.display = 'none';
+                    currentJurySessionKey = '';
+                    currentJuryCoursList = [];
+                    importedData = {};
+                };
+                
+                async function afficherJuryCoursList() {
+                    const container = document.getElementById('juryCoursContainer');
+                    if (!container) return;
+                    
+                    if (currentJuryCoursList.length === 0) {
+                        container.innerHTML = `<div class="empty-state"><i class="bi bi-inbox"></i><p>Aucun cours dans cette session</p></div>`;
+                        return;
+                    }
+                    
+                    let html = '';
+                    for (const cours of currentJuryCoursList) {
+                        const recoursDocId = `${cours.id}_${currentJurySessionKey}_${anneeActiveActuelle?.id || ''}`;
+                        let statut = 'pending';
+                        let nbModifs = 0;
+                        let dateTraitement = null;
+                        const sessionSourceLabel = SESSIONS_DISPONIBLES[cours.session] || cours.session;
+                        
+                        try {
+                            const recoursDoc = await db.collection('recoursJury').doc(recoursDocId).get();
+                            if (recoursDoc.exists) {
+                                const data = recoursDoc.data();
+                                statut = 'done';
+                                nbModifs = data.nombreCotesModifiees || 0;
+                                dateTraitement = data.dateTraitement;
+                            }
+                        } catch(e) {}
+                        
+                        html += `
+                            <div class="jury-cours-row">
+                                <div class="jury-cours-info">
+                                    <div class="jury-cours-name">
+                                        <i class="bi bi-book-fill"></i> ${escapeHtml(cours.nom)}
+                                        <span class="badge-credit">${cours.credits || 0} cr</span>
+                                        <span class="badge-session" style="font-size:10px;">${escapeHtml(sessionSourceLabel)}</span>
+                                    </div>
+                                    <div class="jury-cours-meta">
+                                        <i class="bi bi-person-fill"></i> ${escapeHtml(cours.professeurNom || 'N/A')}
+                                        ${statut === 'done' ? ` | <span style="color:#28a745;"><i class="bi bi-check-circle-fill"></i> Traité (${nbModifs} modif.)</span>` : ''}
+                                        ${dateTraitement ? ` | <i class="bi bi-clock"></i> ${formaterDate(dateTraitement)}` : ''}
+                                    </div>
+                                </div>
+                                <div>
+                                    ${statut === 'done' ? `
+                                        <span style="background:#d4edda;color:#155724;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;"><i class="bi bi-check-circle-fill"></i> Traité</span>
+                                    ` : `
+                                        <span style="background:#fff3cd;color:#856404;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;"><i class="bi bi-hourglass-split"></i> À traiter</span>
+                                    `}
+                                </div>
+                            </div>
+                        `;
+                    }
+                    container.innerHTML = html;
+                }
+                
+                // ✅ EXPORT MULTI-FEUILLES
+                document.getElementById('juryExportBtn').addEventListener('click', async () => {
+                    if (currentJuryCoursList.length === 0) {
+                        showToast('Aucun cours à exporter', 'warning');
+                        return;
+                    }
+                    
+                    showToast('📥 Génération du fichier Excel...', 'info');
+                    
+                    try {
+                        const wb = XLSX.utils.book_new();
+                        
+                        for (const cours of currentJuryCoursList) {
+                            const etudiantsAvecCotes = await getEtudiantsAvecCotes(cours, currentJuryPromoId, currentJurySessionKey);
+                            
+                            const data = [['N°', 'Matricule', 'Nom', 'Cote /20']];
+                            
+                            etudiantsAvecCotes.forEach((e, i) => {
+                                data.push([
+                                    i + 1,
+                                    e.matricule || e.id,
+                                    e.nom || '',
+                                    e.coteActuelle !== undefined ? e.coteActuelle : ''
+                                ]);
+                            });
+                            
+                            const ws = XLSX.utils.aoa_to_sheet(data);
+                            ws['!cols'] = [
+                                { wch: 5 }, { wch: 18 }, { wch: 35 }, { wch: 12 }
+                            ];
+                            
+                            let sheetName = cours.nom.replace(/[\\\/\?\*\[\]:]/g, '_').substring(0, 31);
+                            let i = 1;
+                            let baseName = sheetName;
+                            while (wb.SheetNames.includes(sheetName)) {
+                                const suffix = `_${i}`;
+                                sheetName = baseName.substring(0, 31 - suffix.length) + suffix;
+                                i++;
+                            }
+                            
+                            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+                        }
+                        
+                        const promoNom = juryPromotions.find(p => p.id === currentJuryPromoId)?.nom || 'promo';
+                        const sessionLabel = SESSIONS_RECOURS[currentJurySessionKey]?.replace(/[^a-zA-Z0-9]/g, '_') || 'recours';
+                        const anneeLabel = (anneeActiveActuelle?.anneeNom || 'annee').replace(/[^a-zA-Z0-9]/g, '_');
+                        
+                        const filename = `recours_${promoNom.replace(/[^a-zA-Z0-9]/g, '_')}_${sessionLabel}_${anneeLabel}.xlsx`;
+                        XLSX.writeFile(wb, filename);
+                        
+                        showToast(`✅ Fichier exporté (${currentJuryCoursList.length} cours)`, 'success');
+                    } catch(e) {
+                        console.error('Erreur export:', e);
+                        showToast('❌ Erreur: ' + e.message, 'danger');
+                    }
+                });
+                
+                // ✅ Récupérer la COTE FINALE actuelle (avec MAX appliqué)
+                async function getEtudiantsAvecCotes(cours, promoId, sessionKey) {
+                    const etudiantsPromo = allEtudiants.filter(e => e.promotion === promoId);
+                    etudiantsPromo.sort((a, b) => 
+                        ((a.nomComplet || a.nom || '')).localeCompare((b.nomComplet || b.nom || ''))
+                    );
+                    
+                    const cotSnap = await db.collection('cotations')
+                        .where('coursId', '==', cours.id)
+                        .where('promotionId', '==', promoId)
+                        .get();
+                    const cotationsMap = {};
+                    cotSnap.forEach(doc => {
+                        const d = doc.data();
+                        cotationsMap[d.etudiantId] = d;
+                    });
+                    
+                    // Récupérer TOUTES les délibérations
+                    const anneeId = anneeActiveActuelle?.id || '';
+                    const delibMS = await db.collection('deliberations').doc(`${cours.id}_MI_SESSION_${anneeId}`).get();
+                    const delibR1 = await db.collection('deliberations').doc(`${cours.id}_RATTRAPAGE_1_${anneeId}`).get();
+                    const delibS1 = await db.collection('deliberations').doc(`${cours.id}_SESSION_1_${anneeId}`).get();
+                    const delibR2 = await db.collection('deliberations').doc(`${cours.id}_RATTRAPAGE_2_${anneeId}`).get();
+                    
+                    const cotesMS = delibMS.exists ? (delibMS.data().cotes || {}) : {};
+                    const cotesR1 = delibR1.exists ? (delibR1.data().cotes || {}) : {};
+                    const cotesS1 = delibS1.exists ? (delibS1.data().cotes || {}) : {};
+                    const cotesR2 = delibR2.exists ? (delibR2.data().cotes || {}) : {};
+                    
+                    // Recours déjà appliqué
+                    const recoursDocId = `${cours.id}_${sessionKey}_${anneeId}`;
+                    const recoursDoc = await db.collection('recoursJury').doc(recoursDocId).get();
+                    const recoursCotes = recoursDoc.exists ? (recoursDoc.data().cotesModifiees || {}) : {};
+                    
+                    return etudiantsPromo.map(etu => {
+                        const cot = cotationsMap[etu.id] || {};
+                        const moyenneCours = cot.moyenne || 0;
+                        
+                        // ✅ Calculer TOUTES les cotes possibles
+                        const cotesPossibles = [];
+                        
+                        const coteMS = cotesMS[etu.id];
+                        if (coteMS !== undefined) cotesPossibles.push(moyenneCours + coteMS);
+                        
+                        const coteR1 = cotesR1[etu.id];
+                        if (coteR1 !== undefined) cotesPossibles.push(moyenneCours + coteR1);
+                        
+                        const coteS1 = cotesS1[etu.id];
+                        if (coteS1 !== undefined) cotesPossibles.push(moyenneCours + coteS1);
+                        
+                        const coteR2 = cotesR2[etu.id];
+                        if (coteR2 !== undefined) cotesPossibles.push(moyenneCours + coteR2);
+                        
+                        const coteRecours = recoursCotes[etu.id];
+                        if (coteRecours !== undefined) cotesPossibles.push(coteRecours.nouvelle);
+                        
+                        // ✅ MAX
+                        let coteFinale = 0;
+                        if (cotesPossibles.length > 0) {
+                            coteFinale = Math.max(...cotesPossibles);
+                        }
+                        
+                        if (coteFinale > 20) coteFinale = 20;
+                        
+                        return {
+                            id: etu.id,
+                            matricule: etu.matricule || etu.id,
+                            nom: etu.nomComplet || etu.nom || '',
+                            coteActuelle: Math.round(coteFinale * 100) / 100
+                        };
+                    });
+                }
+                
+                // ✅ IMPORT (listener toujours actif)
+                document.getElementById('juryFile').addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    showToast('📖 Lecture du fichier...', 'info');
+                    
+                    const reader = new FileReader();
+                    reader.onload = async evt => {
+                        try {
+                            const wb = XLSX.read(new Uint8Array(evt.target.result), { type: 'array' });
+                            
+                            const sheetToCours = {};
+                            currentJuryCoursList.forEach(cours => {
+                                let sheetName = cours.nom.replace(/[\\\/\?\*\[\]:]/g, '_').substring(0, 31);
+                                sheetToCours[sheetName] = cours;
+                                sheetToCours[cours.nom] = cours;
+                            });
+                            
+                            importedData = {};
+                            let totalMatched = 0;
+                            let totalUnmatched = 0;
+                            let totalCoursTraites = 0;
+                            
+                            for (const sheetName of wb.SheetNames) {
+                                const cours = sheetToCours[sheetName];
+                                if (!cours) continue;
+                                
+                                const sheet = wb.Sheets[sheetName];
+                                const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+                                
+                                if (rows.length < 2) continue;
+                                
+                                const mapCotes = {};
+                                for (let i = 1; i < rows.length; i++) {
+                                    const row = rows[i];
+                                    const mat = normaliserMatricule(row[1]);
+                                    const coteStr = String(row[3] || '').replace(',', '.').trim();
+                                    
+                                    if (!mat || !coteStr) continue;
+                                    const cote = parseFloat(coteStr);
+                                    if (!isNaN(cote) && cote >= 0 && cote <= 20) {
+                                        mapCotes[mat] = cote;
+                                    }
+                                }
+                                
+                                const etudiantsPromo = allEtudiants.filter(e => e.promotion === currentJuryPromoId);
+                                const cotesModifiees = {};
+                                
+                                for (const etu of etudiantsPromo) {
+                                    const matNorm = normaliserMatricule(etu.matricule || etu.id);
+                                    if (mapCotes[matNorm] !== undefined) {
+                                        cotesModifiees[etu.id] = {
+                                            nouvelle: mapCotes[matNorm],
+                                            ancienne: null
+                                        };
+                                        totalMatched++;
+                                    } else {
+                                        totalUnmatched++;
+                                    }
+                                }
+                                
+                                importedData[cours.id] = {
+                                    cours: cours,
+                                    cotesModifiees: cotesModifiees,
+                                    nbCotes: Object.keys(cotesModifiees).length
+                                };
+                                totalCoursTraites++;
+                            }
+                            
+                            if (totalCoursTraites === 0) {
+                                showToast('❌ Aucun cours reconnu dans le fichier', 'danger');
+                                return;
+                            }
+                            
+                            showToast(`✅ ${totalCoursTraites} cours lus, ${totalMatched} cotes associées`, 'success');
+                            
+                            afficherResumeImport(totalMatched, totalUnmatched, totalCoursTraites);
+                            
+                            // ✅ CHANGER LE BOUTON EN MODE "PUBLIER"
+                            const importBtn = document.getElementById('juryImportBtn');
+                            importBtn.innerHTML = '<i class="bi bi-cloud-upload-fill"></i> Publier les recours';
+                            importBtn.classList.remove('btn-jury-import');
+                            importBtn.classList.add('btn-jury-publish');
+                            importBtn.disabled = false;
+                            importBtn.onclick = () => publierRecours();
+                            
+                        } catch(err) {
+                            console.error('Erreur import:', err);
+                            showToast('❌ Erreur: ' + err.message, 'danger');
+                        }
+                    };
+                    reader.readAsArrayBuffer(file);
+                    e.target.value = '';
+                });
+                
+                function afficherResumeImport(matched, unmatched, coursTraites) {
+                    const container = document.getElementById('juryCoursContainer');
+                    if (!container) return;
+                    
+                    let html = `
+                        <div style="background:#d4edda;padding:15px;border-radius:10px;margin-bottom:15px;border-left:4px solid #28a745;">
+                            <strong style="color:#155724;"><i class="bi bi-check-circle-fill"></i> Import réussi</strong>
+                            <ul style="margin:8px 0 0 20px;color:#155724;font-size:13px;">
+                                <li>${coursTraites} cours traité(s)</li>
+                                <li>${matched} cote(s) associée(s)</li>
+                                <li>${unmatched} cote(s) non trouvée(s)</li>
+                            </ul>
+                        </div>
+                        <p style="font-size:14px;color:#666;">
+                            <i class="bi bi-info-circle"></i> Cliquez sur <strong>"Publier les recours"</strong> pour valider définitivement.
+                        </p>
+                    `;
+                    
+                    Object.values(importedData).forEach(d => {
+                        html += `
+                            <div class="jury-cours-row" style="background:#f0fff4;">
+                                <div class="jury-cours-info">
+                                    <div class="jury-cours-name">${escapeHtml(d.cours.nom)}</div>
+                                    <div class="jury-cours-meta">
+                                        <span style="color:#28a745;"><i class="bi bi-check-circle-fill"></i> ${d.nbCotes} cote(s) modifiée(s)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    container.innerHTML = html;
+                }
+                
+                // ✅ PUBLICATION DES RECOURS
+                async function publierRecours() {
+                    if (!anneeActiveActuelle || !anneeActiveActuelle.id) {
+                        showToast('Aucune année active', 'danger');
+                        return;
+                    }
+                    
+                    if (Object.keys(importedData).length === 0) {
+                        showToast('Aucune donnée à publier', 'warning');
+                        return;
+                    }
+                    
+                    if (!confirm(`Publier les recours pour ${Object.keys(importedData).length} cours ?\n\n⚠️ Cette action est DÉFINITIVE.`)) return;
+                    
+                    const btn = document.getElementById('juryImportBtn');
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Publication...';
+                    
+                    try {
+                        const batch = db.batch();
+                        let totalCours = 0;
+                        let totalCotes = 0;
+                        
+                        for (const [coursId, data] of Object.entries(importedData)) {
+                            const cours = data.cours;
+                            const recoursDocId = `${coursId}_${currentJurySessionKey}_${anneeActiveActuelle.id}`;
+                            
+                            const etudiantsAvecCotes = await getEtudiantsAvecCotes(cours, currentJuryPromoId, currentJurySessionKey);
+                            const mapActuelles = {};
+                            etudiantsAvecCotes.forEach(e => {
+                                mapActuelles[e.id] = e.coteActuelle;
+                            });
+                            
+                            const cotesModifieesFinal = {};
+                            let nbModifs = 0;
+                            for (const [etudiantId, obj] of Object.entries(data.cotesModifiees)) {
+                                const ancienne = mapActuelles[etudiantId] || 0;
+                                const nouvelle = obj.nouvelle;
+                                
+                                if (Math.abs(ancienne - nouvelle) > 0.01) {
+                                    cotesModifieesFinal[etudiantId] = {
+                                        ancienne: Math.round(ancienne * 100) / 100,
+                                        nouvelle: Math.round(nouvelle * 100) / 100,
+                                        motif: 'Révision jury'
+                                    };
+                                    nbModifs++;
+                                }
+                            }
+                            
+                            if (nbModifs === 0) {
+                                console.log(`[JURY] Cours ${cours.nom}: aucune modification`);
+                                continue;
+                            }
+                            
+                            batch.set(db.collection('recoursJury').doc(recoursDocId), {
+                                coursId: coursId,
+                                coursNom: cours.nom || '',
+                                coursCredits: cours.credits || 0,
+                                coursSession: cours.session,
+                                coursSessionLabel: SESSIONS_DISPONIBLES[cours.session] || cours.session,
+                                promotionId: currentJuryPromoId,
+                                promotionNom: juryPromotions.find(p => p.id === currentJuryPromoId)?.nom || '',
+                                sessionRecours: currentJurySessionKey,
+                                sessionOrigine: RECOURS_TO_ORIGINE[currentJurySessionKey],
+                                sessionRecoursLabel: SESSIONS_RECOURS[currentJurySessionKey],
+                                cotesModifiees: cotesModifieesFinal,
+                                nombreCotesModifiees: nbModifs,
+                                traiteParJury: true,
+                                membresJury: currentProfessor.nomComplet || 'Jury',
+                                traitePar: currentProfessor.nomComplet,
+                                traiteParId: currentProfessor.id || currentProfessor.uid,
+                                anneeAcademiqueId: anneeActiveActuelle.id,
+                                anneeAcademiqueNom: anneeActiveActuelle.anneeNom,
+                                dateTraitement: firebase.firestore.FieldValue.serverTimestamp(),
+                                published: true
+                            });
+                            
+                            totalCours++;
+                            totalCotes += nbModifs;
+                        }
+                        
+                        if (totalCours === 0) {
+                            showToast('Aucune modification détectée', 'warning');
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="bi bi-file-earmark-arrow-up-fill"></i> Importer et publier';
+                            btn.classList.remove('btn-jury-publish');
+                            btn.classList.add('btn-jury-import');
+                            btn.onclick = () => document.getElementById('juryFile').click();
+                            return;
+                        }
+                        
+                        await batch.commit();
+                        
+                        showToast(`🎉 ${totalCours} cours publié(s), ${totalCotes} cote(s) modifiée(s) !`, 'success');
+                        
+                        importedData = {};
+                        await afficherJuryCoursList();
+                        ouvrirJurySessions(currentJuryPromoId);
+                        
+                    } catch(e) {
+                        console.error('Erreur publication recours:', e);
+                        showToast('❌ Erreur: ' + e.message, 'danger');
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-file-earmark-arrow-up-fill"></i> Importer et publier';
+                        btn.classList.remove('btn-jury-publish');
+                        btn.classList.add('btn-jury-import');
+                        btn.onclick = () => document.getElementById('juryFile').click();
+                    }
+                }
             }
         }
         
@@ -2372,11 +3402,6 @@
         // ⭐ VUE : PROJETS
         // ============================================================
         function renderProjetsView(container) {
-            const DEPARTEMENTS = [
-                "Agronomie Générale", "Économie Agricole", "Sciences du Sol",
-                "Protection des Végétaux", "Zootechnie", "Génie Rural"
-            ];
-            
             container.innerHTML = `
                 <div class="spa-view active">
                     <div class="view-header">
@@ -2445,12 +3470,12 @@
                     
                     if (project) {
                         resultDiv.innerHTML = `
-                            <div class="student-detail-card" style="cursor:pointer;" onclick="window.displayProjectDetail('${project.id}', ${JSON.stringify(DEPARTEMENTS).replace(/"/g, '&quot;')})">
+                            <div class="student-detail-card" style="cursor:pointer;" onclick="window.displayProjectDetail('${project.id}')">
                                 <strong><i class="bi bi-person-check"></i> ${escapeHtml(project.etudiantNom || 'N/A')}</strong>
                                 <br><small>Matricule: ${escapeHtml(project.etudiantMatricule)} | Progression: ${(project.etape || 0) * 25}%</small>
                             </div>
                         `;
-                        window.displayProjectDetail(project.id, DEPARTEMENTS);
+                        window.displayProjectDetail(project.id);
                     } else {
                         resultDiv.innerHTML = '<p class="text-muted mt-2"><i class="bi bi-exclamation-circle"></i> Aucun étudiant ne correspond.</p>';
                         document.getElementById('projectDetailSection').innerHTML = '';
@@ -2458,7 +3483,7 @@
                 });
             }
             
-            window.displayProjectDetail = function(projectId, depts) {
+            window.displayProjectDetail = function(projectId) {
                 const project = myProjects.find(p => p.id === projectId);
                 if (!project) return;
                 
@@ -2647,13 +3672,11 @@
                 
                 const unsub = db.collection('sujets')
                     .where('professeurId', '==', currentUserId)
+                    .where('anneeAcademiqueId', '==', anneeActiveActuelle?.id || '')
                     .onSnapshot(snap => {
                         professorSubjects = [];
                         snap.forEach(doc => {
-                            const data = doc.data();
-                            if (appartientAnneeActive(data)) {
-                                professorSubjects.push({ id: doc.id, ...data });
-                            }
+                            professorSubjects.push({ id: doc.id, ...doc.data() });
                         });
                         
                         professorSubjects.sort((a, b) => {
@@ -2677,7 +3700,7 @@
                     
                     let html = '';
                     professorSubjects.forEach(s => {
-                        const anneeNom = s.anneeAcademiqueNom || anneeLabel;
+                        const anneeNom = s.anneeAcademiqueNom || '-';
                         html += `
                             <div class="student-detail-card" style="margin-bottom:10px;">
                                 <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
@@ -2718,6 +3741,7 @@
         function renderProfilView(container) {
             const nomComplet = currentProfessor.nomComplet || 'Professeur';
             const initials = nomComplet.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            const estJury = myJuryAssignments.length > 0;
             
             container.innerHTML = `
                 <div class="spa-view active">
@@ -2735,6 +3759,7 @@
                             <div>
                                 <span class="profile-role"><i class="bi bi-person-workspace"></i> Professeur</span>
                                 <span class="profile-status"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Compte Actif</span>
+                                ${estJury ? `<span class="profile-jury-status"><i class="bi bi-shield-fill-check"></i> Membre du Jury</span>` : ''}
                             </div>
                         </div>
                         
@@ -2792,7 +3817,20 @@
                             </div>
                         </div>
                         
-                        <div style="background:linear-gradient(135deg,#f8f9fa,#e9ecef);border-radius:15px;padding:25px;margin-top:30px;border:1px solid #dee2e6;">
+                        ${estJury ? `
+                            <div style="background:#f8f9fa;border-radius:15px;padding:25px;margin-top:20px;border:1px solid #e0e0e0;border-left:4px solid var(--primary-blue);">
+                                <h5 style="color:var(--primary-blue);margin-bottom:15px;">
+                                    <i class="bi bi-shield-fill-check"></i> Mes attributions jury
+                                </h5>
+                                ${juryPromotions.map(p => `
+                                    <div style="background:white;padding:10px 15px;border-radius:10px;margin-bottom:8px;border-left:3px solid var(--primary-blue);">
+                                        <strong style="color:var(--primary-blue);">${escapeHtml(p.nom)}</strong>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        
+                        <div style="background:linear-gradient(135deg,#f8f9fa,#e9ecef);border-radius:15px;padding:25px;margin-top:20px;border:1px solid #dee2e6;">
                             <h5 style="color:var(--primary-blue);margin-bottom:20px;">
                                 <i class="bi bi-lock-fill"></i> Changer le mot de passe
                             </h5>
@@ -2873,12 +3911,12 @@
         // ⭐ VÉRIFICATION SESSION
         // ============================================================
         (function() {
-            console.log('🔍 Vérification de la session professeur...');
+            console.log('🔍 Vérification session professeur...');
             
             const sessionData = localStorage.getItem('professeur_session');
             
             if(!sessionData) { 
-                console.log('❌ Aucune session trouvée');
+                console.log('❌ Aucune session');
                 window.location.href = 'login.html'; 
                 return; 
             }
@@ -2888,7 +3926,6 @@
                 const now = Date.now();
                 
                 if(!session.expires || now > session.expires) {
-                    console.log('⏰ Session expirée');
                     localStorage.removeItem('professeur_session');
                     window.location.href = 'login.html';
                     return;
@@ -2909,7 +3946,7 @@
                 currentProfessor = session;
                 const nomComplet = session.nomComplet || 'Professeur';
                 
-                console.log('✅ Session valide - Bienvenue ' + nomComplet);
+                console.log('✅ Session valide - ' + nomComplet);
                 
                 const navName = document.getElementById('navProfessorName');
                 if(navName) navName.textContent = nomComplet;
@@ -2921,7 +3958,6 @@
                 }
                 
                 if(avatar) avatar.title = nomComplet;
-                
                 document.title = 'Espace Professeur - ' + nomComplet;
                 
                 const tempsRestantMs = session.expires - now;
@@ -2933,9 +3969,12 @@
                 
                 chargerAnneeDepuisLocalStorage();
                 
-                chargerAnneeDirectement().then(() => {
+                Promise.all([
+                    chargerAnneeDirectement(),
+                    chargerMesJuryAssignments()
+                ]).then(() => {
                     const initialView = (location.hash || '#home').substring(1);
-                    const validViews = ['home', 'cours', 'cotations', 'deliberation', 'horaire', 'projets', 'publications', 'profil'];
+                    const validViews = ['home', 'cours', 'cotations', 'deliberation', 'jury', 'horaire', 'projets', 'publications', 'profil'];
                     if (validViews.includes(initialView)) {
                         loadView(initialView);
                     } else {
@@ -2956,12 +3995,45 @@
             }
         })();
         
+        async function chargerMesJuryAssignments() {
+            const currentUserId = currentProfessor.id || currentProfessor.uid;
+            try {
+                const snap = await db.collection('juryAssignations')
+                    .where('professeurId', '==', currentUserId)
+                    .get();
+                
+                myJuryAssignments = [];
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    if (!appartientAnneeActive(data)) return;
+                    myJuryAssignments.push({ id: doc.id, ...data });
+                });
+                
+                juryPromotions = [];
+                const seen = new Set();
+                myJuryAssignments.forEach(j => {
+                    (j.promotions || []).forEach(p => {
+                        if (!seen.has(p.id)) {
+                            seen.add(p.id);
+                            juryPromotions.push({ id: p.id, nom: p.nom });
+                        }
+                    });
+                });
+                
+                console.log(`[JURY] ✅ ${myJuryAssignments.length} assignation(s), ${juryPromotions.length} promotion(s)`);
+            } catch(e) {
+                console.error('Erreur chargement jury:', e);
+                myJuryAssignments = [];
+                juryPromotions = [];
+            }
+        }
+        
         // ============================================================
         // ⭐ NAVIGATION HISTORY
         // ============================================================
         window.addEventListener('popstate', (e) => {
             const view = (location.hash || '#home').substring(1);
-            const validViews = ['home', 'cours', 'cotations', 'deliberation', 'horaire', 'projets', 'publications', 'profil'];
+            const validViews = ['home', 'cours', 'cotations', 'deliberation', 'jury', 'horaire', 'projets', 'publications', 'profil'];
             if (validViews.includes(view)) {
                 loadView(view);
             } else {
@@ -2986,13 +4058,13 @@
                 } catch(e) {}
                 
                 localStorage.removeItem('professeur_session');
-                console.log('🔓 Déconnexion effectuée');
+                console.log('🔓 Déconnexion');
                 window.location.href = 'login.html';
             }
         });
         
         // ============================================================
-        // ⭐ BOUTON HOME (navbar)
+        // ⭐ BOUTON HOME
         // ============================================================
         document.getElementById('homeBrand').addEventListener('click', function(e) {
             e.preventDefault();
@@ -3000,7 +4072,7 @@
         });
         
         // ============================================================
-        // ⭐ CLIC SUR L'AVATAR
+        // ⭐ AVATAR → PROFIL
         // ============================================================
         document.getElementById('profileAvatar').addEventListener('click', function() {
             loadView('profil');
@@ -3064,7 +4136,7 @@
         });
         
         // ============================================================
-        // ⭐ NETTOYAGE AVANT FERMETURE
+        // ⭐ NETTOYAGE
         // ============================================================
         window.addEventListener('beforeunload', () => {
             nettoyerListeners();
@@ -3081,10 +4153,12 @@
         window.loadView = loadView;
         window.showToast = showToast;
         
-        console.log('✅ Espace Professeur SPA - Faculté Agronomique');
-        console.log('📱 Application chargée avec succès');
-        console.log(`⏰ Durée de session: ${SESSION_DUREE_HEURES} heures`);
-        console.log(`📐 Nouvelle formule : TD/2.5 + TP/2.5 + Interro/5 (bonus +2 max) → Moyenne/10`);
+        console.log('✅ Espace Professeur SPA');
+        console.log('📐 Formule : TD/2.5 + TP/2.5 + Interro/5 (bonus +2)');
+        console.log('📅 Sessions : Mi-Session, Rattrapage 1, Session 1, Rattrapage 2');
+        console.log('⚖️ Carte Jury : apparaît uniquement si désigné par l\'académique');
+        console.log('🔗 Cumul : R1 révise MS, R2 révise S1');
+        console.log('📊 Règle MAX : on garde la meilleure cote');
     </script>
 </body>
 </html>
